@@ -52,12 +52,8 @@ public class NestedWrapperRule implements LintRule {
             return Stream.empty();
         }
 
-        var fileName = cu.getStorage()
-                .map(s -> s.getFileName())
-                .orElse("Unknown.java");
-
         return cu.findAll(MethodDeclaration.class).stream()
-                .flatMap(method -> checkMethod(method, fileName, ctx));
+                .flatMap(method -> checkMethod(method, ctx.fileName(), ctx));
     }
 
     private Stream<Diagnostic> checkMethod(MethodDeclaration method, String fileName, LintContext ctx) {

@@ -65,13 +65,9 @@ public class ReturnKindRule implements LintRule {
             return Stream.empty();
         }
 
-        var fileName = cu.getStorage()
-                .map(s -> s.getFileName())
-                .orElse("Unknown.java");
-
         return cu.findAll(MethodDeclaration.class).stream()
                 .filter(method -> !method.isPrivate()) // Only check public/protected/package methods
-                .flatMap(method -> checkMethod(method, fileName, ctx));
+                .flatMap(method -> checkMethod(method, ctx.fileName(), ctx));
     }
 
     private Stream<Diagnostic> checkMethod(MethodDeclaration method, String fileName, LintContext ctx) {

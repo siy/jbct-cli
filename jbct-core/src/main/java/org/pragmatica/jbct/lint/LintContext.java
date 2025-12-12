@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 public record LintContext(
         List<Pattern> businessPackagePatterns,
         Option<JavaSymbolSolver> symbolSolver,
-        LintConfig config
+        LintConfig config,
+        String fileName
 ) {
 
     /**
@@ -47,7 +48,8 @@ public record LintContext(
                         Pattern.compile(".*\\.domain\\..*")
                 ),
                 Option.none(),
-                LintConfig.defaultConfig()
+                LintConfig.defaultConfig(),
+                "Unknown.java"
         );
     }
 
@@ -59,20 +61,27 @@ public record LintContext(
                 .map(p -> p.replace("**", ".*").replace("*", "[^.]*"))
                 .map(Pattern::compile)
                 .toList();
-        return new LintContext(patterns, Option.none(), LintConfig.defaultConfig());
+        return new LintContext(patterns, Option.none(), LintConfig.defaultConfig(), "Unknown.java");
     }
 
     /**
      * Builder-style method to set symbol solver.
      */
     public LintContext withSymbolSolver(JavaSymbolSolver solver) {
-        return new LintContext(businessPackagePatterns, Option.option(solver), config);
+        return new LintContext(businessPackagePatterns, Option.option(solver), config, fileName);
     }
 
     /**
      * Builder-style method to set config.
      */
     public LintContext withConfig(LintConfig config) {
-        return new LintContext(businessPackagePatterns, symbolSolver, config);
+        return new LintContext(businessPackagePatterns, symbolSolver, config, fileName);
+    }
+
+    /**
+     * Builder-style method to set file name.
+     */
+    public LintContext withFileName(String fileName) {
+        return new LintContext(businessPackagePatterns, symbolSolver, config, fileName);
     }
 }

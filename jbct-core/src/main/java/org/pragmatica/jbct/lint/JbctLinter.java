@@ -97,9 +97,10 @@ public class JbctLinter implements Linter {
     }
 
     private List<Diagnostic> analyzeWithRules(CompilationUnit cu, String fileName) {
+        var contextWithFile = context.withFileName(fileName);
         return rules.stream()
-                .filter(rule -> context.isRuleEnabled(rule.ruleId()))
-                .flatMap(rule -> rule.analyze(cu, context))
+                .filter(rule -> contextWithFile.isRuleEnabled(rule.ruleId()))
+                .flatMap(rule -> rule.analyze(cu, contextWithFile))
                 .collect(Collectors.toList());
     }
 
