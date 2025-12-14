@@ -10,7 +10,14 @@ Code formatting and linting tools for [Java Backend Coding Technology (JBCT)](ht
 curl -fsSL https://raw.githubusercontent.com/siy/jbct-cli/main/install.sh | sh
 ```
 
-This installs to `~/.jbct` and adds it to your PATH.
+The installer:
+- Verifies Java is installed (JDK 21+ required)
+- Downloads latest release from GitHub
+- Installs to `~/.jbct/lib/jbct.jar`
+- Creates wrapper script at `~/.jbct/bin/jbct`
+- Adds `~/.jbct/bin` to PATH in your shell RC file
+
+Custom install location: `JBCT_HOME=/custom/path sh install.sh`
 
 ### Manual Installation
 
