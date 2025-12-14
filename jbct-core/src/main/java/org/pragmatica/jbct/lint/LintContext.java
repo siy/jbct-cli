@@ -84,4 +84,15 @@ public record LintContext(
     public LintContext withFileName(String fileName) {
         return new LintContext(businessPackagePatterns, symbolSolver, config, fileName);
     }
+
+    /**
+     * Builder-style method to set business package patterns from glob strings.
+     */
+    public LintContext withBusinessPackages(List<String> patterns) {
+        var compiledPatterns = patterns.stream()
+                .map(p -> p.replace("**", ".*").replace("*", "[^.]*"))
+                .map(Pattern::compile)
+                .toList();
+        return new LintContext(compiledPatterns, symbolSolver, config, fileName);
+    }
 }

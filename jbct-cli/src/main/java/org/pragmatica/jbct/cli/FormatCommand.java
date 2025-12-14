@@ -1,10 +1,12 @@
 package org.pragmatica.jbct.cli;
 
+import org.pragmatica.jbct.config.ConfigLoader;
+import org.pragmatica.jbct.config.JbctConfig;
 import org.pragmatica.jbct.format.JbctFormatter;
 import org.pragmatica.jbct.shared.SourceFile;
 import org.pragmatica.jbct.shared.SourceRoot;
+import org.pragmatica.lang.Option;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.nio.file.Files;
@@ -31,28 +33,41 @@ public class FormatCommand implements Callable<Integer> {
     )
     List<Path> paths;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--check", "-c"},
             description = "Check if files are formatted without modifying them"
     )
     boolean checkOnly;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--dry-run", "-n"},
             description = "Show what would be changed without modifying files"
     )
     boolean dryRun;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--verbose", "-v"},
             description = "Show verbose output"
     )
     boolean verbose;
 
-    private final JbctFormatter formatter = JbctFormatter.jbctFormatter();
+    @picocli.CommandLine.Option(
+            names = {"--config"},
+            description = "Path to configuration file"
+    )
+    Path configPath;
+
+    private JbctFormatter formatter;
 
     @Override
     public Integer call() {
+        // Load configuration
+        var config = ConfigLoader.load(
+                Option.option(configPath),
+                Option.none()
+        );
+        formatter = JbctFormatter.jbctFormatter(config.formatter());
+
         var filesToProcess = collectJavaFiles();
 
         if (filesToProcess.isEmpty()) {

@@ -23,6 +23,12 @@
             <artifactId>core</artifactId>
         </dependency>
 
+        <!-- Pragmatica Lite HTTP Client -->
+        <dependency>
+            <groupId>org.pragmatica-lite</groupId>
+            <artifactId>http-client</artifactId>
+        </dependency>
+
         <!-- JavaParser -->
         <dependency>
             <groupId>com.github.javaparser</groupId>
