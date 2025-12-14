@@ -3,10 +3,20 @@ package org.pragmatica.jbct.lint;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import org.pragmatica.jbct.lint.rules.AlwaysSuccessResultRule;
+import org.pragmatica.jbct.lint.rules.ChainLengthRule;
+import org.pragmatica.jbct.lint.rules.ConditionalLoggingRule;
 import org.pragmatica.jbct.lint.rules.ConstructorBypassRule;
+import org.pragmatica.jbct.lint.rules.ConstructorReferenceRule;
+import org.pragmatica.jbct.lint.rules.DomainIoRule;
 import org.pragmatica.jbct.lint.rules.FactoryNamingRule;
+import org.pragmatica.jbct.lint.rules.FluentFailureRule;
+import org.pragmatica.jbct.lint.rules.FullyQualifiedNameRule;
+import org.pragmatica.jbct.lint.rules.LambdaBracesRule;
 import org.pragmatica.jbct.lint.rules.LambdaComplexityRule;
+import org.pragmatica.jbct.lint.rules.LambdaTernaryRule;
 import org.pragmatica.jbct.lint.rules.LintRule;
+import org.pragmatica.jbct.lint.rules.LoggerParameterRule;
 import org.pragmatica.jbct.lint.rules.NestedRecordFactoryRule;
 import org.pragmatica.jbct.lint.rules.NestedWrapperRule;
 import org.pragmatica.jbct.lint.rules.NoBusinessExceptionsRule;
@@ -123,19 +133,39 @@ public class JbctLinter implements Linter {
 
     private static List<LintRule> defaultRules() {
         return List.of(
+                // Return kinds
                 new ReturnKindRule(),
                 new NestedWrapperRule(),
                 new NullReturnRule(),
                 new VoidTypeRule(),
+                new AlwaysSuccessResultRule(),
+                // Value objects
                 new ValueObjectFactoryRule(),
                 new ConstructorBypassRule(),
+                // Naming
                 new FactoryNamingRule(),
                 new ValidatedNamingRule(),
+                // Exceptions
                 new NoBusinessExceptionsRule(),
                 new OrElseThrowRule(),
+                // Lambda/composition
                 new LambdaComplexityRule(),
+                new LambdaBracesRule(),
+                new LambdaTernaryRule(),
+                // Use case structure
                 new NestedRecordFactoryRule(),
-                new RawLoopRule()
+                // Patterns
+                new RawLoopRule(),
+                new ChainLengthRule(),
+                // Style
+                new FluentFailureRule(),
+                new ConstructorReferenceRule(),
+                new FullyQualifiedNameRule(),
+                // Logging
+                new ConditionalLoggingRule(),
+                new LoggerParameterRule(),
+                // Architecture
+                new DomainIoRule()
         );
     }
 }
