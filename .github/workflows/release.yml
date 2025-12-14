@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build JavaParser
+        run: mvn install -DskipTests -Dmaven.compiler.release=8 -q
+        working-directory: javaparser
+
+      - name: Build
+        run: mvn package -DskipTests -B
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+
+          # Check if release exists
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME exists, uploading artifacts..."
+            gh release upload "$GITHUB_REF_NAME" \
+              jbct-cli/target/jbct.jar \
+              jbct-cli/target/jbct-cli-*-dist.tar.gz \
+              jbct-cli/target/jbct-cli-*-dist.zip \
+              --clobber
+          else
+            echo "Creating release $GITHUB_REF_NAME..."
+            gh release create "$GITHUB_REF_NAME" \
+              jbct-cli/target/jbct.jar \
+              jbct-cli/target/jbct-cli-*-dist.tar.gz \
+              jbct-cli/target/jbct-cli-*-dist.zip \
+              --title "JBCT $VERSION" \
+              --generate-notes
+          fi
