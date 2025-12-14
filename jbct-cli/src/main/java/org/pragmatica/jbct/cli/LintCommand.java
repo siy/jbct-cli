@@ -1,14 +1,15 @@
 package org.pragmatica.jbct.cli;
 
+import org.pragmatica.jbct.config.ConfigLoader;
+import org.pragmatica.jbct.config.JbctConfig;
 import org.pragmatica.jbct.lint.Diagnostic;
 import org.pragmatica.jbct.lint.DiagnosticSeverity;
 import org.pragmatica.jbct.lint.JbctLinter;
-import org.pragmatica.jbct.lint.LintConfig;
 import org.pragmatica.jbct.lint.LintContext;
 import org.pragmatica.jbct.shared.SourceFile;
 import org.pragmatica.jbct.shared.SourceRoot;
+import org.pragmatica.lang.Option;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.nio.file.Files;
@@ -35,24 +36,30 @@ public class LintCommand implements Callable<Integer> {
     )
     List<Path> paths;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--format", "-f"},
             description = "Output format: text, json, sarif",
             defaultValue = "text"
     )
     OutputFormat outputFormat;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--fail-on-warning", "-w"},
             description = "Treat warnings as errors"
     )
     boolean failOnWarning;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--verbose", "-v"},
             description = "Show verbose output"
     )
     boolean verbose;
+
+    @picocli.CommandLine.Option(
+            names = {"--config"},
+            description = "Path to configuration file"
+    )
+    Path configPath;
 
     public enum OutputFormat {
         text, json, sarif
@@ -60,7 +67,12 @@ public class LintCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        var context = createContext();
+        // Load configuration
+        var config = ConfigLoader.load(
+                Option.option(configPath),
+                Option.none()
+        );
+        var context = createContext(config);
         var linter = JbctLinter.jbctLinter(context);
 
         var filesToProcess = collectJavaFiles();
@@ -100,12 +112,14 @@ public class LintCommand implements Callable<Integer> {
         return 0; // Success
     }
 
-    private LintContext createContext() {
-        var configBuilder = LintConfig.defaultConfig();
+    private LintContext createContext(JbctConfig jbctConfig) {
+        var lintConfig = jbctConfig.lint();
         if (failOnWarning) {
-            configBuilder = configBuilder.withFailOnWarning(true);
+            lintConfig = lintConfig.withFailOnWarning(true);
         }
-        return LintContext.defaultContext().withConfig(configBuilder);
+        return LintContext.defaultContext()
+                .withConfig(lintConfig)
+                .withBusinessPackages(jbctConfig.businessPackages());
     }
 
     private List<Path> collectJavaFiles() {

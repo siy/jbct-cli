@@ -11,11 +11,14 @@ import picocli.CommandLine.Option;
         name = "jbct",
         description = "JBCT code formatting and linting tool",
         mixinStandardHelpOptions = true,
-        version = "0.1.0",
+        version = "0.2.0",
         subcommands = {
                 FormatCommand.class,
                 LintCommand.class,
-                CheckCommand.class
+                CheckCommand.class,
+                UpgradeCommand.class,
+                InitCommand.class,
+                UpdateCommand.class
         }
 )
 public class JbctCommand implements Runnable {

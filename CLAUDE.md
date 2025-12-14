@@ -3,11 +3,59 @@
 ## Project Overview
 CLI tool and Maven plugin for JBCT (Java Backend Coding Technology) code formatting and linting.
 
-## Current Status: Formatter Implementation Complete (15/15 tests passing)
+## Project Structure
 
-All golden tests pass. The formatter handles JBCT-style formatting.
+```
+jbct-cli/
+├── jbct-core/          # Core formatting, linting, config, upgrade, init, update logic
+├── jbct-cli/           # Picocli CLI commands
+├── jbct-maven-plugin/  # Maven plugin wrapper
+└── pom.xml             # Parent POM
+```
 
-## Key JBCT Formatting Rules
+## CLI Commands
+
+```bash
+jbct format <path>      # Format Java files
+jbct lint <path>        # Analyze for JBCT compliance
+jbct check <path>       # Format check + lint (for CI)
+jbct upgrade            # Update CLI from GitHub Releases
+jbct init [dir]         # Create new JBCT project + install AI tools
+jbct update             # Update AI tools from coding-technology repo
+```
+
+## Configuration
+
+JBCT uses `jbct.toml` configuration with priority chain:
+1. CLI args (highest)
+2. `./jbct.toml` (project root)
+3. `~/.jbct/config.toml` (user default)
+4. Built-in defaults (lowest)
+
+Example `jbct.toml`:
+```toml
+[format]
+maxLineLength = 120
+indentSize = 4
+alignChainedCalls = true
+
+[lint]
+failOnWarning = false
+businessPackages = ["**.usecase.**", "**.domain.**"]
+
+[lint.rules]
+JBCT-RET-01 = "error"
+JBCT-VO-01 = "warning"
+```
+
+## Key Dependencies
+
+- **pragmatica-lite:core** (0.8.4) - Result, Option, Promise types
+- **pragmatica-lite:http-client** (0.8.4) - HTTP operations for upgrade/update
+- **javaparser** (3.27.2-SNAPSHOT) - Java AST parsing (shaded)
+- **picocli** - CLI framework
+
+## JBCT Formatting Rules
 
 1. **Chain alignment**: `.` aligns to the receiver end
    ```java
@@ -29,67 +77,72 @@ All golden tests pass. The formatter handles JBCT-style formatting.
           : "no";
    ```
 
-4. **Lambda in broken args**: Body aligns to parameter + 4, `}` aligns to parameter
+4. **Lambda in broken args**: Body aligns to parameter + 4
    ```java
    return input.fold(cause -> {
                          logError(cause);
                          return defaultValue;
                      },
-                     value -> {
-                         return value.toUpperCase();
-                     });
+                     value -> value.toUpperCase());
    ```
 
-5. **Lambda in chain**: Body aligns to chain + 4, `}` aligns to chain position
-   ```java
-   return items.stream()
-               .filter(s -> {
-                   var trimmed = s.trim();
-                   return !trimmed.isEmpty();
-               })
-               .toList();
-   ```
-
-6. **Method parameters**: Wrap and align when exceeding line length
-   ```java
-   Result<Response> manyParams(String userId,
-                               String token,
-                               long expiresAt,
-                               Option<String> refreshToken) {
-   ```
-
-7. **Import grouping**: Blank lines between groups (org.pragmatica, java/javax, static)
-
-8. **Blank lines**: Between methods, between type declarations, no blank after opening brace
-
-9. **Empty types**: Single line `{}` for empty interfaces, records, annotations
+5. **Import grouping**: Blank lines between groups (org.pragmatica, java/javax, static)
 
 ## Implementation Architecture
 
-- **JbctPrettyPrinterVisitor**: Custom AST visitor for JBCT formatting
-- **JbctFormatter**: Entry point using the custom printer
-- **FormatterConfig**: Configuration (line length, indent size)
+### Core Components
+- `JbctFormatter` - Entry point for formatting
+- `JbctLinter` - Entry point for linting with 13 lint rules
+- `ConfigLoader` - TOML config loading with priority chain
+- `GitHubReleaseChecker` - Check GitHub Releases for updates
+- `JarInstaller` - Download and install JAR updates
+- `AiToolsInstaller` - Install AI tools to ~/.claude/
+- `AiToolsUpdater` - Update AI tools from GitHub
 
-### Key Tracking Variables
-- `chainAlignColumn`: Tracks chain dot alignment for lambda body alignment
-- `argumentAlignStack`: Tracks when inside broken argument lists
-- `currentColumn`: Tracks output column for alignment calculations
+### HTTP Client Pattern
+Uses pragmatica-lite http-client:
+```java
+http.sendString(request)
+    .await()
+    .flatMap(HttpResult::toResult)
+    .flatMap(body -> ...);
+```
 
-## Known Limitations
-
-1. **Orphan comments** - Comments not attached to nodes (e.g., standalone line between class brace and first member) may be dropped
-2. **Binary expression wrapping** - Long boolean/arithmetic expressions not auto-wrapped
-3. **Array initializer wrapping** - Long array initializers not auto-wrapped
-
-## Commands
+## Build Commands
 
 ```bash
-# Run formatter tests
-mvn test -pl jbct-core -Dtest=GoldenFormatterTest
+# Compile
+mvn compile
 
-# Run all tests
-mvn test -pl jbct-core
+# Run tests
+mvn test
+
+# Build distribution (creates tar.gz/zip)
+mvn package -DskipTests
+
+# Full verify
+mvn verify
+```
+
+## Distribution
+
+Built archives in `jbct-cli/target/`:
+- `jbct-cli-VERSION-dist.tar.gz`
+- `jbct-cli-VERSION-dist.zip`
+
+Contents:
+```
+jbct-VERSION/
+├── bin/jbct        # Unix wrapper
+├── bin/jbct.bat    # Windows wrapper
+└── lib/jbct.jar    # Fat JAR
 ```
 
 ## Golden Examples Location
 `jbct-core/src/test/resources/format-examples/`
+
+## Known Limitations
+
+1. **Orphan comments** - Comments not attached to nodes may be dropped
+2. **Binary expression wrapping** - Long boolean/arithmetic expressions not auto-wrapped
+3. **Array initializer wrapping** - Long array initializers not auto-wrapped

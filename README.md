@@ -4,25 +4,36 @@ Code formatting and linting tools for [Java Backend Coding Technology (JBCT)](ht
 
 ## Installation
 
-### CLI
-
-Download the latest `jbct.jar` from releases or build from source:
+### Quick Install (Linux/macOS)
 
 ```bash
-# Clone with submodules
-git clone --recurse-submodules https://github.com/siy/jbct-cli.git
-cd jbct-cli
-
-# Build (uses build script for JavaParser + jbct)
-./scripts/build.sh
-
-# JAR located at jbct-cli/target/jbct.jar
+curl -fsSL https://raw.githubusercontent.com/siy/jbct-cli/main/install.sh | sh
 ```
 
-Create an alias for convenience:
+The installer:
+- Verifies Java is installed (JDK 21+ required)
+- Downloads latest release from GitHub
+- Installs to `~/.jbct/lib/jbct.jar`
+- Creates wrapper script at `~/.jbct/bin/jbct`
+- Adds `~/.jbct/bin` to PATH in your shell RC file
+
+Custom install location: `JBCT_HOME=/custom/path sh install.sh`
+
+### Manual Installation
+
+Download `jbct.jar` from [releases](https://github.com/siy/jbct-cli/releases) and run:
 
 ```bash
-alias jbct='java -jar /path/to/jbct.jar'
+java -jar jbct.jar --help
+```
+
+### Build from Source
+
+```bash
+git clone --recurse-submodules https://github.com/siy/jbct-cli.git
+cd jbct-cli
+./scripts/build.sh
+# JAR: jbct-cli/target/jbct.jar
 ```
 
 ### Maven Plugin
@@ -35,7 +46,7 @@ Add to your `pom.xml`:
         <plugin>
             <groupId>org.pragmatica-lite</groupId>
             <artifactId>jbct-maven-plugin</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>0.2.0</version>
         </plugin>
     </plugins>
 </build>
@@ -137,7 +148,7 @@ Add executions to run automatically:
 <plugin>
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-maven-plugin</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0</version>
     <executions>
         <execution>
             <id>check</id>
@@ -155,7 +166,7 @@ Add executions to run automatically:
 <plugin>
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-maven-plugin</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0</version>
     <configuration>
         <!-- Source directories to process (default: src/main/java) -->
         <sourceDirectories>

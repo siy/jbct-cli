@@ -1,15 +1,16 @@
 package org.pragmatica.jbct.cli;
 
+import org.pragmatica.jbct.config.ConfigLoader;
+import org.pragmatica.jbct.config.JbctConfig;
 import org.pragmatica.jbct.format.JbctFormatter;
 import org.pragmatica.jbct.lint.Diagnostic;
 import org.pragmatica.jbct.lint.DiagnosticSeverity;
 import org.pragmatica.jbct.lint.JbctLinter;
-import org.pragmatica.jbct.lint.LintConfig;
 import org.pragmatica.jbct.lint.LintContext;
 import org.pragmatica.jbct.shared.SourceFile;
 import org.pragmatica.jbct.shared.SourceRoot;
+import org.pragmatica.lang.Option;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.nio.file.Files;
@@ -36,22 +37,33 @@ public class CheckCommand implements Callable<Integer> {
     )
     List<Path> paths;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--fail-on-warning", "-w"},
             description = "Treat warnings as errors"
     )
     boolean failOnWarning;
 
-    @Option(
+    @picocli.CommandLine.Option(
             names = {"--verbose", "-v"},
             description = "Show verbose output"
     )
     boolean verbose;
 
+    @picocli.CommandLine.Option(
+            names = {"--config"},
+            description = "Path to configuration file"
+    )
+    Path configPath;
+
     @Override
     public Integer call() {
-        var formatter = JbctFormatter.jbctFormatter();
-        var context = createContext();
+        // Load configuration
+        var config = ConfigLoader.load(
+                Option.option(configPath),
+                Option.none()
+        );
+        var formatter = JbctFormatter.jbctFormatter(config.formatter());
+        var context = createContext(config);
         var linter = JbctLinter.jbctLinter(context);
 
         var filesToProcess = collectJavaFiles();
@@ -119,9 +131,14 @@ public class CheckCommand implements Callable<Integer> {
         return 0;
     }
 
-    private LintContext createContext() {
-        var config = LintConfig.defaultConfig().withFailOnWarning(failOnWarning);
-        return LintContext.defaultContext().withConfig(config);
+    private LintContext createContext(JbctConfig jbctConfig) {
+        var lintConfig = jbctConfig.lint();
+        if (failOnWarning) {
+            lintConfig = lintConfig.withFailOnWarning(true);
+        }
+        return LintContext.defaultContext()
+                .withConfig(lintConfig)
+                .withBusinessPackages(jbctConfig.businessPackages());
     }
 
     private List<Path> collectJavaFiles() {

@@ -22,6 +22,7 @@ public record LintConfig(
                     Map.entry("JBCT-RET-02", DiagnosticSeverity.ERROR),   // Nested wrappers
                     Map.entry("JBCT-RET-03", DiagnosticSeverity.ERROR),   // Return null
                     Map.entry("JBCT-RET-04", DiagnosticSeverity.ERROR),   // Use Unit not Void
+                    Map.entry("JBCT-RET-05", DiagnosticSeverity.WARNING), // Always-succeeding Result
                     // Value objects
                     Map.entry("JBCT-VO-01", DiagnosticSeverity.WARNING),  // Missing Result factory
                     Map.entry("JBCT-VO-02", DiagnosticSeverity.ERROR),    // Constructor bypass
@@ -33,10 +34,22 @@ public record LintConfig(
                     Map.entry("JBCT-NAM-02", DiagnosticSeverity.WARNING), // Valid not Validated
                     // Lambda/composition
                     Map.entry("JBCT-LAM-01", DiagnosticSeverity.WARNING), // Complex lambdas
+                    Map.entry("JBCT-LAM-02", DiagnosticSeverity.WARNING), // Lambda braces
+                    Map.entry("JBCT-LAM-03", DiagnosticSeverity.WARNING), // Lambda ternary
                     // Use case structure
                     Map.entry("JBCT-UC-01", DiagnosticSeverity.WARNING),  // Nested record factory
                     // Patterns
-                    Map.entry("JBCT-PAT-01", DiagnosticSeverity.WARNING)  // Raw loops
+                    Map.entry("JBCT-PAT-01", DiagnosticSeverity.WARNING), // Raw loops
+                    Map.entry("JBCT-SEQ-01", DiagnosticSeverity.WARNING), // Chain length
+                    // Style
+                    Map.entry("JBCT-STY-01", DiagnosticSeverity.WARNING), // Fluent failure style
+                    Map.entry("JBCT-STY-02", DiagnosticSeverity.WARNING), // Constructor references
+                    Map.entry("JBCT-STY-03", DiagnosticSeverity.WARNING), // No FQCN
+                    // Logging
+                    Map.entry("JBCT-LOG-01", DiagnosticSeverity.WARNING), // Conditional logging
+                    Map.entry("JBCT-LOG-02", DiagnosticSeverity.WARNING), // Logger as parameter
+                    // Architecture
+                    Map.entry("JBCT-MIX-01", DiagnosticSeverity.ERROR)    // I/O in domain
             ),
             Set.of(),
             false
