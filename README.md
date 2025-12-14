@@ -4,25 +4,29 @@ Code formatting and linting tools for [Java Backend Coding Technology (JBCT)](ht
 
 ## Installation
 
-### CLI
-
-Download the latest `jbct.jar` from releases or build from source:
+### Quick Install (Linux/macOS)
 
 ```bash
-# Clone with submodules
-git clone --recurse-submodules https://github.com/siy/jbct-cli.git
-cd jbct-cli
-
-# Build (uses build script for JavaParser + jbct)
-./scripts/build.sh
-
-# JAR located at jbct-cli/target/jbct.jar
+curl -fsSL https://raw.githubusercontent.com/siy/jbct-cli/main/install.sh | sh
 ```
 
-Create an alias for convenience:
+This installs to `~/.jbct` and adds it to your PATH.
+
+### Manual Installation
+
+Download `jbct.jar` from [releases](https://github.com/siy/jbct-cli/releases) and run:
 
 ```bash
-alias jbct='java -jar /path/to/jbct.jar'
+java -jar jbct.jar --help
+```
+
+### Build from Source
+
+```bash
+git clone --recurse-submodules https://github.com/siy/jbct-cli.git
+cd jbct-cli
+./scripts/build.sh
+# JAR: jbct-cli/target/jbct.jar
 ```
 
 ### Maven Plugin
