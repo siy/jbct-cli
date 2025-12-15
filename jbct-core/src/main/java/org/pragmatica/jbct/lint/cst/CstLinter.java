@@ -3,9 +3,7 @@ package org.pragmatica.jbct.lint.cst;
 import org.pragmatica.jbct.lint.Diagnostic;
 import org.pragmatica.jbct.lint.DiagnosticSeverity;
 import org.pragmatica.jbct.lint.LintContext;
-import org.pragmatica.jbct.lint.cst.rules.CstNullReturnRule;
-import org.pragmatica.jbct.lint.cst.rules.CstOrElseThrowRule;
-import org.pragmatica.jbct.lint.cst.rules.CstRawLoopRule;
+import org.pragmatica.jbct.lint.cst.rules.*;
 import org.pragmatica.jbct.parser.Java25Parser;
 import org.pragmatica.jbct.parser.Java25Parser.CstNode;
 import org.pragmatica.jbct.shared.SourceFile;
@@ -93,10 +91,30 @@ public class CstLinter {
 
     private static List<CstLintRule> defaultRules() {
         return List.of(
-            new CstNullReturnRule(),
-            new CstOrElseThrowRule(),
-            new CstRawLoopRule()
-            // More rules will be added here
+            // Return kinds (JBCT-RET-*)
+            new CstReturnKindRule(),       // JBCT-RET-01
+            new CstNestedWrapperRule(),    // JBCT-RET-02
+            new CstNullReturnRule(),       // JBCT-RET-03
+            new CstVoidTypeRule(),         // JBCT-RET-04
+            // Exceptions (JBCT-EX-*)
+            new CstNoBusinessExceptionsRule(), // JBCT-EX-01
+            new CstOrElseThrowRule(),          // JBCT-EX-02
+            // Lambda/composition (JBCT-LAM-*)
+            new CstLambdaComplexityRule(), // JBCT-LAM-01
+            new CstLambdaBracesRule(),     // JBCT-LAM-02
+            new CstLambdaTernaryRule(),    // JBCT-LAM-03
+            // Patterns (JBCT-PAT-*, JBCT-SEQ-*)
+            new CstRawLoopRule(),          // JBCT-PAT-01
+            new CstChainLengthRule(),      // JBCT-SEQ-01
+            // Style (JBCT-STY-*)
+            new CstFluentFailureRule(),      // JBCT-STY-01
+            new CstConstructorReferenceRule(), // JBCT-STY-02
+            new CstFullyQualifiedNameRule(), // JBCT-STY-03
+            // Logging (JBCT-LOG-*)
+            new CstConditionalLoggingRule(), // JBCT-LOG-01
+            new CstLoggerParameterRule(),    // JBCT-LOG-02
+            // Architecture (JBCT-MIX-*)
+            new CstDomainIoRule()            // JBCT-MIX-01
         );
     }
 }
