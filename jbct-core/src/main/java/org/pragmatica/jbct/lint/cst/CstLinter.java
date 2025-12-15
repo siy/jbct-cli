@@ -92,29 +92,38 @@ public class CstLinter {
     private static List<CstLintRule> defaultRules() {
         return List.of(
             // Return kinds (JBCT-RET-*)
-            new CstReturnKindRule(),       // JBCT-RET-01
-            new CstNestedWrapperRule(),    // JBCT-RET-02
-            new CstNullReturnRule(),       // JBCT-RET-03
-            new CstVoidTypeRule(),         // JBCT-RET-04
+            new CstReturnKindRule(),         // JBCT-RET-01
+            new CstNestedWrapperRule(),      // JBCT-RET-02
+            new CstNullReturnRule(),         // JBCT-RET-03
+            new CstVoidTypeRule(),           // JBCT-RET-04
+            new CstAlwaysSuccessResultRule(), // JBCT-RET-05
+            // Value objects (JBCT-VO-*)
+            new CstValueObjectFactoryRule(), // JBCT-VO-01
+            new CstConstructorBypassRule(),  // JBCT-VO-02
             // Exceptions (JBCT-EX-*)
             new CstNoBusinessExceptionsRule(), // JBCT-EX-01
             new CstOrElseThrowRule(),          // JBCT-EX-02
+            // Naming (JBCT-NAM-*)
+            new CstFactoryNamingRule(),      // JBCT-NAM-01
+            new CstValidatedNamingRule(),    // JBCT-NAM-02
             // Lambda/composition (JBCT-LAM-*)
-            new CstLambdaComplexityRule(), // JBCT-LAM-01
-            new CstLambdaBracesRule(),     // JBCT-LAM-02
-            new CstLambdaTernaryRule(),    // JBCT-LAM-03
+            new CstLambdaComplexityRule(),   // JBCT-LAM-01
+            new CstLambdaBracesRule(),       // JBCT-LAM-02
+            new CstLambdaTernaryRule(),      // JBCT-LAM-03
+            // Use case structure (JBCT-UC-*)
+            new CstNestedRecordFactoryRule(), // JBCT-UC-01
             // Patterns (JBCT-PAT-*, JBCT-SEQ-*)
-            new CstRawLoopRule(),          // JBCT-PAT-01
-            new CstChainLengthRule(),      // JBCT-SEQ-01
+            new CstRawLoopRule(),            // JBCT-PAT-01
+            new CstChainLengthRule(),        // JBCT-SEQ-01
             // Style (JBCT-STY-*)
-            new CstFluentFailureRule(),      // JBCT-STY-01
+            new CstFluentFailureRule(),        // JBCT-STY-01
             new CstConstructorReferenceRule(), // JBCT-STY-02
-            new CstFullyQualifiedNameRule(), // JBCT-STY-03
+            new CstFullyQualifiedNameRule(),   // JBCT-STY-03
             // Logging (JBCT-LOG-*)
-            new CstConditionalLoggingRule(), // JBCT-LOG-01
-            new CstLoggerParameterRule(),    // JBCT-LOG-02
+            new CstConditionalLoggingRule(),   // JBCT-LOG-01
+            new CstLoggerParameterRule(),      // JBCT-LOG-02
             // Architecture (JBCT-MIX-*)
-            new CstDomainIoRule()            // JBCT-MIX-01
+            new CstDomainIoRule()              // JBCT-MIX-01
         );
     }
 }
