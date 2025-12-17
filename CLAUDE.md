@@ -139,8 +139,11 @@ The CST preserves all source information including whitespace and comments, enab
   - ✅ Record bodies (empty and non-empty)
   - ✅ Enum bodies with constant formatting
   - ✅ Blank line preservation from source trivia
-  - ⏳ Argument alignment (multi-line args)
-  - ⏳ Lambda formatting in complex contexts
+  - ✅ Argument alignment (multi-line args with method chains)
+  - ✅ Parameter alignment (multi-line method parameters)
+  - ✅ Lambda body alignment (in chains and broken args)
+  - ✅ Annotation body formatting
+  - ⏳ Binary operator line wrapping (string concatenation)
 
 ### HTTP Client Pattern
 Uses pragmatica-lite http-client:
@@ -200,7 +203,8 @@ Grammar synced from `../java-peglib/Java25GrammarExample.java`. Supports full Ja
 - ✅ Phase 4: Ternary operators & binary operator spacing
 - ✅ Phase 5: Record/enum body formatting
 - ✅ Phase 6: Control flow keyword spacing
-- ⏳ Phase 7: Argument alignment, complex lambdas (2/12 golden tests pass)
+- ✅ Phase 7: Argument/parameter alignment, lambda formatting (10/12 golden tests pass)
+- ⏳ Phase 8: Binary operator line wrapping (string concatenation)
 
 ### Migration Status (JavaParser → CST)
 - ⏳ JbctFormatter still uses JavaParser (CstFormatter exists but not integrated)

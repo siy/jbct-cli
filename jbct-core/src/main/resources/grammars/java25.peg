@@ -38,7 +38,7 @@ Member <- ConstructorDecl / TypeKind / MethodDecl / FieldDecl
 InitializerBlock <- 'static'? Block
 EnumBody <- '{' EnumConsts? (';' ClassMember*)? '}'
 EnumConsts <- EnumConst (',' EnumConst)* ','?
-EnumConst <- Identifier ('(' Args? ')')? ClassBody?
+EnumConst <- Annotation* Identifier ('(' Args? ')')? ClassBody?
 RecordComponents <- RecordComp (',' RecordComp)*
 RecordComp <- Annotation* Type Identifier
 RecordBody <- '{' RecordMember* '}'
@@ -100,13 +100,13 @@ Assignment <- Ternary (('=' / '>>>=' / '>>=' / '<<=' / '+=' / '-=' / '*=' / '/='
 Ternary <- LogOr ('?' Expr ':' Ternary)?
 LogOr <- LogAnd ('||' LogAnd)*
 LogAnd <- BitOr ('&&' BitOr)*
-BitOr <- BitXor ('|' BitXor)*
+BitOr <- BitXor (!'||' '|' BitXor)*
 BitXor <- BitAnd ('^' BitAnd)*
-BitAnd <- Equality ('&' Equality)*
+BitAnd <- Equality (!'&&' '&' Equality)*
 Equality <- Relational (('==' / '!=') Relational)*
 Relational <- Shift (('<=' / '>=' / '<' / '>') Shift / 'instanceof' (Pattern / Type))?
 Shift <- Additive (('<<' / '>>>' / '>>') Additive)*
-Additive <- Multiplicative (('+' / '-') Multiplicative)*
+Additive <- Multiplicative (('+' / '-' !'>') Multiplicative)*
 Multiplicative <- Unary (('*' / '/' / '%') Unary)*
 Unary <- ('++' / '--' / '+' / '-' / '!' / '~') Unary / '(' Type ('&' Type)* ')' Unary / Postfix
 Postfix <- Primary PostOp*
