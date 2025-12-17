@@ -41,6 +41,7 @@ public class CstPrinter {
     private final Deque<Integer> argumentAlignStack = new ArrayDeque<>();
     private final Deque<Integer> lambdaAlignStack = new ArrayDeque<>();
     private int chainAlignColumn = -1;
+    private boolean insideBreakingChain = false;  // Whether we're inside a chain that breaks
 
     // Keywords that shouldn't have preceding newlines removed
     private static final Set<String> BLOCK_KEYWORDS = Set.of(
@@ -170,6 +171,9 @@ public class CstPrinter {
                 }
                 case Trivia.BlockComment bc -> {
                     print(bc.text());
+                    // Javadoc and multi-line block comments should be followed by newline+indent
+                    println();
+                    printIndent();
                 }
                 case Trivia.Whitespace _ -> {
                     // Skip whitespace - we control layout
@@ -223,8 +227,18 @@ public class CstPrinter {
             return false;
         }
 
-        // No space before '(' in method calls, but space after control flow keywords
+        // Space before '[' when following ')' (type-use annotation arrays: @Nullable [] arr)
+        if (firstChar == '[' && lastChar == ')') {
+            return true;
+        }
+
+        // No space before '(' in method calls, but space after control flow keywords or binary operators
         if (firstChar == '(') {
+            // Space after binary operators: x = (y)
+            if (isBinaryOpLastChar()) {
+                return true;
+            }
+            // Space after control flow keywords: if (x)
             return SPACE_BEFORE_PAREN_KEYWORDS.contains(lastWord);
         }
 
@@ -238,14 +252,26 @@ public class CstPrinter {
             return false;
         }
 
-        // No space before or after '.'
-        if (lastChar == '.' || firstChar == '.') {
+        // No space before or after '.' (but handle varargs ... specially)
+        if (firstChar == '.' && !text.equals("...")) {
+            return false;
+        }
+        // Space after ... (varargs): Object... args
+        if (lastChar == '.' && prevChar == '.' && Character.isLetter(firstChar)) {
+            return true;  // After ..., need space before identifier
+        }
+        if (lastChar == '.' && !text.equals("...")) {
             return false;
         }
 
         // No space after '@'
         if (lastChar == '@') {
             return false;
+        }
+
+        // Space before '@' when following ')' (multiple annotations: @Anno1() @Anno2())
+        if (firstChar == '@' && lastChar == ')') {
+            return true;
         }
 
         // No space before or after '::'
@@ -257,6 +283,14 @@ public class CstPrinter {
         // In generics (after type name): no space - List<String>
         // In comparison (after variable): space - if (x < 5)
         if (text.equals("<") || text.equals(">")) {
+            // No space between consecutive angle brackets: >> or <<
+            if (lastChar == '<' || lastChar == '>') {
+                return false;
+            }
+            // No space when forming -> (arrow operator)
+            if (text.equals(">") && lastChar == '-') {
+                return false;
+            }
             // If last char is alphanumeric, check if it's likely a type name (generics) or variable (comparison)
             if (Character.isLetterOrDigit(lastChar)) {
                 // Type names typically start with uppercase, variables with lowercase
@@ -265,8 +299,13 @@ public class CstPrinter {
                 }
                 return true;  // Likely comparison: value < 5
             }
-            // After non-alphanumeric (like ')'), it's comparison
-            return true;
+            // After ')' - likely comparison: value.length() < 8
+            if (lastChar == ')' || lastChar == ']') {
+                return true;
+            }
+            // After '.' - likely generics invocation: List.<String>of()
+            // Otherwise, no space (e.g., inside generic bounds)
+            return lastChar != '.';
         }
 
         // Space around binary operators
@@ -285,18 +324,25 @@ public class CstPrinter {
             return true;
         }
 
+        // Space after ) when followed by identifier (e.g., @Anno(params) Type)
+        if (lastChar == ')' && Character.isLetter(firstChar)) {
+            return true;
+        }
+
         // Space after > when:
-        // 1. Followed by identifier (e.g., "Result<String> name")
+        // 1. Followed by lowercase identifier (variable name): "Result<String> name"
         // 2. Part of -> (lambda arrow) followed by anything but {
+        // But NOT when followed by uppercase (type name): "<T>Result" - type params before return type
         if (lastChar == '>') {
             // Check if it's after -> (lambda arrow)
             if (prevChar == '-') {
                 // After -> in lambda, need space unless followed by {
                 return firstChar != '{';
             }
-            // After > in generics, space before identifier
+            // After > in generics, space before lowercase identifier (variable name)
+            // No space before uppercase (type name) - e.g., <T>Result
             if (Character.isLetter(firstChar)) {
-                return true;
+                return Character.isLowerCase(firstChar);
             }
         }
 
@@ -344,7 +390,9 @@ public class CstPrinter {
             case "MethodDecl", "ConstructorDecl" -> printMethodDecl(nt);
             case "FieldDecl" -> printFieldDecl(nt);
             case "ClassBody" -> printClassBody(nt);
+            case "AnnotationBody" -> printAnnotationBody(nt);
             case "Block" -> printBlock(nt);
+            case "SwitchBlock" -> printSwitchBlock(nt);
             case "Stmt" -> printStatement(nt);
             case "Expr", "Assignment" -> printExpression(nt);
             case "Postfix" -> printPostfix(nt);
@@ -352,6 +400,9 @@ public class CstPrinter {
             case "PostOp" -> printPostOp(nt);
             case "Args" -> printArgs(nt);
             case "Lambda" -> printLambda(nt);
+            case "LambdaParam" -> printLambdaParam(nt);
+            case "Param" -> printParam(nt);
+            case "Params" -> printParams(nt);
             case "Ternary" -> printTernary(nt);
             default -> printChildren(nt);
         }
@@ -493,7 +544,17 @@ public class CstPrinter {
         childByRule(enumBody, "EnumConsts").fold(
             () -> null,
             consts -> {
-                printIndent();
+                // Print comments on the EnumConsts node (before first constant)
+                var leadingTrivia = consts.leadingTrivia();
+                boolean hasComments = leadingTrivia.stream().anyMatch(t ->
+                    t instanceof Trivia.LineComment || t instanceof Trivia.BlockComment);
+                if (hasComments) {
+                    // Print indent before first comment, then comments
+                    printIndent();
+                    printCommentsOnly(leadingTrivia);
+                } else {
+                    printIndent();
+                }
                 printEnumConsts((CstNode.NonTerminal) consts);
                 return null;
             }
@@ -581,10 +642,8 @@ public class CstPrinter {
                 println();
                 printIndent();
             } else if ("EnumConst".equals(child.rule())) {
-                if (!first) {
-                    // Already printed newline after comma
-                }
-                printNodeContent(child);
+                // Print enum constant with comments preserved
+                printNodeSkipTrivia(child);
                 first = false;
             } else {
                 printNode(child);
@@ -592,8 +651,12 @@ public class CstPrinter {
         }
     }
 
-    private void printClassBody(CstNode.NonTerminal classBody) {
-        var children = children(classBody);
+    private void printAnnotationBody(CstNode.NonTerminal annotBody) {
+        // AnnotationBody <- '{' AnnotationMember* '}'
+        var children = children(annotBody);
+
+        // Check if body has any members
+        var hasMembers = children.stream().anyMatch(c -> c.rule().equals("AnnotationMember"));
 
         // Find and print opening brace with its trivia
         for (var child : children) {
@@ -603,30 +666,82 @@ public class CstPrinter {
             }
         }
 
-        indentLevel++;
-        println();
+        if (hasMembers) {
+            indentLevel++;
+            println();
 
-        boolean first = true;
-        CstNode prevMember = null;
-        for (var child : children) {
-            if (child.rule().equals("ClassMember")) {
-                // Check if original source has a blank line before this member
-                boolean hasBlankLineInTrivia = hasBlankLineInLeadingTrivia(child);
-                if (!first && (needsBlankLineBefore(child, prevMember) || hasBlankLineInTrivia)) {
+            boolean first = true;
+            CstNode prevMember = null;
+            for (var child : children) {
+                if (child.rule().equals("AnnotationMember")) {
+                    boolean hasBlankLineInTrivia = hasBlankLineInLeadingTrivia(child);
+                    if (!first && hasBlankLineInTrivia) {
+                        println();
+                    }
+                    printIndent();
+                    printNodeSkipTrivia(child);  // Skip trivia - we control layout
                     println();
+                    first = false;
+                    prevMember = child;
+                } else if (!isTerminalWithText(child, "{") && !isTerminalWithText(child, "}")) {
+                    printNode(child);
                 }
-                printIndent();
-                printNodeSkipTrivia(child);  // Skip trivia - we control layout
-                println();
-                first = false;
-                prevMember = child;
-            } else if (!isTerminalWithText(child, "{") && !isTerminalWithText(child, "}")) {
+            }
+
+            indentLevel--;
+            printIndent();
+        }
+
+        // Find and print closing brace
+        for (var child : children) {
+            if (isTerminalWithText(child, "}")) {
                 printNode(child);
+                break;
+            }
+        }
+    }
+
+    private void printClassBody(CstNode.NonTerminal classBody) {
+        var children = children(classBody);
+
+        // Check if body has any members
+        var hasMembers = children.stream().anyMatch(c -> c.rule().equals("ClassMember"));
+
+        // Find and print opening brace with its trivia
+        for (var child : children) {
+            if (isTerminalWithText(child, "{")) {
+                printNode(child);
+                break;
             }
         }
 
-        indentLevel--;
-        printIndent();
+        if (hasMembers) {
+            indentLevel++;
+            println();
+
+            boolean first = true;
+            CstNode prevMember = null;
+            for (var child : children) {
+                if (child.rule().equals("ClassMember")) {
+                    // Check if original source has a blank line before this member
+                    boolean hasBlankLineInTrivia = hasBlankLineInLeadingTrivia(child);
+                    if (!first && (needsBlankLineBefore(child, prevMember) || hasBlankLineInTrivia)) {
+                        println();
+                    }
+                    printIndent();
+                    printNodeSkipTrivia(child);  // Skip trivia - we control layout
+                    println();
+                    first = false;
+                    prevMember = child;
+                } else if (!isTerminalWithText(child, "{") && !isTerminalWithText(child, "}")) {
+                    printNode(child);
+                }
+            }
+
+            indentLevel--;
+            printIndent();
+        }
+        // Empty body - just print {} without newline/indent
 
         // Find and print closing brace
         for (var child : children) {
@@ -654,6 +769,14 @@ public class CstPrinter {
     private void printBlock(CstNode.NonTerminal block) {
         var children = children(block);
 
+        // Check if we're inside broken arguments with lambda alignment
+        boolean useLambdaAlign = !lambdaAlignStack.isEmpty();
+        int lambdaAlignCol = useLambdaAlign ? lambdaAlignStack.peek() : -1;
+
+        // Check if we're inside a breaking chain (for lambda blocks in chains)
+        boolean useChainAlign = !useLambdaAlign && chainAlignColumn >= 0;
+        int chainAlignCol = useChainAlign ? chainAlignColumn : -1;
+
         // Find and print opening brace with its trivia
         for (var child : children) {
             if (isTerminalWithText(child, "{")) {
@@ -662,23 +785,45 @@ public class CstPrinter {
             }
         }
 
-        indentLevel++;
-
         var stmts = children.stream()
             .filter(c -> c.rule().equals("BlockStmt"))
             .toList();
 
         if (!stmts.isEmpty()) {
             println();
-            for (var stmt : stmts) {
+            if (useLambdaAlign) {
+                // Lambda body in broken args: align to arg column + indent
+                int bodyCol = lambdaAlignCol + config.indentSize();
+                for (var stmt : stmts) {
+                    printAlignedTo(bodyCol);
+                    printNodeSkipTrivia(stmt);  // Skip trivia - we control layout
+                    println();
+                }
+                // Close brace aligns with lambda arg
+                printAlignedTo(lambdaAlignCol);
+            } else if (useChainAlign) {
+                // Lambda body in chain: body aligns to chain + indent, close aligns to chain
+                int bodyCol = chainAlignCol + config.indentSize();
+                for (var stmt : stmts) {
+                    printAlignedTo(bodyCol);
+                    printNodeSkipTrivia(stmt);  // Skip trivia - we control layout
+                    println();
+                }
+                // Close brace aligns with chain
+                printAlignedTo(chainAlignCol);
+            } else {
+                // Normal block indentation
+                indentLevel++;
+                for (var stmt : stmts) {
+                    printIndent();
+                    printNodeSkipTrivia(stmt);  // Skip trivia - we control layout
+                    println();
+                }
+                indentLevel--;
                 printIndent();
-                printNodeSkipTrivia(stmt);  // Skip trivia - we control layout
-                println();
             }
         }
-
-        indentLevel--;
-        printIndent();
+        // Empty block - no indent, just close immediately: {}
 
         // Find and print closing brace with its trivia
         for (var child : children) {
@@ -687,6 +832,32 @@ public class CstPrinter {
                 break;
             }
         }
+    }
+
+    private void printSwitchBlock(CstNode.NonTerminal switchBlock) {
+        var children = children(switchBlock);
+
+        // Print opening brace (spacing comes from prior token)
+        print("{");
+        indentLevel++;
+
+        // Find and print switch rules
+        var rules = children.stream()
+            .filter(c -> c.rule().equals("SwitchRule"))
+            .toList();
+
+        if (!rules.isEmpty()) {
+            println();
+            for (var rule : rules) {
+                printIndent();
+                printNodeSkipTrivia(rule);
+                println();
+            }
+        }
+
+        indentLevel--;
+        printIndent();
+        print("}");
     }
 
     private void printStatement(CstNode.NonTerminal stmt) {
@@ -762,7 +933,9 @@ public class CstPrinter {
 
         // Save chain align for nested lambdas
         int previousChainAlign = chainAlignColumn;
+        boolean wasInsideBreakingChain = insideBreakingChain;
         chainAlignColumn = alignColumn;
+        insideBreakingChain = true;  // Args inside a breaking chain should break too
 
         try {
             boolean firstMethodCall = true;
@@ -785,6 +958,7 @@ public class CstPrinter {
             }
         } finally {
             chainAlignColumn = previousChainAlign;
+            insideBreakingChain = wasInsideBreakingChain;
         }
     }
 
@@ -798,15 +972,18 @@ public class CstPrinter {
             case CstNode.Token tok -> printWithSpacing(tok.text());
             case CstNode.NonTerminal nt -> {
                 var rule = nt.rule();
-                // For Lambda nodes, use printLambda to ensure proper arrow formatting
-                if ("Lambda".equals(rule)) {
-                    printLambdaContent(nt);
-                } else if ("Args".equals(rule)) {
-                    // Dispatch to printArgs for proper line breaking
-                    printArgs(nt);
-                } else {
-                    for (var child : children(nt)) {
-                        printNodeContent(child);
+                // Dispatch to specialized handlers for proper formatting
+                switch (rule) {
+                    case "Lambda" -> printLambdaContent(nt);
+                    case "LambdaParam" -> printLambdaParam(nt);
+                    case "Args" -> printArgs(nt);
+                    case "Block" -> printBlock(nt);
+                    case "Postfix" -> printPostfix(nt);
+                    case "Ternary" -> printTernary(nt);
+                    default -> {
+                        for (var child : children(nt)) {
+                            printNodeContent(child);
+                        }
                     }
                 }
             }
@@ -844,16 +1021,15 @@ public class CstPrinter {
             return;
         }
 
+        // Check if arguments are "complex" (contain method chains or lambdas)
+        boolean hasComplexArgs = hasComplexArguments(args);
+
         // Measure formatted width (single-line), not raw source width
         int argsWidth = measureWidth(args);
         int totalWidth = currentColumn + argsWidth;
 
-        // DEBUG - uncomment to trace
-        // System.out.println("printArgs: currentColumn=" + currentColumn + " argsWidth=" + argsWidth + " total=" + totalWidth + " lastChar='" + lastChar + "'");
-        // new Exception("printArgs called from").printStackTrace(System.out);
-
-        if (totalWidth <= config.maxLineLength()) {
-            // Fits on one line - print without trivia to avoid extra spaces
+        if (!hasComplexArgs && totalWidth <= config.maxLineLength()) {
+            // Simple args that fit on one line - print without trivia to avoid extra spaces
             for (var child : children(args)) {
                 printNodeContent(child);
             }
@@ -863,26 +1039,81 @@ public class CstPrinter {
         }
     }
 
+    /**
+     * Check if arguments contain complex expressions that should trigger line breaking.
+     * - Method chains (.foo().bar()) = complex
+     * - Lambda blocks (-> {) = complex
+     * - Inside breaking chain with method call args = complex
+     * - Simple identifiers (a, b, c) = NOT complex even in chains
+     */
+    private boolean hasComplexArguments(CstNode.NonTerminal args) {
+        var exprs = childrenByRule(args, "Expr");
+
+        // Multiple arguments where any contains a method chain or lambda block = complex
+        if (exprs.size() >= 2) {
+            for (var expr : exprs) {
+                var exprText = text(expr, source);
+                // Check for method call patterns: .identifier( or lambda blocks
+                if (containsMethodCall(exprText) || exprText.contains("-> {")) {
+                    return true;
+                }
+            }
+            // Inside a breaking chain and args have method calls (even simple ones) = complex
+            if (insideBreakingChain) {
+                for (var expr : exprs) {
+                    var exprText = text(expr, source);
+                    // Check if any arg is a method call: identifier()
+                    if (exprText.contains("(")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        // Single argument with lambda block uses normal block indentation, not alignment
+        return false;
+    }
+
+    private boolean containsMethodCall(String text) {
+        // Check for method CHAIN pattern: at least 2 method calls like .foo().bar()
+        // Single method calls like .trim() or .message() should NOT trigger breaking
+        var pattern = Pattern.compile("\\.[a-zA-Z_][a-zA-Z0-9_]*\\s*\\(");
+        var matcher = pattern.matcher(text);
+        int count = 0;
+        while (matcher.find()) {
+            count++;
+            if (count >= 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void printBrokenArgs(CstNode.NonTerminal args) {
         var children = children(args);
         int alignCol = currentColumn;  // Align to current position (after opening paren)
 
-        boolean first = true;
-        for (var child : children) {
-            if (isTerminalWithText(child, ",")) {
-                print(",");
-                println();
-                printAlignedTo(alignCol);
-            } else if ("Expr".equals(child.rule())) {
-                if (first) {
-                    printNode(child);
+        // Push alignment column for lambda body indentation
+        lambdaAlignStack.push(alignCol);
+        try {
+            boolean first = true;
+            for (var child : children) {
+                if (isTerminalWithText(child, ",")) {
+                    print(",");
+                    println();
+                    printAlignedTo(alignCol);
+                } else if ("Expr".equals(child.rule())) {
+                    if (first) {
+                        printNode(child);
+                    } else {
+                        printNodeSkipTrivia(child);  // Skip trivia - we control alignment
+                    }
+                    first = false;
                 } else {
-                    printNodeSkipTrivia(child);  // Skip trivia - we control alignment
+                    printNode(child);
                 }
-                first = false;
-            } else {
-                printNode(child);
             }
+        } finally {
+            lambdaAlignStack.pop();
         }
     }
 
@@ -896,6 +1127,117 @@ public class CstPrinter {
             } else if (afterArrow) {
                 printNodeSkipTrivia(child);  // Skip trivia after arrow - we added space
                 afterArrow = false;
+            } else {
+                printNode(child);
+            }
+        }
+    }
+
+    private void printParams(CstNode.NonTerminal params) {
+        // Params <- Param (',' Param)*
+        // Similar to Args - check if fits on one line, otherwise break with alignment
+        if (measuringMode) {
+            for (var child : children(params)) {
+                printNodeContent(child);
+            }
+            return;
+        }
+
+        int paramsWidth = measureWidth(params);
+        int totalWidth = currentColumn + paramsWidth;
+
+        // Account for closing paren and typical suffix (") {" = 3 chars)
+        // Use <= to include lines that are exactly at the limit
+        if (totalWidth + 3 <= config.maxLineLength()) {
+            // Fits on one line - print children normally
+            printChildren(params);
+        } else {
+            // Break parameters onto multiple lines aligned to current position
+            printBrokenParams(params);
+        }
+    }
+
+    private void printBrokenParams(CstNode.NonTerminal params) {
+        var children = children(params);
+        int alignCol = currentColumn;
+
+        boolean first = true;
+        for (var child : children) {
+            if (isTerminalWithText(child, ",")) {
+                print(",");
+                println();
+                printAlignedTo(alignCol);
+            } else if ("Param".equals(child.rule())) {
+                if (first) {
+                    printNodeSkipTrivia(child);  // Skip trivia for all params - we control layout
+                } else {
+                    printNodeSkipTrivia(child);
+                }
+                first = false;
+            } else {
+                // Skip commas handled above
+            }
+        }
+    }
+
+    private void printParam(CstNode.NonTerminal param) {
+        // Param <- Annotation* Modifier* Type '...'? Identifier Dims?
+        // Print without trivia - we control layout in broken params context
+        var children = children(param);
+        var paramText = text(param, source);
+        boolean isVarargs = paramText.contains("...");
+        boolean printedDots = false;
+        for (var child : children) {
+            if (isTerminalWithText(child, "...")) {
+                if (!printedDots) {
+                    printWithSpacing("...");
+                    printedDots = true;
+                }
+            } else if ("Type".equals(child.rule()) && isVarargs) {
+                // For varargs, Type may include trailing dots from parser quirk
+                // Print type without trailing dots
+                var typeText = text(child, source).trim();
+                if (typeText.endsWith("...")) {
+                    typeText = typeText.substring(0, typeText.length() - 3);
+                }
+                printWithSpacing(typeText);
+            } else {
+                printNodeSkipTrivia(child);
+            }
+        }
+    }
+
+    private void printLambdaParam(CstNode.NonTerminal param) {
+        // LambdaParam <- Annotation* Modifier* (('var' / Type) &lookahead)? '...'? (Identifier / '_')
+        // Due to grammar quirk with failed lookahead, parser may create duplicate content:
+        // For (s) -> ..., we get Type="s" and Identifier="s" - both with same text.
+        // We need to print just the Identifier, skip the duplicate Type.
+
+        var children = children(param);
+
+        // Find all identifiers (these are the actual parameters)
+        var identifierTexts = children.stream()
+            .filter(c -> "Identifier".equals(c.rule()))
+            .map(c -> text(c, source).trim())
+            .collect(java.util.stream.Collectors.toSet());
+
+        for (var child : children) {
+            var rule = child.rule();
+            var childText = text(child, source).trim();
+
+            if ("Identifier".equals(rule)) {
+                // Always print identifiers
+                printWithSpacing(childText);
+            } else if ("Type".equals(rule)) {
+                // Skip Type if its text matches an Identifier (it's duplicate noise)
+                // Only print if it's genuinely a type annotation like (String s) -> ...
+                if (!identifierTexts.contains(childText)) {
+                    printNodeContent(child);
+                }
+            } else if ("Annotation".equals(rule) || "Modifier".equals(rule)) {
+                printNode(child);
+            } else if (isTerminalWithText(child, "...")) {
+                printWithSpacing("...");
             } else {
                 printNode(child);
             }
@@ -945,14 +1287,17 @@ public class CstPrinter {
         for (var trivia : triviaList) {
             switch (trivia) {
                 case Trivia.Whitespace ws -> {
-                    // Normalize whitespace - preserve newlines but normalize spaces
+                    // Normalize whitespace - preserve newlines and add proper indentation
                     var text = ws.text();
                     long newlines = text.chars().filter(c -> c == '\n').count();
                     if (newlines > 0) {
                         for (int i = 0; i < Math.min(newlines, 2); i++) {
                             println();
                         }
-                    } else if (!text.isEmpty()) {
+                        // After newlines, add proper indentation
+                        printIndent();
+                    } else if (!text.isEmpty() && lastChar != ' ' && lastChar != '\t') {
+                        // Only add space if we don't already have one (avoid double spacing from nested trivia)
                         print(" ");
                     }
                 }

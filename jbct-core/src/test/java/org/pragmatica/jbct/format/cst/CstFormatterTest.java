@@ -239,6 +239,41 @@ class CstFormatterTest {
     }
 
     @Test
+    void debug_formatChainAlignment() throws IOException {
+        compareGoldenFile("ChainAlignment.java");
+    }
+
+    @Test
+    void debug_formatAnnotations() throws IOException {
+        compareGoldenFile("Annotations.java");
+    }
+
+    @Test
+    void debug_formatMultilineArguments() throws IOException {
+        compareGoldenFile("MultilineArguments.java");
+    }
+
+    @Test
+    void debug_formatLambdas() throws IOException {
+        compareGoldenFile("Lambdas.java");
+    }
+
+    @Test
+    void debug_formatSwitchExpressions() throws IOException {
+        compareGoldenFile("SwitchExpressions.java");
+    }
+
+    @Test
+    void debug_formatLineWrapping() throws IOException {
+        compareGoldenFile("LineWrapping.java");
+    }
+
+    @Test
+    void debug_formatMultilineParameters() throws IOException {
+        compareGoldenFile("MultilineParameters.java");
+    }
+
+    @Test
     void debug_formatTernaryOperators() throws IOException {
         compareGoldenFile("TernaryOperators.java");
     }
