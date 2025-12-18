@@ -119,7 +119,7 @@ public final class GitHubReleaseChecker {
 
     /**
      * Compare versions to check if newVersion is newer than currentVersion.
-     * Supports semantic versioning (e.g., 1.2.3, 0.3.0-SNAPSHOT).
+     * Supports semantic versioning (e.g., 1.2.3, 0.3.1-SNAPSHOT).
      */
     public static boolean isNewerVersion(String currentVersion, String newVersion) {
         var current = normalizeVersion(currentVersion);

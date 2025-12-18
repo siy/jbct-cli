@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.3.0] - Unreleased
+## [0.3.1] - Unreleased
+
+### Changed
+- TBD
+
+## [0.3.0] - 2025-12-18
 
 ### Changed
 - Complete migration from JavaParser to CST-based implementation
