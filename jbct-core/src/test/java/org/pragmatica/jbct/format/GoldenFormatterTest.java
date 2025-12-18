@@ -45,7 +45,8 @@ class GoldenFormatterTest {
             "TernaryOperators.java",
             "BlankLines.java",
             "LineWrapping.java",
-            "Comments.java"
+            "Comments.java",
+            "TextBlocks.java"
     })
     void formatter_isIdempotent_onGoldenExamples(String fileName) throws IOException {
         var path = EXAMPLES_DIR.resolve(fileName);
@@ -59,16 +60,27 @@ class GoldenFormatterTest {
                     // The formatter should not change already-formatted golden examples
                     // This verifies idempotency and that our format matches the golden standard
                     if (!formatted.content().equals(content)) {
-                        // Show diff for debugging
-                        System.err.println("=== Expected (" + fileName + ") ===");
-                        System.err.println(content);
-                        System.err.println("=== Actual ===");
-                        System.err.println(formatted.content());
-                        System.err.println("=== End ===");
+                        // Find first difference for debugging
+                        var expected = content;
+                        var actual = formatted.content();
+                        int minLen = Math.min(expected.length(), actual.length());
+                        int diffPos = minLen;
+                        for (int i = 0; i < minLen; i++) {
+                            if (expected.charAt(i) != actual.charAt(i)) {
+                                diffPos = i;
+                                break;
+                            }
+                        }
+                        int start = Math.max(0, diffPos - 30);
+                        int end = Math.min(Math.max(expected.length(), actual.length()), diffPos + 30);
+                        System.err.println("First diff at position " + diffPos);
+                        System.err.println("Expected: [" + expected.substring(start, Math.min(end, expected.length())).replace("\n", "\\n") + "]");
+                        System.err.println("Actual:   [" + actual.substring(start, Math.min(end, actual.length())).replace("\n", "\\n") + "]");
 
                         fail("Formatter changed golden example: " + fileName +
                              "\nExpected length: " + content.length() +
-                             "\nActual length: " + formatted.content().length());
+                             ", Actual: " + formatted.content().length() +
+                             ", Diff at: " + diffPos);
                     }
                 });
     }

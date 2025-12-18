@@ -2,8 +2,12 @@
 
 ## [0.3.1] - Unreleased
 
+### Added
+- TextBlocks golden example for formatter verification
+
 ### Changed
 - Regenerated parser with ADVANCED error reporting mode (Rust-style diagnostics)
+- Improved golden test diff output for easier debugging
 
 ## [0.3.0] - 2025-12-18
 
