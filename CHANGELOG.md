@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.1] - Unreleased
+## [0.3.1] - 2025-12-18
 
 ### Added
 - TextBlocks golden example for formatter verification
