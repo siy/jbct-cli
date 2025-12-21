@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.5] - Unreleased
+
+### Fixed
+- Parser: compound assignment operators (`+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`, `>>>=`) no longer break into separate tokens
+
 ## [0.3.4] - 2025-12-21
 
 ### Fixed
