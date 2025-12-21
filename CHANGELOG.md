@@ -1,11 +1,14 @@
 # Changelog
 
-## [0.3.2] - 2025-12-20
+## [0.3.3] - 2025-12-21
 
 ### Fixed
 - Parser: `assertEquals` no longer parsed as assert statement (keyword word-boundary check)
 - Parser: `String.class` no longer produces extra dot (QualifiedName lookahead fix)
 - Formatter: `Result.<Integer>failure` no longer has space after `>` (PostOp special handling)
+- Build: Fix central-publishing-maven-plugin activation for Maven Central deployment
+
+## [0.3.2] - 2025-12-20
 
 ### Changed
 - Parser grammar improvements
