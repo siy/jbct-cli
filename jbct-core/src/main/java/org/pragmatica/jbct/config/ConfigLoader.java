@@ -14,7 +14,6 @@ import java.nio.file.Path;
  * 4. Built-in defaults - lowest
  */
 public final class ConfigLoader {
-
     private static final String PROJECT_CONFIG_NAME = "jbct.toml";
     private static final String USER_CONFIG_DIR = ".jbct";
     private static final String USER_CONFIG_NAME = "config.toml";
@@ -30,20 +29,17 @@ public final class ConfigLoader {
     public static JbctConfig load(Option<Path> explicitConfigPath, Option<Path> workingDirectory) {
         // Start with defaults
         JbctConfig config = JbctConfig.DEFAULT;
-
         // Layer 1: User config (~/.jbct/config.toml)
         var userConfig = loadUserConfig();
         if (userConfig.isPresent()) {
             config = config.merge(userConfig.unwrap());
         }
-
         // Layer 2: Project config (./jbct.toml)
         var projectDir = workingDirectory.or(() -> Path.of(System.getProperty("user.dir")));
         var projectConfig = loadProjectConfig(projectDir);
         if (projectConfig.isPresent()) {
             config = config.merge(projectConfig.unwrap());
         }
-
         // Layer 3: Explicit config file (highest priority)
         if (explicitConfigPath.isPresent()) {
             var explicitConfig = loadFromFile(explicitConfigPath.unwrap());
@@ -51,7 +47,6 @@ public final class ConfigLoader {
                 config = config.merge(explicitConfig.unwrap());
             }
         }
-
         return config;
     }
 
@@ -82,21 +77,19 @@ public final class ConfigLoader {
         if (!Files.exists(path) || !Files.isRegularFile(path)) {
             return Option.none();
         }
-
         return readFile(path)
-                .flatMap(TomlParser::parse)
-                .map(JbctConfig::fromToml)
-                .fold(
-                        _ -> Option.none(),
-                        Option::option
-                );
+               .flatMap(TomlParser::parse)
+               .map(JbctConfig::fromToml)
+               .fold(_ -> Option.none(),
+                     Option::option);
     }
 
     /**
      * Find the project config file, searching up the directory tree.
      */
     public static Option<Path> findProjectConfig(Path startDir) {
-        var dir = startDir.toAbsolutePath().normalize();
+        var dir = startDir.toAbsolutePath()
+                          .normalize();
         while (dir != null) {
             var configPath = dir.resolve(PROJECT_CONFIG_NAME);
             if (Files.exists(configPath) && Files.isRegularFile(configPath)) {
@@ -119,7 +112,8 @@ public final class ConfigLoader {
      * Get the default user config file path.
      */
     public static Path getUserConfigPath() {
-        return getUserConfigDir().resolve(USER_CONFIG_NAME);
+        return getUserConfigDir()
+               .resolve(USER_CONFIG_NAME);
     }
 
     private static Result<String> readFile(Path path) {

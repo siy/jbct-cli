@@ -12,7 +12,6 @@ import java.util.stream.Stream;
  * Each rule analyzes a CST and produces zero or more diagnostics.
  */
 public interface CstLintRule {
-
     /**
      * Get the rule ID (e.g., "JBCT-RET-01").
      */

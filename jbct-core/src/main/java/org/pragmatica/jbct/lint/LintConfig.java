@@ -45,11 +45,25 @@ public record LintConfig(
                     Map.entry("JBCT-STY-01", DiagnosticSeverity.WARNING), // Fluent failure style
                     Map.entry("JBCT-STY-02", DiagnosticSeverity.WARNING), // Constructor references
                     Map.entry("JBCT-STY-03", DiagnosticSeverity.WARNING), // No FQCN
+                    Map.entry("JBCT-STY-04", DiagnosticSeverity.WARNING), // Utility class → sealed interface
+                    Map.entry("JBCT-STY-05", DiagnosticSeverity.WARNING), // Method reference preference
+                    Map.entry("JBCT-STY-06", DiagnosticSeverity.WARNING), // Import ordering
                     // Logging
                     Map.entry("JBCT-LOG-01", DiagnosticSeverity.WARNING), // Conditional logging
                     Map.entry("JBCT-LOG-02", DiagnosticSeverity.WARNING), // Logger as parameter
                     // Architecture
-                    Map.entry("JBCT-MIX-01", DiagnosticSeverity.ERROR)    // I/O in domain
+                    Map.entry("JBCT-MIX-01", DiagnosticSeverity.ERROR),   // I/O in domain
+                    // Static imports
+                    Map.entry("JBCT-STATIC-01", DiagnosticSeverity.WARNING), // Static imports for Pragmatica
+                    // Utilities
+                    Map.entry("JBCT-UTIL-01", DiagnosticSeverity.WARNING), // Pragmatica parsing utilities
+                    Map.entry("JBCT-UTIL-02", DiagnosticSeverity.WARNING), // Verify.Is predicates
+                    // Nesting
+                    Map.entry("JBCT-NEST-01", DiagnosticSeverity.WARNING), // Nested monadic operations
+                    // Zones
+                    Map.entry("JBCT-ZONE-01", DiagnosticSeverity.WARNING), // Zone 2 verbs for steps
+                    Map.entry("JBCT-ZONE-02", DiagnosticSeverity.WARNING), // Zone 3 verbs for leaves
+                    Map.entry("JBCT-ZONE-03", DiagnosticSeverity.WARNING)  // No zone mixing
             ),
             Set.of(),
             false

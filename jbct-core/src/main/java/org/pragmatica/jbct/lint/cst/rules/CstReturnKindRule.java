@@ -17,13 +17,11 @@ import static org.pragmatica.jbct.parser.CstNodes.*;
  * T, Option<T>, Result<T>, or Promise<T>.
  */
 public class CstReturnKindRule implements CstLintRule {
-
     private static final String RULE_ID = "JBCT-RET-01";
     private static final String DOC_LINK = "https://github.com/siy/coding-technology/blob/main/series/part-2-four-return-types.md";
 
-    private static final Set<String> FORBIDDEN_TYPES = Set.of(
-        "Optional", "CompletableFuture", "Future", "CompletionStage"
-    );
+    private static final Set<String>FORBIDDEN_TYPES = Set.of(
+    "Optional", "CompletableFuture", "Future", "CompletionStage");
 
     @Override
     public String ruleId() {
@@ -38,23 +36,23 @@ public class CstReturnKindRule implements CstLintRule {
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
         var packageName = findFirst(root, RuleId.PackageDecl.class)
-            .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
-            .map(qn -> text(qn, source))
-            .or("");
-
+                          .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+                          .map(qn -> text(qn, source))
+                          .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-
-        return findAll(root, RuleId.MethodDecl.class).stream()
-            .filter(method -> !isPrivateMethod(method, source))
-            .flatMap(method -> checkMethod(method, source, ctx));
+        return findAll(root, RuleId.MethodDecl.class)
+               .stream()
+               .filter(method -> !isPrivateMethod(method, root, source))
+               .flatMap(method -> checkMethod(method, source, ctx));
     }
 
-    private boolean isPrivateMethod(CstNode method, String source) {
-        // Check if method has 'private' modifier in its ancestors
-        var methodText = text(method, source);
-        return methodText.contains("private ");
+    private boolean isPrivateMethod(CstNode method, CstNode root, String source) {
+        // Find the ClassMember ancestor which contains the Modifier
+        return findAncestor(root, method, RuleId.ClassMember.class)
+               .map(cm -> text(cm, source).contains("private "))
+               .or(false);
     }
 
     private Stream<Diagnostic> checkMethod(CstNode method, String source, LintContext ctx) {
@@ -63,65 +61,65 @@ public class CstReturnKindRule implements CstLintRule {
         if (returnType.isEmpty()) {
             return Stream.empty();
         }
-
-        var typeText = text(returnType.unwrap(), source).trim();
+        var typeText = text(returnType.unwrap(),
+                            source)
+                       .trim();
         var methodName = childByRule(method, RuleId.Identifier.class)
-            .map(id -> text(id, source))
-            .or("(unknown)");
-
+                         .map(id -> text(id, source))
+                         .or("(unknown)");
         // Check for void
         if (typeText.equals("void")) {
             return Stream.of(createVoidDiagnostic(method, methodName, ctx));
         }
-
         // Check for forbidden types
         for (var forbidden : FORBIDDEN_TYPES) {
             if (typeText.startsWith(forbidden + "<") || typeText.equals(forbidden)) {
                 return Stream.of(createForbiddenTypeDiagnostic(method, methodName, typeText, ctx));
             }
         }
-
         return Stream.empty();
     }
 
     private Diagnostic createVoidDiagnostic(CstNode method, String methodName, LintContext ctx) {
-        return Diagnostic.diagnostic(
-            RULE_ID,
-            ctx.severityFor(RULE_ID),
-            ctx.fileName(),
-            startLine(method),
-            startColumn(method),
-            "Method '" + methodName + "' returns void; JBCT requires Result<Unit> or Promise<Unit>",
-            "In JBCT, void methods should return Result<Unit> (sync) or Promise<Unit> (async)."
-        ).withExample("""
+        return Diagnostic.diagnostic(RULE_ID,
+                                     ctx.severityFor(RULE_ID),
+                                     ctx.fileName(),
+                                     startLine(method),
+                                     startColumn(method),
+                                     "Method '" + methodName
+                                     + "' returns void; JBCT requires Result<Unit> or Promise<Unit>",
+                                     "In JBCT, void methods should return Result<Unit> (sync) or Promise<Unit> (async).")
+                         .withExample("""
             // Before (void)
             public void saveUser(User user) { ... }
 
             // After (Result<Unit>)
             public Result<Unit> saveUser(User user) { ... }
             """)
-            .withDocLink(DOC_LINK);
+                         .withDocLink(DOC_LINK);
     }
 
-    private Diagnostic createForbiddenTypeDiagnostic(CstNode method, String methodName, String typeName, LintContext ctx) {
+    private Diagnostic createForbiddenTypeDiagnostic(CstNode method,
+                                                     String methodName,
+                                                     String typeName,
+                                                     LintContext ctx) {
         var replacement = suggestReplacement(typeName);
-
-        return Diagnostic.diagnostic(
-            RULE_ID,
-            ctx.severityFor(RULE_ID),
-            ctx.fileName(),
-            startLine(method),
-            startColumn(method),
-            "Method '" + methodName + "' returns " + typeName + "; use " + replacement + " instead",
-            "JBCT uses its own monadic types for consistency."
-        ).withExample("""
+        return Diagnostic.diagnostic(RULE_ID,
+                                     ctx.severityFor(RULE_ID),
+                                     ctx.fileName(),
+                                     startLine(method),
+                                     startColumn(method),
+                                     "Method '" + methodName + "' returns " + typeName + "; use " + replacement
+                                     + " instead",
+                                     "JBCT uses its own monadic types for consistency.")
+                         .withExample("""
             // Before
             public %s process() { ... }
 
             // After
             public %s process() { ... }
             """.formatted(typeName, replacement))
-            .withDocLink(DOC_LINK);
+                         .withDocLink(DOC_LINK);
     }
 
     private String suggestReplacement(String typeName) {

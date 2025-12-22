@@ -126,7 +126,7 @@ The CST preserves all source information including whitespace and comments, enab
 - `CstPrinter` - Prints CST back to source with formatting rules
 - `Java25Parser` - Generated PEG parser producing CST with trivia
 - `JbctLinter` - Entry point for linting (delegates to CstLinter)
-- `CstLinter` - CST-based linter with 23 lint rules
+- `CstLinter` - CST-based linter with 30 lint rules
 - `ConfigLoader` - TOML config loading with priority chain
 - `GitHubReleaseChecker` - Check GitHub Releases for updates
 - `JarInstaller` - Download and install JAR updates
@@ -147,7 +147,7 @@ The CST preserves all source information including whitespace and comments, enab
 ### Linter Components (jbct-core/src/main/java/org/pragmatica/jbct/lint/cst/)
 - `CstLinter` - CST-based linter entry point
 - `CstLintRule` - Interface for CST-based lint rules
-- `rules/` - 23 CST-based lint rule implementations
+- `rules/` - 30 CST-based lint rule implementations
 
 ### HTTP Client Pattern
 Uses pragmatica-lite http-client:
@@ -202,3 +202,13 @@ Grammar synced from `../java-peglib/Java25GrammarExample.java`. Supports full Ja
 
 ### Spacing Heuristics
 - `List<String>CONSTANT` - No space after `>` before uppercase identifier (could be generic type or constant name)
+
+## Postponed Linter Rules
+
+These rules are planned but not yet implemented:
+
+| Rule | Description | Complexity | Notes |
+|------|-------------|------------|-------|
+| JBCT-DEP-01 | Correct Pragmatica Lite dependency | Easy | Requires build file analysis (pom.xml/gradle), not Java source |
+| JBCT-MUT-01 | No mutation of input parameters | Hard | Requires data-flow analysis |
+| JBCT-FJ-01 | Fork-Join inputs must be immutable | Hard | Requires data-flow analysis |

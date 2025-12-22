@@ -16,7 +16,6 @@ import static org.pragmatica.jbct.parser.CstNodes.*;
  * Exception-based control flow is forbidden. Use Result/Option composition.
  */
 public class CstOrElseThrowRule implements CstLintRule {
-
     private static final String RULE_ID = "JBCT-EX-02";
 
     @Override
@@ -32,36 +31,34 @@ public class CstOrElseThrowRule implements CstLintRule {
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
         var packageName = findFirst(root, RuleId.PackageDecl.class)
-            .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
-            .map(qn -> text(qn, source))
-            .or("");
-
+                          .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+                          .map(qn -> text(qn, source))
+                          .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-
-        // Find all method calls
-        return findAll(root, RuleId.PostOp.class).stream()
-            .filter(op -> isOrElseThrow(op, source))
-            .map(op -> createDiagnostic(op, ctx));
+        // Find Primary nodes containing orElseThrow
+        return findAll(root, RuleId.Primary.class)
+               .stream()
+               .filter(node -> isOrElseThrow(node, source))
+               .map(node -> createDiagnostic(node, ctx));
     }
 
-    private boolean isOrElseThrow(CstNode op, String source) {
-        var opText = text(op, source);
-        return opText.contains(".orElseThrow") || opText.startsWith(".orElseThrow");
+    private boolean isOrElseThrow(CstNode node, String source) {
+        var nodeText = text(node, source);
+        return nodeText.contains(".orElseThrow");
     }
 
     private Diagnostic createDiagnostic(CstNode node, LintContext ctx) {
-        return Diagnostic.diagnostic(
-            RULE_ID,
-            ctx.severityFor(RULE_ID),
-            ctx.fileName(),
-            startLine(node),
-            startColumn(node),
-            "orElseThrow() bypasses JBCT error handling",
-            "Use Result/Option composition instead of throwing exceptions. " +
-                "Exceptions break the functional pipeline."
-        ).withExample("""
+        return Diagnostic.diagnostic(RULE_ID,
+                                     ctx.severityFor(RULE_ID),
+                                     ctx.fileName(),
+                                     startLine(node),
+                                     startColumn(node),
+                                     "orElseThrow() bypasses JBCT error handling",
+                                     "Use Result/Option composition instead of throwing exceptions. "
+                                     + "Exceptions break the functional pipeline.")
+                         .withExample("""
             // Before: using orElseThrow
             User user = findUser(id).orElseThrow();
 

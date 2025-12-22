@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.6] - 2025-12-22
+
+### Added
+- 10 new lint rules (33 total):
+  - JBCT-STY-04: Utility class pattern (final class → sealed interface)
+  - JBCT-STY-05: Method reference preference (lambda → method ref)
+  - JBCT-STY-06: Import ordering (java → javax → pragmatica → third-party)
+  - JBCT-STATIC-01: Prefer static imports for Pragmatica factories
+  - JBCT-UTIL-01: Use Pragmatica parsing utilities (Number.parseInt, etc.)
+  - JBCT-UTIL-02: Use Verify.Is predicates for validation
+  - JBCT-NEST-01: No nested monadic operations in lambdas
+  - JBCT-ZONE-01: Step interfaces should use Zone 2 verbs
+  - JBCT-ZONE-02: Leaf functions should use Zone 3 verbs
+  - JBCT-ZONE-03: No zone mixing in sequencer chains
+- Cut operators in Java 25 grammar for better error messages
+- Comprehensive lint rule test suite (114 tests)
+
 ## [0.3.5] - 2025-12-21
 
 ### Fixed
