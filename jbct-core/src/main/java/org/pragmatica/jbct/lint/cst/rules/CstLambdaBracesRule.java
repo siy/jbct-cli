@@ -14,7 +14,6 @@ import static org.pragmatica.jbct.parser.CstNodes.*;
  * JBCT-LAM-02: No braces in lambdas.
  */
 public class CstLambdaBracesRule implements CstLintRule {
-
     private static final String RULE_ID = "JBCT-LAM-02";
 
     @Override
@@ -30,17 +29,16 @@ public class CstLambdaBracesRule implements CstLintRule {
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
         var packageName = findFirst(root, RuleId.PackageDecl.class)
-            .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
-            .map(qn -> text(qn, source))
-            .or("");
-
+                          .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+                          .map(qn -> text(qn, source))
+                          .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-
-        return findAll(root, RuleId.Lambda.class).stream()
-            .filter(lambda -> hasBlockBody(lambda, source))
-            .map(lambda -> createDiagnostic(lambda, ctx));
+        return findAll(root, RuleId.Lambda.class)
+               .stream()
+               .filter(lambda -> hasBlockBody(lambda, source))
+               .map(lambda -> createDiagnostic(lambda, ctx));
     }
 
     private boolean hasBlockBody(CstNode lambda, String source) {
@@ -48,19 +46,19 @@ public class CstLambdaBracesRule implements CstLintRule {
         var lambdaText = text(lambda, source);
         var arrowIndex = lambdaText.indexOf("->");
         if (arrowIndex < 0) return false;
-        var afterArrow = lambdaText.substring(arrowIndex + 2).trim();
+        var afterArrow = lambdaText.substring(arrowIndex + 2)
+                                   .trim();
         return afterArrow.startsWith("{");
     }
 
     private Diagnostic createDiagnostic(CstNode lambda, LintContext ctx) {
         return Diagnostic.diagnostic(
-            RULE_ID,
-            ctx.severityFor(RULE_ID),
-            ctx.fileName(),
-            startLine(lambda),
-            startColumn(lambda),
-            "Lambda has block body - extract to a method reference",
-            "Lambdas should be single expressions. Extract block bodies to methods."
-        );
+        RULE_ID,
+        ctx.severityFor(RULE_ID),
+        ctx.fileName(),
+        startLine(lambda),
+        startColumn(lambda),
+        "Lambda has block body - extract to a method reference",
+        "Lambdas should be single expressions. Extract block bodies to methods.");
     }
 }

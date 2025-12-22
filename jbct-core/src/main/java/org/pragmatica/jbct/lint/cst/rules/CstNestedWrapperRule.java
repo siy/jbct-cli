@@ -18,16 +18,14 @@ import static org.pragmatica.jbct.parser.CstNodes.*;
  * Forbids Promise<Result<T>>, Option<Option<T>>, etc.
  */
 public class CstNestedWrapperRule implements CstLintRule {
-
     private static final String RULE_ID = "JBCT-RET-02";
     private static final String DOC_LINK = "https://github.com/siy/coding-technology/blob/main/series/part-2-four-return-types.md";
 
-    private static final Set<String> WRAPPER_TYPES = Set.of("Option", "Result", "Promise");
+    private static final Set<String>WRAPPER_TYPES = Set.of("Option", "Result", "Promise");
 
     // Pattern to detect nested wrappers like Promise<Result<...>>
     private static final Pattern NESTED_PATTERN = Pattern.compile(
-        "(Promise|Result|Option)<\\s*(Promise|Result|Option)<"
-    );
+    "(Promise|Result|Option)<\\s*(Promise|Result|Option)<");
 
     @Override
     public String ruleId() {
@@ -42,16 +40,15 @@ public class CstNestedWrapperRule implements CstLintRule {
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
         var packageName = findFirst(root, RuleId.PackageDecl.class)
-            .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
-            .map(qn -> text(qn, source))
-            .or("");
-
+                          .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+                          .map(qn -> text(qn, source))
+                          .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-
-        return findAll(root, RuleId.MethodDecl.class).stream()
-            .flatMap(method -> checkMethod(method, source, ctx));
+        return findAll(root, RuleId.MethodDecl.class)
+               .stream()
+               .flatMap(method -> checkMethod(method, source, ctx));
     }
 
     private Stream<Diagnostic> checkMethod(CstNode method, String source, LintContext ctx) {
@@ -59,18 +56,16 @@ public class CstNestedWrapperRule implements CstLintRule {
         if (returnType.isEmpty()) {
             return Stream.empty();
         }
-
-        var typeText = text(returnType.unwrap(), source).trim();
+        var typeText = text(returnType.unwrap(),
+                            source)
+                       .trim();
         var nestedPattern = detectNestedWrapper(typeText);
-
         if (nestedPattern != null) {
             var methodName = childByRule(method, RuleId.Identifier.class)
-                .map(id -> text(id, source))
-                .or("(unknown)");
-
+                             .map(id -> text(id, source))
+                             .or("(unknown)");
             return Stream.of(createDiagnostic(method, methodName, nestedPattern, ctx));
         }
-
         return Stream.empty();
     }
 
@@ -79,10 +74,8 @@ public class CstNestedWrapperRule implements CstLintRule {
         if (!matcher.find()) {
             return null;
         }
-
         var outer = matcher.group(1);
         var inner = matcher.group(2);
-
         // Forbidden patterns
         if ("Promise".equals(outer) && "Result".equals(inner)) {
             return "Promise<Result<T>>";
@@ -96,26 +89,22 @@ public class CstNestedWrapperRule implements CstLintRule {
         if ("Promise".equals(outer) && "Promise".equals(inner)) {
             return "Promise<Promise<T>>";
         }
-
         // Result<Option<T>> is allowed for optional validation
         // Promise<Option<T>> is allowed for optional async results
-
         return null;
     }
 
     private Diagnostic createDiagnostic(CstNode method, String methodName, String pattern, LintContext ctx) {
         var suggestion = getSuggestion(pattern);
-
-        return Diagnostic.diagnostic(
-            RULE_ID,
-            ctx.severityFor(RULE_ID),
-            ctx.fileName(),
-            startLine(method),
-            startColumn(method),
-            "Method '" + methodName + "' uses forbidden nested wrapper " + pattern,
-            "JBCT prohibits redundant nesting. " + suggestion
-        ).withExample(getExample(pattern))
-            .withDocLink(DOC_LINK);
+        return Diagnostic.diagnostic(RULE_ID,
+                                     ctx.severityFor(RULE_ID),
+                                     ctx.fileName(),
+                                     startLine(method),
+                                     startColumn(method),
+                                     "Method '" + methodName + "' uses forbidden nested wrapper " + pattern,
+                                     "JBCT prohibits redundant nesting. " + suggestion)
+                         .withExample(getExample(pattern))
+                         .withDocLink(DOC_LINK);
     }
 
     private String getSuggestion(String pattern) {

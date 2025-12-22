@@ -15,18 +15,23 @@ import static org.pragmatica.jbct.parser.CstNodes.*;
  * JBCT-MIX-01: No I/O operations in domain packages.
  */
 public class CstDomainIoRule implements CstLintRule {
-
     private static final String RULE_ID = "JBCT-MIX-01";
 
-    private static final Set<String> IO_PACKAGES = Set.of(
-        "java.io", "java.nio", "java.net", "java.sql",
-        "javax.net", "java.util.concurrent"
-    );
+    private static final Set<String>IO_PACKAGES = Set.of(
+    "java.io", "java.nio", "java.net", "java.sql", "javax.net", "java.util.concurrent");
 
-    private static final Set<String> IO_CLASSES = Set.of(
-        "File", "Path", "InputStream", "OutputStream", "Reader", "Writer",
-        "Socket", "ServerSocket", "HttpClient", "Connection", "Statement"
-    );
+    private static final Set<String>IO_CLASSES = Set.of(
+    "File",
+    "Path",
+    "InputStream",
+    "OutputStream",
+    "Reader",
+    "Writer",
+    "Socket",
+    "ServerSocket",
+    "HttpClient",
+    "Connection",
+    "Statement");
 
     @Override
     public String ruleId() {
@@ -41,27 +46,26 @@ public class CstDomainIoRule implements CstLintRule {
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
         var packageName = findFirst(root, RuleId.PackageDecl.class)
-            .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
-            .map(qn -> text(qn, source))
-            .or("");
-
+                          .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+                          .map(qn -> text(qn, source))
+                          .or("");
         // Only check domain packages
         if (!isDomainPackage(packageName)) {
             return Stream.empty();
         }
-
         // Check imports for I/O packages
-        return findAll(root, RuleId.ImportDecl.class).stream()
-            .filter(imp -> isIoImport(imp, source))
-            .map(imp -> createDiagnostic(imp, source, ctx));
+        return findAll(root, RuleId.ImportDecl.class)
+               .stream()
+               .filter(imp -> isIoImport(imp, source))
+               .map(imp -> createDiagnostic(imp, source, ctx));
     }
 
     private boolean isDomainPackage(String packageName) {
         return packageName.contains(".domain") ||
-               packageName.contains(".model") ||
-               packageName.contains(".entity") ||
-               packageName.endsWith(".domain") ||
-               packageName.endsWith(".model");
+        packageName.contains(".model") ||
+        packageName.contains(".entity") ||
+        packageName.endsWith(".domain") ||
+        packageName.endsWith(".model");
     }
 
     private boolean isIoImport(CstNode imp, String source) {
@@ -73,7 +77,7 @@ public class CstDomainIoRule implements CstLintRule {
         }
         for (var ioCls : IO_CLASSES) {
             if (importText.contains("." + ioCls + ";") ||
-                importText.endsWith("." + ioCls)) {
+            importText.endsWith("." + ioCls)) {
                 return true;
             }
         }
@@ -81,16 +85,15 @@ public class CstDomainIoRule implements CstLintRule {
     }
 
     private Diagnostic createDiagnostic(CstNode imp, String source, LintContext ctx) {
-        var importText = text(imp, source).trim();
-
+        var importText = text(imp, source)
+                         .trim();
         return Diagnostic.diagnostic(
-            RULE_ID,
-            ctx.severityFor(RULE_ID),
-            ctx.fileName(),
-            startLine(imp),
-            startColumn(imp),
-            "I/O import in domain package: " + importText,
-            "Domain packages should be pure. Move I/O to infrastructure layer."
-        );
+        RULE_ID,
+        ctx.severityFor(RULE_ID),
+        ctx.fileName(),
+        startLine(imp),
+        startColumn(imp),
+        "I/O import in domain package: " + importText,
+        "Domain packages should be pure. Move I/O to infrastructure layer.");
     }
 }

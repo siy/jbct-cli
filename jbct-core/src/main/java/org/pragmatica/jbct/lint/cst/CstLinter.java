@@ -123,7 +123,18 @@ public class CstLinter {
             new CstConditionalLoggingRule(),   // JBCT-LOG-01
             new CstLoggerParameterRule(),      // JBCT-LOG-02
             // Architecture (JBCT-MIX-*)
-            new CstDomainIoRule()              // JBCT-MIX-01
+            new CstDomainIoRule(),             // JBCT-MIX-01
+            // Static imports (JBCT-STATIC-*)
+            new CstStaticImportRule(),         // JBCT-STATIC-01
+            // Utilities (JBCT-UTIL-*)
+            new CstParsingUtilitiesRule(),     // JBCT-UTIL-01
+            new CstVerifyPredicatesRule(),     // JBCT-UTIL-02
+            // Nesting (JBCT-NEST-*)
+            new CstNestedOperationsRule(),     // JBCT-NEST-01
+            // Zones (JBCT-ZONE-*)
+            new CstZoneTwoVerbsRule(),         // JBCT-ZONE-01
+            new CstZoneThreeVerbsRule(),       // JBCT-ZONE-02
+            new CstZoneMixingRule()            // JBCT-ZONE-03
         );
     }
 }

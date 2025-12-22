@@ -7,7 +7,6 @@ import org.pragmatica.lang.Result;
  * Interface for JBCT code formatting operations.
  */
 public interface Formatter {
-
     /**
      * Format a source file and return the formatted content.
      *

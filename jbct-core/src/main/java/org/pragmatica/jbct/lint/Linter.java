@@ -9,7 +9,6 @@ import java.util.List;
  * Interface for JBCT code linting operations.
  */
 public interface Linter {
-
     /**
      * Lint a source file and return all diagnostics.
      *
