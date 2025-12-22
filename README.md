@@ -246,7 +246,7 @@ Add executions to run automatically:
 </plugin>
 ```
 
-## Lint Rules (30 total)
+## Lint Rules (33 total)
 
 ### Return Kinds
 
