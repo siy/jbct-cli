@@ -26,7 +26,7 @@ public record Email(String value) {
         Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     private static final Fn1<Cause, String> INVALID_EMAIL =
-        Causes.forValue("Invalid email: {}");
+        Causes.forOneValue("Invalid email: %s");
 
     // Private constructor - cannot construct directly
     private Email {}
@@ -96,7 +96,7 @@ public static Result<Email> email(String raw) {
 ```java
 public record UserId(UUID value) {
     private static final Fn1<Cause, String> INVALID_USER_ID =
-        Causes.forValue("Invalid user ID: {}");
+        Causes.forOneValue("Invalid user ID: %s");
 
     private UserId {}
 
@@ -126,11 +126,11 @@ public record Password(String value) {
     private static final Pattern HAS_UPPER = Pattern.compile(".*[A-Z].*");
 
     private static final Fn1<Cause, String> TOO_SHORT =
-        Causes.forValue("Password too short (min " + MIN_LENGTH + "): {}");
+        Causes.forOneValue("Password too short (min " + MIN_LENGTH + "): %s");
     private static final Fn1<Cause, String> NO_DIGIT =
-        Causes.forValue("Password must contain digit: {}");
+        Causes.forOneValue("Password must contain digit: %s");
     private static final Fn1<Cause, String> NO_UPPER =
-        Causes.forValue("Password must contain uppercase: {}");
+        Causes.forOneValue("Password must contain uppercase: %s");
 
     private Password {}
 
@@ -178,10 +178,10 @@ Use constants with descriptive names:
 
 ```java
 private static final Fn1<Cause, String> INVALID_EMAIL =
-    Causes.forValue("Invalid email: {}");
+    Causes.forOneValue("Invalid email: %s");
 
 private static final Fn1<Cause, String> TOO_SHORT =
-    Causes.forValue("Password too short: {}");
+    Causes.forOneValue("Password too short: %s");
 ```
 
 ## Validated Inputs
@@ -302,7 +302,7 @@ public record UserProfile(
 ```java
 public record OrderItems(List<Item> items) {
     private static final Fn1<Cause, Integer> MIN_ITEMS_ERROR =
-        Causes.forValue("Order must have at least {} items");
+        Causes.forOneValue("Order must have at least %d items");
 
     private OrderItems {}
 
