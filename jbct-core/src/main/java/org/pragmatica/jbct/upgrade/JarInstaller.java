@@ -39,7 +39,7 @@ public final class JarInstaller {
                 .connectTimeout(Duration.ofSeconds(10))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
-        return new JarInstaller(JdkHttpOperations.create(client));
+        return new JarInstaller(JdkHttpOperations.jdkHttpOperations(client));
     }
 
     /**

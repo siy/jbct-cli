@@ -39,7 +39,7 @@ public final class GitHubReleaseChecker {
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
         return new GitHubReleaseChecker(
-                JdkHttpOperations.create(client),
+                JdkHttpOperations.jdkHttpOperations(client),
                 GITHUB_API_URL
         );
     }
@@ -52,7 +52,7 @@ public final class GitHubReleaseChecker {
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
         return new GitHubReleaseChecker(
-                JdkHttpOperations.create(client),
+                JdkHttpOperations.jdkHttpOperations(client),
                 apiUrl
         );
     }

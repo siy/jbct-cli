@@ -9,7 +9,8 @@
   - JBCT-PAT-02: No Fork-Join inside Sequencer (Result.all inside flatMap)
 
 ### Changed
-- Update to Pragmatica Lite 0.8.6
+- Update to Pragmatica Lite 0.9.0
+- Replace local TOML parser with pragmatica-lite toml module
 - AI tools: sync to JBCT v2.0.7
 - AI tools: replace `Causes.forValue()` with `forOneValue()` in examples
 - AI tools: replace `Verify.ensureFn()` with `.filter(cause, predicate)` pattern

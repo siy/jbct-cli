@@ -72,7 +72,7 @@ public final class AiToolsUpdater {
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
         return new AiToolsUpdater(
-                JdkHttpOperations.create(client),
+                JdkHttpOperations.jdkHttpOperations(client),
                 Path.of(userHome, ".claude"),
                 Path.of(userHome, ".jbct")
         );
@@ -86,7 +86,7 @@ public final class AiToolsUpdater {
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
         return new AiToolsUpdater(
-                JdkHttpOperations.create(client),
+                JdkHttpOperations.jdkHttpOperations(client),
                 claudeDir,
                 jbctDir
         );

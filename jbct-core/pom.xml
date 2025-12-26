@@ -29,6 +29,12 @@
             <artifactId>http-client</artifactId>
         </dependency>
 
+        <!-- Pragmatica Lite TOML Parser -->
+        <dependency>
+            <groupId>org.pragmatica-lite</groupId>
+            <artifactId>toml</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

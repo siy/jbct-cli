@@ -1,7 +1,7 @@
 package org.pragmatica.jbct.config;
 
+import org.pragmatica.config.toml.TomlParser;
 import org.pragmatica.lang.Option;
-import org.pragmatica.lang.Result;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,11 +77,10 @@ public final class ConfigLoader {
         if (!Files.exists(path) || !Files.isRegularFile(path)) {
             return Option.none();
         }
-        return readFile(path)
-               .flatMap(TomlParser::parse)
-               .map(JbctConfig::fromToml)
-               .fold(_ -> Option.none(),
-                     Option::option);
+        return TomlParser.parseFile(path)
+                         .map(JbctConfig::fromToml)
+                         .fold(_ -> Option.none(),
+                               Option::option);
     }
 
     /**
@@ -114,9 +113,5 @@ public final class ConfigLoader {
     public static Path getUserConfigPath() {
         return getUserConfigDir()
                .resolve(USER_CONFIG_NAME);
-    }
-
-    private static Result<String> readFile(Path path) {
-        return Result.lift(() -> Files.readString(path));
     }
 }
