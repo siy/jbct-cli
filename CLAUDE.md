@@ -50,8 +50,9 @@ JBCT-VO-01 = "warning"
 
 ## Key Dependencies
 
-- **pragmatica-lite:core** (0.8.6) - Result, Option, Promise types
-- **pragmatica-lite:http-client** (0.8.6) - HTTP operations for upgrade/update
+- **pragmatica-lite:core** (0.9.0) - Result, Option, Promise types
+- **pragmatica-lite:http-client** (0.9.0) - HTTP operations for upgrade/update
+- **pragmatica-lite:toml** (0.9.0) - TOML configuration parsing
 - **java-peglib** - PEG parser generator for CST-based parsing
 - **picocli** - CLI framework
 
@@ -147,7 +148,7 @@ The CST preserves all source information including whitespace and comments, enab
 ### Linter Components (jbct-core/src/main/java/org/pragmatica/jbct/lint/cst/)
 - `CstLinter` - CST-based linter entry point
 - `CstLintRule` - Interface for CST-based lint rules
-- `rules/` - 30 CST-based lint rule implementations
+- `rules/` - 36 CST-based lint rule implementations
 
 ### HTTP Client Pattern
 Uses pragmatica-lite http-client:

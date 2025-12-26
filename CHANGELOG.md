@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.9] - 2025-12-25
+## [0.3.9] - 2025-12-26
 
 ### Added
 - 3 new lint rules (36 total):
@@ -11,9 +11,18 @@
 ### Changed
 - Update to Pragmatica Lite 0.9.0
 - Replace local TOML parser with pragmatica-lite toml module
+- Maven plugin now reads configuration from jbct.toml (same as CLI)
+- Version now read from resource file instead of hardcoded string
 - AI tools: sync to JBCT v2.0.7
 - AI tools: replace `Causes.forValue()` with `forOneValue()` in examples
 - AI tools: replace `Verify.ensureFn()` with `.filter(cause, predicate)` pattern
+
+### Fixed
+- Add missing JBCT-ACR-01, JBCT-SEAL-01, JBCT-PAT-02 to LintConfig defaults
+- Remove unused includes/excludes Maven parameters
+- Fix formatting issues in UpgradeCommand
+- Fix spacing in CstReturnKindRule
+- Remove unused Trivia import from CstFormatter
 
 ## [0.3.8] - 2025-12-23
 

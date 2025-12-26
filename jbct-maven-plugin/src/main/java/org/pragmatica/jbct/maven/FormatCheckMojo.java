@@ -7,9 +7,11 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.pragmatica.jbct.config.ConfigLoader;
 import org.pragmatica.jbct.format.JbctFormatter;
 import org.pragmatica.jbct.shared.SourceFile;
 import org.pragmatica.jbct.shared.SourceRoot;
+import org.pragmatica.lang.Option;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -33,12 +35,6 @@ public class FormatCheckMojo extends AbstractMojo {
     @Parameter(property = "jbct.testSourceDirectory", defaultValue = "${project.build.testSourceDirectory}")
     private File testSourceDirectory;
 
-    @Parameter(property = "jbct.includes", defaultValue = "**/*.java")
-    private List<String> includes;
-
-    @Parameter(property = "jbct.excludes")
-    private List<String> excludes;
-
     @Parameter(property = "jbct.skip", defaultValue = "false")
     private boolean skip;
 
@@ -52,7 +48,10 @@ public class FormatCheckMojo extends AbstractMojo {
             return;
         }
 
-        var formatter = JbctFormatter.jbctFormatter();
+        // Load configuration from jbct.toml
+        var projectDir = project.getBasedir().toPath();
+        var config = ConfigLoader.load(Option.none(), Option.option(projectDir));
+        var formatter = JbctFormatter.jbctFormatter(config.formatter());
         var filesToProcess = collectJavaFiles();
 
         if (filesToProcess.isEmpty()) {

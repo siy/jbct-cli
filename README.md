@@ -223,27 +223,40 @@ Add executions to run automatically:
 
 ### Configuration
 
+The Maven plugin reads configuration from `jbct.toml` in your project root.
+All formatting and linting settings are shared between CLI and Maven plugin.
+
 ```xml
 <plugin>
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-maven-plugin</artifactId>
     <version>0.3.9</version>
     <configuration>
-        <!-- Source directories to process (default: src/main/java) -->
-        <sourceDirectories>
-            <sourceDirectory>src/main/java</sourceDirectory>
-        </sourceDirectories>
+        <!-- Skip JBCT processing -->
+        <skip>false</skip>
 
-        <!-- Business package patterns for lint rules -->
-        <businessPackages>
-            <package>**.usecase.**</package>
-            <package>**.domain.**</package>
-        </businessPackages>
-
-        <!-- Fail build on warnings -->
-        <failOnWarning>false</failOnWarning>
+        <!-- Include test sources -->
+        <includeTests>false</includeTests>
     </configuration>
 </plugin>
+```
+
+Create `jbct.toml` for formatting/linting configuration:
+
+```toml
+[format]
+maxLineLength = 120
+indentSize = 4
+alignChainedCalls = true
+
+[lint]
+failOnWarning = false
+businessPackages = ["**.usecase.**", "**.domain.**"]
+
+[lint.rules]
+JBCT-RET-01 = "error"
+JBCT-STY-01 = "warning"
+JBCT-LOG-01 = "off"
 ```
 
 ## Lint Rules (36 total)
