@@ -6,10 +6,15 @@
 - Parser: keyword-prefixed identifiers no longer corrupted (e.g., `newState` → `new State`)
 - Grammar: add word boundary checks for keywords in Primary, PrimType, Modifier, Literal, LocalVarType, LambdaParam
 - Grammar: add cut operators to MethodDecl and ConstructorDecl for better error messages
+- Grammar: add word boundaries to all statement keywords (if, while, for, do, try, switch, synchronized, catch, finally)
+- Grammar: fix `throw` in switch expression arrows (was using raw literal instead of ThrowKW)
+- Grammar: fix `when` contextual keyword to prevent misparsing (e.g., `whenever` as `when` + `ever`)
 
 ### Added
 - Golden test for keyword-prefixed identifiers (newState, oldState, thisValue, etc.)
 - Unit tests for keyword boundary parsing
+- Unit tests for switch expressions with throw and when guards
+- Debug technique documentation in CLAUDE.md (binary search for parse errors)
 
 ## [0.3.9] - 2025-12-27
 
