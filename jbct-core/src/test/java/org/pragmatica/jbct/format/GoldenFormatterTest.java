@@ -46,7 +46,8 @@ class GoldenFormatterTest {
             "BlankLines.java",
             "LineWrapping.java",
             "Comments.java",
-            "TextBlocks.java"
+            "TextBlocks.java",
+            "KeywordPrefixedIdentifiers.java"
     })
     void formatter_isIdempotent_onGoldenExamples(String fileName) throws IOException {
         var path = EXAMPLES_DIR.resolve(fileName);

@@ -2,11 +2,14 @@
 
 ## [0.3.10] - 2025-12-27
 
-### Added
-
-### Changed
-
 ### Fixed
+- Parser: keyword-prefixed identifiers no longer corrupted (e.g., `newState` → `new State`)
+- Grammar: add word boundary checks for keywords in Primary, PrimType, Modifier, Literal, LocalVarType, LambdaParam
+- Grammar: add cut operators to MethodDecl and ConstructorDecl for better error messages
+
+### Added
+- Golden test for keyword-prefixed identifiers (newState, oldState, thisValue, etc.)
+- Unit tests for keyword boundary parsing
 
 ## [0.3.9] - 2025-12-27
 

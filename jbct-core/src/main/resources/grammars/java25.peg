@@ -52,18 +52,18 @@ FieldDecl <- Type VarDecls ';'
 VarDecls <- VarDecl (',' VarDecl)*
 VarDecl <- Identifier Dims? ('=' VarInit)?
 VarInit <- '{' (VarInit (',' VarInit)* ','?)? '}' / Expr
-MethodDecl <- TypeParams? Type Identifier '(' Params? ')' Dims? Throws? (Block / ';')
+MethodDecl <- TypeParams? Type Identifier '(' ^ Params? ')' Dims? Throws? (Block / ';')
 Params <- Param (',' Param)*
 Param <- Annotation* Modifier* Type '...'? Identifier Dims?
 Throws <- 'throws' ^ TypeList
-ConstructorDecl <- TypeParams? Identifier '(' Params? ')' Throws? Block
+ConstructorDecl <- TypeParams? Identifier '(' ^ Params? ')' Throws? Block
 
 # === Blocks and Statements (JLS 14) ===
 Block <- '{' BlockStmt* '}'
 BlockStmt <- LocalVar / LocalTypeDecl / Stmt
 LocalTypeDecl <- Annotation* Modifier* TypeKind
 LocalVar <- Modifier* LocalVarType VarDecls ';'
-LocalVarType <- 'var' / Type
+LocalVarType <- < 'var' ![a-zA-Z0-9_$] > / Type
 # Statement keywords use helper rules to combine keyword + word boundary as single token
 # This prevents the parser from skipping whitespace before the boundary check
 # Cut operator after literal keywords commits to that statement type
@@ -128,16 +128,16 @@ Multiplicative <- Unary ((!'*=' '*' / !'/=' '/' / !'%=' '%') Unary)*
 Unary <- ('++' / '--' / '+' / '-' / '!' / '~') Unary / '(' Type ('&' Type)* ')' Unary / Postfix
 Postfix <- Primary PostOp*
 PostOp <- '.' TypeArgs? Identifier ('(' Args? ')')? / '.' 'class' / '.' 'this' / '[' Expr ']' / '(' Args? ')' / '++' / '--' / '::' TypeArgs? (Identifier / 'new')
-Primary <- Literal / 'this' / 'super' / 'new' TypeArgs? Type ('(' Args? ')' ClassBody? / Dims? VarInit?) / 'switch' '(' Expr ')' SwitchBlock / Lambda / '(' Expr ')' / QualifiedName
+Primary <- Literal / < 'this' ![a-zA-Z0-9_$] > / < 'super' ![a-zA-Z0-9_$] > / < 'new' ![a-zA-Z0-9_$] > TypeArgs? Type ('(' Args? ')' ClassBody? / Dims? VarInit?) / 'switch' '(' Expr ')' SwitchBlock / Lambda / '(' Expr ')' / QualifiedName
 Lambda <- LambdaParams '->' (Expr / Block)
 LambdaParams <- Identifier / '_' / '(' LambdaParam? (',' LambdaParam)* ')'
-LambdaParam <- Annotation* Modifier* (('var' / Type) &('...' / Identifier / '_'))? '...'? (Identifier / '_')
+LambdaParam <- Annotation* Modifier* ((< 'var' ![a-zA-Z0-9_$] > / Type) &('...' / Identifier / '_'))? '...'? (Identifier / '_')
 Args <- Expr (',' Expr)*
 ExprList <- Expr (',' Expr)*
 
 # === Types with Type-Use Annotations (JSR 308 / JLS 4.11) ===
 Type <- Annotation* (PrimType / RefType) Dims?
-PrimType <- 'boolean' / 'byte' / 'short' / 'int' / 'long' / 'float' / 'double' / 'char' / 'void'
+PrimType <- < ('boolean' / 'byte' / 'short' / 'int' / 'long' / 'float' / 'double' / 'char' / 'void') ![a-zA-Z0-9_$] >
 RefType <- AnnotatedTypeName ('.' AnnotatedTypeName)*
 AnnotatedTypeName <- Annotation* Identifier TypeArgs?
 Dims <- (Annotation* '[' ']')+
@@ -148,12 +148,12 @@ TypeArg <- Type / '?' (Annotation* ('extends' / 'super') Type)?
 QualifiedName <- Identifier (&('.' Identifier) '.' Identifier)*
 Identifier <- !Keyword < [a-zA-Z_$] [a-zA-Z0-9_$]* >
 
-Modifier <- 'public' / 'protected' / 'private' / 'static' / 'final' / 'abstract' / 'native' / 'synchronized' / 'transient' / 'volatile' / 'strictfp' / 'default' / 'sealed' / 'non-sealed'
+Modifier <- < ('public' / 'protected' / 'private' / 'static' / 'final' / 'abstract' / 'native' / 'synchronized' / 'transient' / 'volatile' / 'strictfp' / 'default' / 'sealed' / 'non-sealed') ![a-zA-Z0-9_$] >
 Annotation <- '@' !'interface' QualifiedName ('(' AnnotationValue? ')')?
 AnnotationValue <- Identifier '=' AnnotationElem (',' Identifier '=' AnnotationElem)* / AnnotationElem
 AnnotationElem <- Annotation / '{' (AnnotationElem (',' AnnotationElem)* ','?)? '}' / Ternary
 
-Literal <- 'null' / 'true' / 'false' / CharLit / StringLit / NumLit
+Literal <- < ('null' / 'true' / 'false') ![a-zA-Z0-9_$] > / CharLit / StringLit / NumLit
 CharLit <- < '\'' ([^'\\] / '\\' .)* '\'' >
 StringLit <- < '"""' (!'"""' .)* '"""' > / < '"' ([^"\\] / '\\' .)* '"' >
 NumLit <- < '0' [xX] [0-9a-fA-F_]+ [lL]? > / < '0' [bB] [01_]+ [lL]? > / < [0-9][0-9_]* ('.' [0-9_]*)? ([eE] [+\-]? [0-9_]+)? [fFdDlL]? > / < '.' [0-9_]+ ([eE] [+\-]? [0-9_]+)? [fFdD]? >

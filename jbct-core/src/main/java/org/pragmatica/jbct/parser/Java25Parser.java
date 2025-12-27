@@ -6383,16 +6383,8 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
-            var optStart6 = location();
-            var trivia7 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var optElem6 = parse_Params(trivia7);
-            if (optElem6.isSuccess() && optElem6.node != null) {
-                children.add(optElem6.node);
-            }
-            var elem0_4 = optElem6.isSuccess() ? optElem6 : CstParseResult.success(null, "", location());
-            if (optElem6.isFailure()) {
-                restoreLocation(optStart6);
-            }
+            if (!inTokenBoundary) skipWhitespace();
+            var elem0_4 = CstParseResult.success(null, "", location());
             if (elem0_4.isCutFailure()) {
                 restoreLocation(seqStart0);
                 result = elem0_4;
@@ -6401,11 +6393,17 @@ public final class Java25Parser {
                 result = cut0 ? elem0_4.asCutFailure() : elem0_4;
             }
         }
+        cut0 = true;
         if (result.isSuccess()) {
-            if (!inTokenBoundary) skipWhitespace();
-            var elem0_5 = matchLiteralCst(")", false);
-            if (elem0_5.isSuccess() && elem0_5.node != null) {
-                children.add(elem0_5.node);
+            var optStart7 = location();
+            var trivia8 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var optElem7 = parse_Params(trivia8);
+            if (optElem7.isSuccess() && optElem7.node != null) {
+                children.add(optElem7.node);
+            }
+            var elem0_5 = optElem7.isSuccess() ? optElem7 : CstParseResult.success(null, "", location());
+            if (optElem7.isFailure()) {
+                restoreLocation(optStart7);
             }
             if (elem0_5.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -6416,15 +6414,10 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
-            var optStart9 = location();
-            var trivia10 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var optElem9 = parse_Dims(trivia10);
-            if (optElem9.isSuccess() && optElem9.node != null) {
-                children.add(optElem9.node);
-            }
-            var elem0_6 = optElem9.isSuccess() ? optElem9 : CstParseResult.success(null, "", location());
-            if (optElem9.isFailure()) {
-                restoreLocation(optStart9);
+            if (!inTokenBoundary) skipWhitespace();
+            var elem0_6 = matchLiteralCst(")", false);
+            if (elem0_6.isSuccess() && elem0_6.node != null) {
+                children.add(elem0_6.node);
             }
             if (elem0_6.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -6435,15 +6428,15 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
-            var optStart11 = location();
-            var trivia12 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var optElem11 = parse_Throws(trivia12);
-            if (optElem11.isSuccess() && optElem11.node != null) {
-                children.add(optElem11.node);
+            var optStart10 = location();
+            var trivia11 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var optElem10 = parse_Dims(trivia11);
+            if (optElem10.isSuccess() && optElem10.node != null) {
+                children.add(optElem10.node);
             }
-            var elem0_7 = optElem11.isSuccess() ? optElem11 : CstParseResult.success(null, "", location());
-            if (optElem11.isFailure()) {
-                restoreLocation(optStart11);
+            var elem0_7 = optElem10.isSuccess() ? optElem10 : CstParseResult.success(null, "", location());
+            if (optElem10.isFailure()) {
+                restoreLocation(optStart10);
             }
             if (elem0_7.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -6454,40 +6447,15 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
-            CstParseResult elem0_8 = null;
-            var choiceStart14 = location();
-            var savedChildren14 = new ArrayList<>(children);
-            children.clear();
-            children.addAll(savedChildren14);
-            var trivia15 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var alt14_0 = parse_Block(trivia15);
-            if (alt14_0.isSuccess() && alt14_0.node != null) {
-                children.add(alt14_0.node);
+            var optStart12 = location();
+            var trivia13 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var optElem12 = parse_Throws(trivia13);
+            if (optElem12.isSuccess() && optElem12.node != null) {
+                children.add(optElem12.node);
             }
-            if (alt14_0.isSuccess()) {
-                elem0_8 = alt14_0;
-            } else if (alt14_0.isCutFailure()) {
-                elem0_8 = alt14_0;
-            } else {
-                restoreLocation(choiceStart14);
-            children.clear();
-            children.addAll(savedChildren14);
-            var alt14_1 = matchLiteralCst(";", false);
-            if (alt14_1.isSuccess() && alt14_1.node != null) {
-                children.add(alt14_1.node);
-            }
-            if (alt14_1.isSuccess()) {
-                elem0_8 = alt14_1;
-            } else if (alt14_1.isCutFailure()) {
-                elem0_8 = alt14_1;
-            } else {
-                restoreLocation(choiceStart14);
-            }
-            }
-            if (elem0_8 == null) {
-                children.clear();
-                children.addAll(savedChildren14);
-                elem0_8 = CstParseResult.failure("one of alternatives");
+            var elem0_8 = optElem12.isSuccess() ? optElem12 : CstParseResult.success(null, "", location());
+            if (optElem12.isFailure()) {
+                restoreLocation(optStart12);
             }
             if (elem0_8.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -6495,6 +6463,50 @@ public final class Java25Parser {
             } else if (elem0_8.isFailure()) {
                 restoreLocation(seqStart0);
                 result = cut0 ? elem0_8.asCutFailure() : elem0_8;
+            }
+        }
+        if (result.isSuccess()) {
+            CstParseResult elem0_9 = null;
+            var choiceStart15 = location();
+            var savedChildren15 = new ArrayList<>(children);
+            children.clear();
+            children.addAll(savedChildren15);
+            var trivia16 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var alt15_0 = parse_Block(trivia16);
+            if (alt15_0.isSuccess() && alt15_0.node != null) {
+                children.add(alt15_0.node);
+            }
+            if (alt15_0.isSuccess()) {
+                elem0_9 = alt15_0;
+            } else if (alt15_0.isCutFailure()) {
+                elem0_9 = alt15_0;
+            } else {
+                restoreLocation(choiceStart15);
+            children.clear();
+            children.addAll(savedChildren15);
+            var alt15_1 = matchLiteralCst(";", false);
+            if (alt15_1.isSuccess() && alt15_1.node != null) {
+                children.add(alt15_1.node);
+            }
+            if (alt15_1.isSuccess()) {
+                elem0_9 = alt15_1;
+            } else if (alt15_1.isCutFailure()) {
+                elem0_9 = alt15_1;
+            } else {
+                restoreLocation(choiceStart15);
+            }
+            }
+            if (elem0_9 == null) {
+                children.clear();
+                children.addAll(savedChildren15);
+                elem0_9 = CstParseResult.failure("one of alternatives");
+            }
+            if (elem0_9.isCutFailure()) {
+                restoreLocation(seqStart0);
+                result = elem0_9;
+            } else if (elem0_9.isFailure()) {
+                restoreLocation(seqStart0);
+                result = cut0 ? elem0_9.asCutFailure() : elem0_9;
             }
         }
         if (result.isSuccess()) {
@@ -6905,16 +6917,8 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
-            var optStart5 = location();
-            var trivia6 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var optElem5 = parse_Params(trivia6);
-            if (optElem5.isSuccess() && optElem5.node != null) {
-                children.add(optElem5.node);
-            }
-            var elem0_3 = optElem5.isSuccess() ? optElem5 : CstParseResult.success(null, "", location());
-            if (optElem5.isFailure()) {
-                restoreLocation(optStart5);
-            }
+            if (!inTokenBoundary) skipWhitespace();
+            var elem0_3 = CstParseResult.success(null, "", location());
             if (elem0_3.isCutFailure()) {
                 restoreLocation(seqStart0);
                 result = elem0_3;
@@ -6923,11 +6927,17 @@ public final class Java25Parser {
                 result = cut0 ? elem0_3.asCutFailure() : elem0_3;
             }
         }
+        cut0 = true;
         if (result.isSuccess()) {
-            if (!inTokenBoundary) skipWhitespace();
-            var elem0_4 = matchLiteralCst(")", false);
-            if (elem0_4.isSuccess() && elem0_4.node != null) {
-                children.add(elem0_4.node);
+            var optStart6 = location();
+            var trivia7 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var optElem6 = parse_Params(trivia7);
+            if (optElem6.isSuccess() && optElem6.node != null) {
+                children.add(optElem6.node);
+            }
+            var elem0_4 = optElem6.isSuccess() ? optElem6 : CstParseResult.success(null, "", location());
+            if (optElem6.isFailure()) {
+                restoreLocation(optStart6);
             }
             if (elem0_4.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -6938,15 +6948,10 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
-            var optStart8 = location();
-            var trivia9 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var optElem8 = parse_Throws(trivia9);
-            if (optElem8.isSuccess() && optElem8.node != null) {
-                children.add(optElem8.node);
-            }
-            var elem0_5 = optElem8.isSuccess() ? optElem8 : CstParseResult.success(null, "", location());
-            if (optElem8.isFailure()) {
-                restoreLocation(optStart8);
+            if (!inTokenBoundary) skipWhitespace();
+            var elem0_5 = matchLiteralCst(")", false);
+            if (elem0_5.isSuccess() && elem0_5.node != null) {
+                children.add(elem0_5.node);
             }
             if (elem0_5.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -6957,10 +6962,15 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
+            var optStart9 = location();
             var trivia10 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var elem0_6 = parse_Block(trivia10);
-            if (elem0_6.isSuccess() && elem0_6.node != null) {
-                children.add(elem0_6.node);
+            var optElem9 = parse_Throws(trivia10);
+            if (optElem9.isSuccess() && optElem9.node != null) {
+                children.add(optElem9.node);
+            }
+            var elem0_6 = optElem9.isSuccess() ? optElem9 : CstParseResult.success(null, "", location());
+            if (optElem9.isFailure()) {
+                restoreLocation(optStart9);
             }
             if (elem0_6.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -6968,6 +6978,20 @@ public final class Java25Parser {
             } else if (elem0_6.isFailure()) {
                 restoreLocation(seqStart0);
                 result = cut0 ? elem0_6.asCutFailure() : elem0_6;
+            }
+        }
+        if (result.isSuccess()) {
+            var trivia11 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var elem0_7 = parse_Block(trivia11);
+            if (elem0_7.isSuccess() && elem0_7.node != null) {
+                children.add(elem0_7.node);
+            }
+            if (elem0_7.isCutFailure()) {
+                restoreLocation(seqStart0);
+                result = elem0_7;
+            } else if (elem0_7.isFailure()) {
+                restoreLocation(seqStart0);
+                result = cut0 ? elem0_7.asCutFailure() : elem0_7;
             }
         }
         if (result.isSuccess()) {
@@ -7370,9 +7394,51 @@ public final class Java25Parser {
         var savedChildren0 = new ArrayList<>(children);
         children.clear();
         children.addAll(savedChildren0);
-        var alt0_0 = matchLiteralCst("var", false);
-        if (alt0_0.isSuccess() && alt0_0.node != null) {
-            children.add(alt0_0.node);
+        var tbStart1 = location();
+        inTokenBoundary = true;
+        var savedChildrenTb1 = new ArrayList<>(children);
+        CstParseResult tbElem1 = CstParseResult.success(null, "", location());
+        var seqStart2 = location();
+        boolean cut2 = false;
+        if (tbElem1.isSuccess()) {
+            var elem2_0 = matchLiteralCst("var", false);
+            if (elem2_0.isCutFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = elem2_0;
+            } else if (elem2_0.isFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = cut2 ? elem2_0.asCutFailure() : elem2_0;
+            }
+        }
+        if (tbElem1.isSuccess()) {
+            if (!inTokenBoundary) skipWhitespace();
+            var notStart4 = location();
+            var notElem4 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+            restoreLocation(notStart4);
+            var elem2_1 = notElem4.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+            if (elem2_1.isCutFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = elem2_1;
+            } else if (elem2_1.isFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = cut2 ? elem2_1.asCutFailure() : elem2_1;
+            }
+        }
+        if (tbElem1.isSuccess()) {
+            tbElem1 = CstParseResult.success(null, substring(seqStart2.offset(), pos), location());
+        }
+        inTokenBoundary = false;
+        children.clear();
+        children.addAll(savedChildrenTb1);
+        CstParseResult alt0_0;
+        if (tbElem1.isSuccess()) {
+            var tbText1 = substring(tbStart1.offset(), pos);
+            var tbSpan1 = SourceSpan.of(tbStart1, location());
+            var tbNode1 = new CstNode.Token(tbSpan1, RULE_PEG_TOKEN, tbText1, List.of(), List.of());
+            children.add(tbNode1);
+            alt0_0 = CstParseResult.success(tbNode1, tbText1, location());
+        } else {
+            alt0_0 = tbElem1;
         }
         if (alt0_0.isSuccess()) {
             result = alt0_0;
@@ -7382,8 +7448,8 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var trivia2 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-        var alt0_1 = parse_Type(trivia2);
+        var trivia6 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+        var alt0_1 = parse_Type(trivia6);
         if (alt0_1.isSuccess() && alt0_1.node != null) {
             children.add(alt0_1.node);
         }
@@ -14376,9 +14442,51 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var alt0_1 = matchLiteralCst("this", false);
-        if (alt0_1.isSuccess() && alt0_1.node != null) {
-            children.add(alt0_1.node);
+        var tbStart2 = location();
+        inTokenBoundary = true;
+        var savedChildrenTb2 = new ArrayList<>(children);
+        CstParseResult tbElem2 = CstParseResult.success(null, "", location());
+        var seqStart3 = location();
+        boolean cut3 = false;
+        if (tbElem2.isSuccess()) {
+            var elem3_0 = matchLiteralCst("this", false);
+            if (elem3_0.isCutFailure()) {
+                restoreLocation(seqStart3);
+                tbElem2 = elem3_0;
+            } else if (elem3_0.isFailure()) {
+                restoreLocation(seqStart3);
+                tbElem2 = cut3 ? elem3_0.asCutFailure() : elem3_0;
+            }
+        }
+        if (tbElem2.isSuccess()) {
+            if (!inTokenBoundary) skipWhitespace();
+            var notStart5 = location();
+            var notElem5 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+            restoreLocation(notStart5);
+            var elem3_1 = notElem5.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+            if (elem3_1.isCutFailure()) {
+                restoreLocation(seqStart3);
+                tbElem2 = elem3_1;
+            } else if (elem3_1.isFailure()) {
+                restoreLocation(seqStart3);
+                tbElem2 = cut3 ? elem3_1.asCutFailure() : elem3_1;
+            }
+        }
+        if (tbElem2.isSuccess()) {
+            tbElem2 = CstParseResult.success(null, substring(seqStart3.offset(), pos), location());
+        }
+        inTokenBoundary = false;
+        children.clear();
+        children.addAll(savedChildrenTb2);
+        CstParseResult alt0_1;
+        if (tbElem2.isSuccess()) {
+            var tbText2 = substring(tbStart2.offset(), pos);
+            var tbSpan2 = SourceSpan.of(tbStart2, location());
+            var tbNode2 = new CstNode.Token(tbSpan2, RULE_PEG_TOKEN, tbText2, List.of(), List.of());
+            children.add(tbNode2);
+            alt0_1 = CstParseResult.success(tbNode2, tbText2, location());
+        } else {
+            alt0_1 = tbElem2;
         }
         if (alt0_1.isSuccess()) {
             result = alt0_1;
@@ -14388,9 +14496,51 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var alt0_2 = matchLiteralCst("super", false);
-        if (alt0_2.isSuccess() && alt0_2.node != null) {
-            children.add(alt0_2.node);
+        var tbStart7 = location();
+        inTokenBoundary = true;
+        var savedChildrenTb7 = new ArrayList<>(children);
+        CstParseResult tbElem7 = CstParseResult.success(null, "", location());
+        var seqStart8 = location();
+        boolean cut8 = false;
+        if (tbElem7.isSuccess()) {
+            var elem8_0 = matchLiteralCst("super", false);
+            if (elem8_0.isCutFailure()) {
+                restoreLocation(seqStart8);
+                tbElem7 = elem8_0;
+            } else if (elem8_0.isFailure()) {
+                restoreLocation(seqStart8);
+                tbElem7 = cut8 ? elem8_0.asCutFailure() : elem8_0;
+            }
+        }
+        if (tbElem7.isSuccess()) {
+            if (!inTokenBoundary) skipWhitespace();
+            var notStart10 = location();
+            var notElem10 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+            restoreLocation(notStart10);
+            var elem8_1 = notElem10.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+            if (elem8_1.isCutFailure()) {
+                restoreLocation(seqStart8);
+                tbElem7 = elem8_1;
+            } else if (elem8_1.isFailure()) {
+                restoreLocation(seqStart8);
+                tbElem7 = cut8 ? elem8_1.asCutFailure() : elem8_1;
+            }
+        }
+        if (tbElem7.isSuccess()) {
+            tbElem7 = CstParseResult.success(null, substring(seqStart8.offset(), pos), location());
+        }
+        inTokenBoundary = false;
+        children.clear();
+        children.addAll(savedChildrenTb7);
+        CstParseResult alt0_2;
+        if (tbElem7.isSuccess()) {
+            var tbText7 = substring(tbStart7.offset(), pos);
+            var tbSpan7 = SourceSpan.of(tbStart7, location());
+            var tbNode7 = new CstNode.Token(tbSpan7, RULE_PEG_TOKEN, tbText7, List.of(), List.of());
+            children.add(tbNode7);
+            alt0_2 = CstParseResult.success(tbNode7, tbText7, location());
+        } else {
+            alt0_2 = tbElem7;
         }
         if (alt0_2.isSuccess()) {
             result = alt0_2;
@@ -14401,206 +14551,248 @@ public final class Java25Parser {
         children.clear();
         children.addAll(savedChildren0);
         CstParseResult alt0_3 = CstParseResult.success(null, "", location());
-        var seqStart4 = location();
-        boolean cut4 = false;
+        var seqStart12 = location();
+        boolean cut12 = false;
         if (alt0_3.isSuccess()) {
-            var elem4_0 = matchLiteralCst("new", false);
-            if (elem4_0.isSuccess() && elem4_0.node != null) {
-                children.add(elem4_0.node);
-            }
-            if (elem4_0.isCutFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = elem4_0;
-            } else if (elem4_0.isFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = cut4 ? elem4_0.asCutFailure() : elem4_0;
-            }
-        }
-        if (alt0_3.isSuccess()) {
-            var optStart6 = location();
-            var trivia7 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var optElem6 = parse_TypeArgs(trivia7);
-            if (optElem6.isSuccess() && optElem6.node != null) {
-                children.add(optElem6.node);
-            }
-            var elem4_1 = optElem6.isSuccess() ? optElem6 : CstParseResult.success(null, "", location());
-            if (optElem6.isFailure()) {
-                restoreLocation(optStart6);
-            }
-            if (elem4_1.isCutFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = elem4_1;
-            } else if (elem4_1.isFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = cut4 ? elem4_1.asCutFailure() : elem4_1;
-            }
-        }
-        if (alt0_3.isSuccess()) {
-            var trivia8 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var elem4_2 = parse_Type(trivia8);
-            if (elem4_2.isSuccess() && elem4_2.node != null) {
-                children.add(elem4_2.node);
-            }
-            if (elem4_2.isCutFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = elem4_2;
-            } else if (elem4_2.isFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = cut4 ? elem4_2.asCutFailure() : elem4_2;
-            }
-        }
-        if (alt0_3.isSuccess()) {
-            CstParseResult elem4_3 = null;
-            var choiceStart10 = location();
-            var savedChildren10 = new ArrayList<>(children);
-            children.clear();
-            children.addAll(savedChildren10);
-            CstParseResult alt10_0 = CstParseResult.success(null, "", location());
-            var seqStart11 = location();
-            boolean cut11 = false;
-            if (alt10_0.isSuccess()) {
-                var elem11_0 = matchLiteralCst("(", false);
-                if (elem11_0.isSuccess() && elem11_0.node != null) {
-                    children.add(elem11_0.node);
-                }
-                if (elem11_0.isCutFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = elem11_0;
-                } else if (elem11_0.isFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = cut11 ? elem11_0.asCutFailure() : elem11_0;
+            var tbStart13 = location();
+            inTokenBoundary = true;
+            var savedChildrenTb13 = new ArrayList<>(children);
+            CstParseResult tbElem13 = CstParseResult.success(null, "", location());
+            var seqStart14 = location();
+            boolean cut14 = false;
+            if (tbElem13.isSuccess()) {
+                var elem14_0 = matchLiteralCst("new", false);
+                if (elem14_0.isCutFailure()) {
+                    restoreLocation(seqStart14);
+                    tbElem13 = elem14_0;
+                } else if (elem14_0.isFailure()) {
+                    restoreLocation(seqStart14);
+                    tbElem13 = cut14 ? elem14_0.asCutFailure() : elem14_0;
                 }
             }
-            if (alt10_0.isSuccess()) {
-                var optStart13 = location();
-                var trivia14 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-                var optElem13 = parse_Args(trivia14);
-                if (optElem13.isSuccess() && optElem13.node != null) {
-                    children.add(optElem13.node);
-                }
-                var elem11_1 = optElem13.isSuccess() ? optElem13 : CstParseResult.success(null, "", location());
-                if (optElem13.isFailure()) {
-                    restoreLocation(optStart13);
-                }
-                if (elem11_1.isCutFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = elem11_1;
-                } else if (elem11_1.isFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = cut11 ? elem11_1.asCutFailure() : elem11_1;
-                }
-            }
-            if (alt10_0.isSuccess()) {
+            if (tbElem13.isSuccess()) {
                 if (!inTokenBoundary) skipWhitespace();
-                var elem11_2 = matchLiteralCst(")", false);
-                if (elem11_2.isSuccess() && elem11_2.node != null) {
-                    children.add(elem11_2.node);
-                }
-                if (elem11_2.isCutFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = elem11_2;
-                } else if (elem11_2.isFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = cut11 ? elem11_2.asCutFailure() : elem11_2;
-                }
-            }
-            if (alt10_0.isSuccess()) {
-                var optStart16 = location();
-                var trivia17 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-                var optElem16 = parse_ClassBody(trivia17);
-                if (optElem16.isSuccess() && optElem16.node != null) {
-                    children.add(optElem16.node);
-                }
-                var elem11_3 = optElem16.isSuccess() ? optElem16 : CstParseResult.success(null, "", location());
-                if (optElem16.isFailure()) {
-                    restoreLocation(optStart16);
-                }
-                if (elem11_3.isCutFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = elem11_3;
-                } else if (elem11_3.isFailure()) {
-                    restoreLocation(seqStart11);
-                    alt10_0 = cut11 ? elem11_3.asCutFailure() : elem11_3;
+                var notStart16 = location();
+                var notElem16 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+                restoreLocation(notStart16);
+                var elem14_1 = notElem16.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+                if (elem14_1.isCutFailure()) {
+                    restoreLocation(seqStart14);
+                    tbElem13 = elem14_1;
+                } else if (elem14_1.isFailure()) {
+                    restoreLocation(seqStart14);
+                    tbElem13 = cut14 ? elem14_1.asCutFailure() : elem14_1;
                 }
             }
-            if (alt10_0.isSuccess()) {
-                alt10_0 = CstParseResult.success(null, substring(seqStart11.offset(), pos), location());
+            if (tbElem13.isSuccess()) {
+                tbElem13 = CstParseResult.success(null, substring(seqStart14.offset(), pos), location());
             }
-            if (alt10_0.isSuccess()) {
-                elem4_3 = alt10_0;
-            } else if (alt10_0.isCutFailure()) {
-                elem4_3 = alt10_0;
-            } else {
-                restoreLocation(choiceStart10);
+            inTokenBoundary = false;
             children.clear();
-            children.addAll(savedChildren10);
-            CstParseResult alt10_1 = CstParseResult.success(null, "", location());
-            var seqStart18 = location();
-            boolean cut18 = false;
-            if (alt10_1.isSuccess()) {
-                var optStart19 = location();
-                var trivia20 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-                var optElem19 = parse_Dims(trivia20);
-                if (optElem19.isSuccess() && optElem19.node != null) {
-                    children.add(optElem19.node);
-                }
-                var elem18_0 = optElem19.isSuccess() ? optElem19 : CstParseResult.success(null, "", location());
-                if (optElem19.isFailure()) {
-                    restoreLocation(optStart19);
-                }
-                if (elem18_0.isCutFailure()) {
-                    restoreLocation(seqStart18);
-                    alt10_1 = elem18_0;
-                } else if (elem18_0.isFailure()) {
-                    restoreLocation(seqStart18);
-                    alt10_1 = cut18 ? elem18_0.asCutFailure() : elem18_0;
-                }
-            }
-            if (alt10_1.isSuccess()) {
-                var optStart21 = location();
-                var trivia22 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-                var optElem21 = parse_VarInit(trivia22);
-                if (optElem21.isSuccess() && optElem21.node != null) {
-                    children.add(optElem21.node);
-                }
-                var elem18_1 = optElem21.isSuccess() ? optElem21 : CstParseResult.success(null, "", location());
-                if (optElem21.isFailure()) {
-                    restoreLocation(optStart21);
-                }
-                if (elem18_1.isCutFailure()) {
-                    restoreLocation(seqStart18);
-                    alt10_1 = elem18_1;
-                } else if (elem18_1.isFailure()) {
-                    restoreLocation(seqStart18);
-                    alt10_1 = cut18 ? elem18_1.asCutFailure() : elem18_1;
-                }
-            }
-            if (alt10_1.isSuccess()) {
-                alt10_1 = CstParseResult.success(null, substring(seqStart18.offset(), pos), location());
-            }
-            if (alt10_1.isSuccess()) {
-                elem4_3 = alt10_1;
-            } else if (alt10_1.isCutFailure()) {
-                elem4_3 = alt10_1;
+            children.addAll(savedChildrenTb13);
+            CstParseResult elem12_0;
+            if (tbElem13.isSuccess()) {
+                var tbText13 = substring(tbStart13.offset(), pos);
+                var tbSpan13 = SourceSpan.of(tbStart13, location());
+                var tbNode13 = new CstNode.Token(tbSpan13, RULE_PEG_TOKEN, tbText13, List.of(), List.of());
+                children.add(tbNode13);
+                elem12_0 = CstParseResult.success(tbNode13, tbText13, location());
             } else {
-                restoreLocation(choiceStart10);
+                elem12_0 = tbElem13;
             }
-            }
-            if (elem4_3 == null) {
-                children.clear();
-                children.addAll(savedChildren10);
-                elem4_3 = CstParseResult.failure("one of alternatives");
-            }
-            if (elem4_3.isCutFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = elem4_3;
-            } else if (elem4_3.isFailure()) {
-                restoreLocation(seqStart4);
-                alt0_3 = cut4 ? elem4_3.asCutFailure() : elem4_3;
+            if (elem12_0.isCutFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = elem12_0;
+            } else if (elem12_0.isFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = cut12 ? elem12_0.asCutFailure() : elem12_0;
             }
         }
         if (alt0_3.isSuccess()) {
-            alt0_3 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
+            var optStart18 = location();
+            var trivia19 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var optElem18 = parse_TypeArgs(trivia19);
+            if (optElem18.isSuccess() && optElem18.node != null) {
+                children.add(optElem18.node);
+            }
+            var elem12_1 = optElem18.isSuccess() ? optElem18 : CstParseResult.success(null, "", location());
+            if (optElem18.isFailure()) {
+                restoreLocation(optStart18);
+            }
+            if (elem12_1.isCutFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = elem12_1;
+            } else if (elem12_1.isFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = cut12 ? elem12_1.asCutFailure() : elem12_1;
+            }
+        }
+        if (alt0_3.isSuccess()) {
+            var trivia20 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var elem12_2 = parse_Type(trivia20);
+            if (elem12_2.isSuccess() && elem12_2.node != null) {
+                children.add(elem12_2.node);
+            }
+            if (elem12_2.isCutFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = elem12_2;
+            } else if (elem12_2.isFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = cut12 ? elem12_2.asCutFailure() : elem12_2;
+            }
+        }
+        if (alt0_3.isSuccess()) {
+            CstParseResult elem12_3 = null;
+            var choiceStart22 = location();
+            var savedChildren22 = new ArrayList<>(children);
+            children.clear();
+            children.addAll(savedChildren22);
+            CstParseResult alt22_0 = CstParseResult.success(null, "", location());
+            var seqStart23 = location();
+            boolean cut23 = false;
+            if (alt22_0.isSuccess()) {
+                var elem23_0 = matchLiteralCst("(", false);
+                if (elem23_0.isSuccess() && elem23_0.node != null) {
+                    children.add(elem23_0.node);
+                }
+                if (elem23_0.isCutFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = elem23_0;
+                } else if (elem23_0.isFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = cut23 ? elem23_0.asCutFailure() : elem23_0;
+                }
+            }
+            if (alt22_0.isSuccess()) {
+                var optStart25 = location();
+                var trivia26 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+                var optElem25 = parse_Args(trivia26);
+                if (optElem25.isSuccess() && optElem25.node != null) {
+                    children.add(optElem25.node);
+                }
+                var elem23_1 = optElem25.isSuccess() ? optElem25 : CstParseResult.success(null, "", location());
+                if (optElem25.isFailure()) {
+                    restoreLocation(optStart25);
+                }
+                if (elem23_1.isCutFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = elem23_1;
+                } else if (elem23_1.isFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = cut23 ? elem23_1.asCutFailure() : elem23_1;
+                }
+            }
+            if (alt22_0.isSuccess()) {
+                if (!inTokenBoundary) skipWhitespace();
+                var elem23_2 = matchLiteralCst(")", false);
+                if (elem23_2.isSuccess() && elem23_2.node != null) {
+                    children.add(elem23_2.node);
+                }
+                if (elem23_2.isCutFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = elem23_2;
+                } else if (elem23_2.isFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = cut23 ? elem23_2.asCutFailure() : elem23_2;
+                }
+            }
+            if (alt22_0.isSuccess()) {
+                var optStart28 = location();
+                var trivia29 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+                var optElem28 = parse_ClassBody(trivia29);
+                if (optElem28.isSuccess() && optElem28.node != null) {
+                    children.add(optElem28.node);
+                }
+                var elem23_3 = optElem28.isSuccess() ? optElem28 : CstParseResult.success(null, "", location());
+                if (optElem28.isFailure()) {
+                    restoreLocation(optStart28);
+                }
+                if (elem23_3.isCutFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = elem23_3;
+                } else if (elem23_3.isFailure()) {
+                    restoreLocation(seqStart23);
+                    alt22_0 = cut23 ? elem23_3.asCutFailure() : elem23_3;
+                }
+            }
+            if (alt22_0.isSuccess()) {
+                alt22_0 = CstParseResult.success(null, substring(seqStart23.offset(), pos), location());
+            }
+            if (alt22_0.isSuccess()) {
+                elem12_3 = alt22_0;
+            } else if (alt22_0.isCutFailure()) {
+                elem12_3 = alt22_0;
+            } else {
+                restoreLocation(choiceStart22);
+            children.clear();
+            children.addAll(savedChildren22);
+            CstParseResult alt22_1 = CstParseResult.success(null, "", location());
+            var seqStart30 = location();
+            boolean cut30 = false;
+            if (alt22_1.isSuccess()) {
+                var optStart31 = location();
+                var trivia32 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+                var optElem31 = parse_Dims(trivia32);
+                if (optElem31.isSuccess() && optElem31.node != null) {
+                    children.add(optElem31.node);
+                }
+                var elem30_0 = optElem31.isSuccess() ? optElem31 : CstParseResult.success(null, "", location());
+                if (optElem31.isFailure()) {
+                    restoreLocation(optStart31);
+                }
+                if (elem30_0.isCutFailure()) {
+                    restoreLocation(seqStart30);
+                    alt22_1 = elem30_0;
+                } else if (elem30_0.isFailure()) {
+                    restoreLocation(seqStart30);
+                    alt22_1 = cut30 ? elem30_0.asCutFailure() : elem30_0;
+                }
+            }
+            if (alt22_1.isSuccess()) {
+                var optStart33 = location();
+                var trivia34 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+                var optElem33 = parse_VarInit(trivia34);
+                if (optElem33.isSuccess() && optElem33.node != null) {
+                    children.add(optElem33.node);
+                }
+                var elem30_1 = optElem33.isSuccess() ? optElem33 : CstParseResult.success(null, "", location());
+                if (optElem33.isFailure()) {
+                    restoreLocation(optStart33);
+                }
+                if (elem30_1.isCutFailure()) {
+                    restoreLocation(seqStart30);
+                    alt22_1 = elem30_1;
+                } else if (elem30_1.isFailure()) {
+                    restoreLocation(seqStart30);
+                    alt22_1 = cut30 ? elem30_1.asCutFailure() : elem30_1;
+                }
+            }
+            if (alt22_1.isSuccess()) {
+                alt22_1 = CstParseResult.success(null, substring(seqStart30.offset(), pos), location());
+            }
+            if (alt22_1.isSuccess()) {
+                elem12_3 = alt22_1;
+            } else if (alt22_1.isCutFailure()) {
+                elem12_3 = alt22_1;
+            } else {
+                restoreLocation(choiceStart22);
+            }
+            }
+            if (elem12_3 == null) {
+                children.clear();
+                children.addAll(savedChildren22);
+                elem12_3 = CstParseResult.failure("one of alternatives");
+            }
+            if (elem12_3.isCutFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = elem12_3;
+            } else if (elem12_3.isFailure()) {
+                restoreLocation(seqStart12);
+                alt0_3 = cut12 ? elem12_3.asCutFailure() : elem12_3;
+            }
+        }
+        if (alt0_3.isSuccess()) {
+            alt0_3 = CstParseResult.success(null, substring(seqStart12.offset(), pos), location());
         }
         if (alt0_3.isSuccess()) {
             result = alt0_3;
@@ -14611,79 +14803,79 @@ public final class Java25Parser {
         children.clear();
         children.addAll(savedChildren0);
         CstParseResult alt0_4 = CstParseResult.success(null, "", location());
-        var seqStart23 = location();
-        boolean cut23 = false;
+        var seqStart35 = location();
+        boolean cut35 = false;
         if (alt0_4.isSuccess()) {
-            var elem23_0 = matchLiteralCst("switch", false);
-            if (elem23_0.isSuccess() && elem23_0.node != null) {
-                children.add(elem23_0.node);
+            var elem35_0 = matchLiteralCst("switch", false);
+            if (elem35_0.isSuccess() && elem35_0.node != null) {
+                children.add(elem35_0.node);
             }
-            if (elem23_0.isCutFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = elem23_0;
-            } else if (elem23_0.isFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = cut23 ? elem23_0.asCutFailure() : elem23_0;
+            if (elem35_0.isCutFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = elem35_0;
+            } else if (elem35_0.isFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = cut35 ? elem35_0.asCutFailure() : elem35_0;
             }
         }
         if (alt0_4.isSuccess()) {
             if (!inTokenBoundary) skipWhitespace();
-            var elem23_1 = matchLiteralCst("(", false);
-            if (elem23_1.isSuccess() && elem23_1.node != null) {
-                children.add(elem23_1.node);
+            var elem35_1 = matchLiteralCst("(", false);
+            if (elem35_1.isSuccess() && elem35_1.node != null) {
+                children.add(elem35_1.node);
             }
-            if (elem23_1.isCutFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = elem23_1;
-            } else if (elem23_1.isFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = cut23 ? elem23_1.asCutFailure() : elem23_1;
+            if (elem35_1.isCutFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = elem35_1;
+            } else if (elem35_1.isFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = cut35 ? elem35_1.asCutFailure() : elem35_1;
             }
         }
         if (alt0_4.isSuccess()) {
-            var trivia26 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var elem23_2 = parse_Expr(trivia26);
-            if (elem23_2.isSuccess() && elem23_2.node != null) {
-                children.add(elem23_2.node);
+            var trivia38 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var elem35_2 = parse_Expr(trivia38);
+            if (elem35_2.isSuccess() && elem35_2.node != null) {
+                children.add(elem35_2.node);
             }
-            if (elem23_2.isCutFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = elem23_2;
-            } else if (elem23_2.isFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = cut23 ? elem23_2.asCutFailure() : elem23_2;
+            if (elem35_2.isCutFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = elem35_2;
+            } else if (elem35_2.isFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = cut35 ? elem35_2.asCutFailure() : elem35_2;
             }
         }
         if (alt0_4.isSuccess()) {
             if (!inTokenBoundary) skipWhitespace();
-            var elem23_3 = matchLiteralCst(")", false);
-            if (elem23_3.isSuccess() && elem23_3.node != null) {
-                children.add(elem23_3.node);
+            var elem35_3 = matchLiteralCst(")", false);
+            if (elem35_3.isSuccess() && elem35_3.node != null) {
+                children.add(elem35_3.node);
             }
-            if (elem23_3.isCutFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = elem23_3;
-            } else if (elem23_3.isFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = cut23 ? elem23_3.asCutFailure() : elem23_3;
-            }
-        }
-        if (alt0_4.isSuccess()) {
-            var trivia28 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var elem23_4 = parse_SwitchBlock(trivia28);
-            if (elem23_4.isSuccess() && elem23_4.node != null) {
-                children.add(elem23_4.node);
-            }
-            if (elem23_4.isCutFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = elem23_4;
-            } else if (elem23_4.isFailure()) {
-                restoreLocation(seqStart23);
-                alt0_4 = cut23 ? elem23_4.asCutFailure() : elem23_4;
+            if (elem35_3.isCutFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = elem35_3;
+            } else if (elem35_3.isFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = cut35 ? elem35_3.asCutFailure() : elem35_3;
             }
         }
         if (alt0_4.isSuccess()) {
-            alt0_4 = CstParseResult.success(null, substring(seqStart23.offset(), pos), location());
+            var trivia40 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var elem35_4 = parse_SwitchBlock(trivia40);
+            if (elem35_4.isSuccess() && elem35_4.node != null) {
+                children.add(elem35_4.node);
+            }
+            if (elem35_4.isCutFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = elem35_4;
+            } else if (elem35_4.isFailure()) {
+                restoreLocation(seqStart35);
+                alt0_4 = cut35 ? elem35_4.asCutFailure() : elem35_4;
+            }
+        }
+        if (alt0_4.isSuccess()) {
+            alt0_4 = CstParseResult.success(null, substring(seqStart35.offset(), pos), location());
         }
         if (alt0_4.isSuccess()) {
             result = alt0_4;
@@ -14693,8 +14885,8 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var trivia29 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-        var alt0_5 = parse_Lambda(trivia29);
+        var trivia41 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+        var alt0_5 = parse_Lambda(trivia41);
         if (alt0_5.isSuccess() && alt0_5.node != null) {
             children.add(alt0_5.node);
         }
@@ -14707,51 +14899,51 @@ public final class Java25Parser {
         children.clear();
         children.addAll(savedChildren0);
         CstParseResult alt0_6 = CstParseResult.success(null, "", location());
-        var seqStart30 = location();
-        boolean cut30 = false;
+        var seqStart42 = location();
+        boolean cut42 = false;
         if (alt0_6.isSuccess()) {
-            var elem30_0 = matchLiteralCst("(", false);
-            if (elem30_0.isSuccess() && elem30_0.node != null) {
-                children.add(elem30_0.node);
+            var elem42_0 = matchLiteralCst("(", false);
+            if (elem42_0.isSuccess() && elem42_0.node != null) {
+                children.add(elem42_0.node);
             }
-            if (elem30_0.isCutFailure()) {
-                restoreLocation(seqStart30);
-                alt0_6 = elem30_0;
-            } else if (elem30_0.isFailure()) {
-                restoreLocation(seqStart30);
-                alt0_6 = cut30 ? elem30_0.asCutFailure() : elem30_0;
+            if (elem42_0.isCutFailure()) {
+                restoreLocation(seqStart42);
+                alt0_6 = elem42_0;
+            } else if (elem42_0.isFailure()) {
+                restoreLocation(seqStart42);
+                alt0_6 = cut42 ? elem42_0.asCutFailure() : elem42_0;
             }
         }
         if (alt0_6.isSuccess()) {
-            var trivia32 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var elem30_1 = parse_Expr(trivia32);
-            if (elem30_1.isSuccess() && elem30_1.node != null) {
-                children.add(elem30_1.node);
+            var trivia44 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var elem42_1 = parse_Expr(trivia44);
+            if (elem42_1.isSuccess() && elem42_1.node != null) {
+                children.add(elem42_1.node);
             }
-            if (elem30_1.isCutFailure()) {
-                restoreLocation(seqStart30);
-                alt0_6 = elem30_1;
-            } else if (elem30_1.isFailure()) {
-                restoreLocation(seqStart30);
-                alt0_6 = cut30 ? elem30_1.asCutFailure() : elem30_1;
+            if (elem42_1.isCutFailure()) {
+                restoreLocation(seqStart42);
+                alt0_6 = elem42_1;
+            } else if (elem42_1.isFailure()) {
+                restoreLocation(seqStart42);
+                alt0_6 = cut42 ? elem42_1.asCutFailure() : elem42_1;
             }
         }
         if (alt0_6.isSuccess()) {
             if (!inTokenBoundary) skipWhitespace();
-            var elem30_2 = matchLiteralCst(")", false);
-            if (elem30_2.isSuccess() && elem30_2.node != null) {
-                children.add(elem30_2.node);
+            var elem42_2 = matchLiteralCst(")", false);
+            if (elem42_2.isSuccess() && elem42_2.node != null) {
+                children.add(elem42_2.node);
             }
-            if (elem30_2.isCutFailure()) {
-                restoreLocation(seqStart30);
-                alt0_6 = elem30_2;
-            } else if (elem30_2.isFailure()) {
-                restoreLocation(seqStart30);
-                alt0_6 = cut30 ? elem30_2.asCutFailure() : elem30_2;
+            if (elem42_2.isCutFailure()) {
+                restoreLocation(seqStart42);
+                alt0_6 = elem42_2;
+            } else if (elem42_2.isFailure()) {
+                restoreLocation(seqStart42);
+                alt0_6 = cut42 ? elem42_2.asCutFailure() : elem42_2;
             }
         }
         if (alt0_6.isSuccess()) {
-            alt0_6 = CstParseResult.success(null, substring(seqStart30.offset(), pos), location());
+            alt0_6 = CstParseResult.success(null, substring(seqStart42.offset(), pos), location());
         }
         if (alt0_6.isSuccess()) {
             result = alt0_6;
@@ -14761,8 +14953,8 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var trivia34 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-        var alt0_7 = parse_QualifiedName(trivia34);
+        var trivia46 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+        var alt0_7 = parse_QualifiedName(trivia46);
         if (alt0_7.isSuccess() && alt0_7.node != null) {
             children.add(alt0_7.node);
         }
@@ -15163,9 +15355,51 @@ public final class Java25Parser {
                 var savedChildren9 = new ArrayList<>(children);
                 children.clear();
                 children.addAll(savedChildren9);
-                var alt9_0 = matchLiteralCst("var", false);
-                if (alt9_0.isSuccess() && alt9_0.node != null) {
-                    children.add(alt9_0.node);
+                var tbStart10 = location();
+                inTokenBoundary = true;
+                var savedChildrenTb10 = new ArrayList<>(children);
+                CstParseResult tbElem10 = CstParseResult.success(null, "", location());
+                var seqStart11 = location();
+                boolean cut11 = false;
+                if (tbElem10.isSuccess()) {
+                    var elem11_0 = matchLiteralCst("var", false);
+                    if (elem11_0.isCutFailure()) {
+                        restoreLocation(seqStart11);
+                        tbElem10 = elem11_0;
+                    } else if (elem11_0.isFailure()) {
+                        restoreLocation(seqStart11);
+                        tbElem10 = cut11 ? elem11_0.asCutFailure() : elem11_0;
+                    }
+                }
+                if (tbElem10.isSuccess()) {
+                    if (!inTokenBoundary) skipWhitespace();
+                    var notStart13 = location();
+                    var notElem13 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+                    restoreLocation(notStart13);
+                    var elem11_1 = notElem13.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+                    if (elem11_1.isCutFailure()) {
+                        restoreLocation(seqStart11);
+                        tbElem10 = elem11_1;
+                    } else if (elem11_1.isFailure()) {
+                        restoreLocation(seqStart11);
+                        tbElem10 = cut11 ? elem11_1.asCutFailure() : elem11_1;
+                    }
+                }
+                if (tbElem10.isSuccess()) {
+                    tbElem10 = CstParseResult.success(null, substring(seqStart11.offset(), pos), location());
+                }
+                inTokenBoundary = false;
+                children.clear();
+                children.addAll(savedChildrenTb10);
+                CstParseResult alt9_0;
+                if (tbElem10.isSuccess()) {
+                    var tbText10 = substring(tbStart10.offset(), pos);
+                    var tbSpan10 = SourceSpan.of(tbStart10, location());
+                    var tbNode10 = new CstNode.Token(tbSpan10, RULE_PEG_TOKEN, tbText10, List.of(), List.of());
+                    children.add(tbNode10);
+                    alt9_0 = CstParseResult.success(tbNode10, tbText10, location());
+                } else {
+                    alt9_0 = tbElem10;
                 }
                 if (alt9_0.isSuccess()) {
                     elem7_0 = alt9_0;
@@ -15175,8 +15409,8 @@ public final class Java25Parser {
                     restoreLocation(choiceStart9);
                 children.clear();
                 children.addAll(savedChildren9);
-                var trivia11 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-                var alt9_1 = parse_Type(trivia11);
+                var trivia15 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+                var alt9_1 = parse_Type(trivia15);
                 if (alt9_1.isSuccess() && alt9_1.node != null) {
                     children.add(alt9_1.node);
                 }
@@ -15203,42 +15437,42 @@ public final class Java25Parser {
             }
             if (optElem5.isSuccess()) {
                 if (!inTokenBoundary) skipWhitespace();
-                var andStart12 = location();
-                var savedChildrenAnd12 = new ArrayList<>(children);
-                CstParseResult andElem12 = null;
-                var choiceStart14 = location();
-                var alt14_0 = matchLiteralCst("...", false);
-                if (alt14_0.isSuccess()) {
-                    andElem12 = alt14_0;
-                } else if (alt14_0.isCutFailure()) {
-                    andElem12 = alt14_0;
+                var andStart16 = location();
+                var savedChildrenAnd16 = new ArrayList<>(children);
+                CstParseResult andElem16 = null;
+                var choiceStart18 = location();
+                var alt18_0 = matchLiteralCst("...", false);
+                if (alt18_0.isSuccess()) {
+                    andElem16 = alt18_0;
+                } else if (alt18_0.isCutFailure()) {
+                    andElem16 = alt18_0;
                 } else {
-                    restoreLocation(choiceStart14);
-                var trivia16 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-                var alt14_1 = parse_Identifier(trivia16);
-                if (alt14_1.isSuccess()) {
-                    andElem12 = alt14_1;
-                } else if (alt14_1.isCutFailure()) {
-                    andElem12 = alt14_1;
+                    restoreLocation(choiceStart18);
+                var trivia20 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+                var alt18_1 = parse_Identifier(trivia20);
+                if (alt18_1.isSuccess()) {
+                    andElem16 = alt18_1;
+                } else if (alt18_1.isCutFailure()) {
+                    andElem16 = alt18_1;
                 } else {
-                    restoreLocation(choiceStart14);
-                var alt14_2 = matchLiteralCst("_", false);
-                if (alt14_2.isSuccess()) {
-                    andElem12 = alt14_2;
-                } else if (alt14_2.isCutFailure()) {
-                    andElem12 = alt14_2;
+                    restoreLocation(choiceStart18);
+                var alt18_2 = matchLiteralCst("_", false);
+                if (alt18_2.isSuccess()) {
+                    andElem16 = alt18_2;
+                } else if (alt18_2.isCutFailure()) {
+                    andElem16 = alt18_2;
                 } else {
-                    restoreLocation(choiceStart14);
+                    restoreLocation(choiceStart18);
                 }
                 }
                 }
-                if (andElem12 == null) {
-                    andElem12 = CstParseResult.failure("one of alternatives");
+                if (andElem16 == null) {
+                    andElem16 = CstParseResult.failure("one of alternatives");
                 }
-                restoreLocation(andStart12);
+                restoreLocation(andStart16);
                 children.clear();
-                children.addAll(savedChildrenAnd12);
-                var elem7_1 = andElem12.isSuccess() ? CstParseResult.success(null, "", location()) : andElem12;
+                children.addAll(savedChildrenAnd16);
+                var elem7_1 = andElem16.isSuccess() ? CstParseResult.success(null, "", location()) : andElem16;
                 if (elem7_1.isCutFailure()) {
                     restoreLocation(seqStart7);
                     optElem5 = elem7_1;
@@ -15263,15 +15497,15 @@ public final class Java25Parser {
             }
         }
         if (result.isSuccess()) {
-            var optStart18 = location();
+            var optStart22 = location();
             if (!inTokenBoundary) skipWhitespace();
-            var optElem18 = matchLiteralCst("...", false);
-            if (optElem18.isSuccess() && optElem18.node != null) {
-                children.add(optElem18.node);
+            var optElem22 = matchLiteralCst("...", false);
+            if (optElem22.isSuccess() && optElem22.node != null) {
+                children.add(optElem22.node);
             }
-            var elem0_3 = optElem18.isSuccess() ? optElem18 : CstParseResult.success(null, "", location());
-            if (optElem18.isFailure()) {
-                restoreLocation(optStart18);
+            var elem0_3 = optElem22.isSuccess() ? optElem22 : CstParseResult.success(null, "", location());
+            if (optElem22.isFailure()) {
+                restoreLocation(optStart22);
             }
             if (elem0_3.isCutFailure()) {
                 restoreLocation(seqStart0);
@@ -15283,38 +15517,38 @@ public final class Java25Parser {
         }
         if (result.isSuccess()) {
             CstParseResult elem0_4 = null;
-            var choiceStart21 = location();
-            var savedChildren21 = new ArrayList<>(children);
+            var choiceStart25 = location();
+            var savedChildren25 = new ArrayList<>(children);
             children.clear();
-            children.addAll(savedChildren21);
-            var trivia22 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-            var alt21_0 = parse_Identifier(trivia22);
-            if (alt21_0.isSuccess() && alt21_0.node != null) {
-                children.add(alt21_0.node);
+            children.addAll(savedChildren25);
+            var trivia26 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+            var alt25_0 = parse_Identifier(trivia26);
+            if (alt25_0.isSuccess() && alt25_0.node != null) {
+                children.add(alt25_0.node);
             }
-            if (alt21_0.isSuccess()) {
-                elem0_4 = alt21_0;
-            } else if (alt21_0.isCutFailure()) {
-                elem0_4 = alt21_0;
+            if (alt25_0.isSuccess()) {
+                elem0_4 = alt25_0;
+            } else if (alt25_0.isCutFailure()) {
+                elem0_4 = alt25_0;
             } else {
-                restoreLocation(choiceStart21);
+                restoreLocation(choiceStart25);
             children.clear();
-            children.addAll(savedChildren21);
-            var alt21_1 = matchLiteralCst("_", false);
-            if (alt21_1.isSuccess() && alt21_1.node != null) {
-                children.add(alt21_1.node);
+            children.addAll(savedChildren25);
+            var alt25_1 = matchLiteralCst("_", false);
+            if (alt25_1.isSuccess() && alt25_1.node != null) {
+                children.add(alt25_1.node);
             }
-            if (alt21_1.isSuccess()) {
-                elem0_4 = alt21_1;
-            } else if (alt21_1.isCutFailure()) {
-                elem0_4 = alt21_1;
+            if (alt25_1.isSuccess()) {
+                elem0_4 = alt25_1;
+            } else if (alt25_1.isCutFailure()) {
+                elem0_4 = alt25_1;
             } else {
-                restoreLocation(choiceStart21);
+                restoreLocation(choiceStart25);
             }
             }
             if (elem0_4 == null) {
                 children.clear();
-                children.addAll(savedChildren21);
+                children.addAll(savedChildren25);
                 elem0_4 = CstParseResult.failure("one of alternatives");
             }
             if (elem0_4.isCutFailure()) {
@@ -15684,137 +15918,134 @@ public final class Java25Parser {
         
         var children = new ArrayList<CstNode>();
         
-        CstParseResult result = null;
-        var choiceStart0 = location();
-        var savedChildren0 = new ArrayList<>(children);
+        var tbStart0 = location();
+        inTokenBoundary = true;
+        var savedChildrenTb0 = new ArrayList<>(children);
+        CstParseResult tbElem0 = CstParseResult.success(null, "", location());
+        var seqStart1 = location();
+        boolean cut1 = false;
+        if (tbElem0.isSuccess()) {
+            CstParseResult elem1_0 = null;
+            var choiceStart3 = location();
+            var alt3_0 = matchLiteralCst("boolean", false);
+            if (alt3_0.isSuccess()) {
+                elem1_0 = alt3_0;
+            } else if (alt3_0.isCutFailure()) {
+                elem1_0 = alt3_0;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_1 = matchLiteralCst("byte", false);
+            if (alt3_1.isSuccess()) {
+                elem1_0 = alt3_1;
+            } else if (alt3_1.isCutFailure()) {
+                elem1_0 = alt3_1;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_2 = matchLiteralCst("short", false);
+            if (alt3_2.isSuccess()) {
+                elem1_0 = alt3_2;
+            } else if (alt3_2.isCutFailure()) {
+                elem1_0 = alt3_2;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_3 = matchLiteralCst("int", false);
+            if (alt3_3.isSuccess()) {
+                elem1_0 = alt3_3;
+            } else if (alt3_3.isCutFailure()) {
+                elem1_0 = alt3_3;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_4 = matchLiteralCst("long", false);
+            if (alt3_4.isSuccess()) {
+                elem1_0 = alt3_4;
+            } else if (alt3_4.isCutFailure()) {
+                elem1_0 = alt3_4;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_5 = matchLiteralCst("float", false);
+            if (alt3_5.isSuccess()) {
+                elem1_0 = alt3_5;
+            } else if (alt3_5.isCutFailure()) {
+                elem1_0 = alt3_5;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_6 = matchLiteralCst("double", false);
+            if (alt3_6.isSuccess()) {
+                elem1_0 = alt3_6;
+            } else if (alt3_6.isCutFailure()) {
+                elem1_0 = alt3_6;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_7 = matchLiteralCst("char", false);
+            if (alt3_7.isSuccess()) {
+                elem1_0 = alt3_7;
+            } else if (alt3_7.isCutFailure()) {
+                elem1_0 = alt3_7;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_8 = matchLiteralCst("void", false);
+            if (alt3_8.isSuccess()) {
+                elem1_0 = alt3_8;
+            } else if (alt3_8.isCutFailure()) {
+                elem1_0 = alt3_8;
+            } else {
+                restoreLocation(choiceStart3);
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            if (elem1_0 == null) {
+                elem1_0 = CstParseResult.failure("one of alternatives");
+            }
+            if (elem1_0.isCutFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = elem1_0;
+            } else if (elem1_0.isFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = cut1 ? elem1_0.asCutFailure() : elem1_0;
+            }
+        }
+        if (tbElem0.isSuccess()) {
+            if (!inTokenBoundary) skipWhitespace();
+            var notStart13 = location();
+            var notElem13 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+            restoreLocation(notStart13);
+            var elem1_1 = notElem13.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+            if (elem1_1.isCutFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = elem1_1;
+            } else if (elem1_1.isFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = cut1 ? elem1_1.asCutFailure() : elem1_1;
+            }
+        }
+        if (tbElem0.isSuccess()) {
+            tbElem0 = CstParseResult.success(null, substring(seqStart1.offset(), pos), location());
+        }
+        inTokenBoundary = false;
         children.clear();
-        children.addAll(savedChildren0);
-        var alt0_0 = matchLiteralCst("boolean", false);
-        if (alt0_0.isSuccess() && alt0_0.node != null) {
-            children.add(alt0_0.node);
-        }
-        if (alt0_0.isSuccess()) {
-            result = alt0_0;
-        } else if (alt0_0.isCutFailure()) {
-            result = alt0_0;
+        children.addAll(savedChildrenTb0);
+        CstParseResult result;
+        if (tbElem0.isSuccess()) {
+            var tbText0 = substring(tbStart0.offset(), pos);
+            var tbSpan0 = SourceSpan.of(tbStart0, location());
+            var tbNode0 = new CstNode.Token(tbSpan0, RULE_PEG_TOKEN, tbText0, List.of(), List.of());
+            children.add(tbNode0);
+            result = CstParseResult.success(tbNode0, tbText0, location());
         } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_1 = matchLiteralCst("byte", false);
-        if (alt0_1.isSuccess() && alt0_1.node != null) {
-            children.add(alt0_1.node);
-        }
-        if (alt0_1.isSuccess()) {
-            result = alt0_1;
-        } else if (alt0_1.isCutFailure()) {
-            result = alt0_1;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_2 = matchLiteralCst("short", false);
-        if (alt0_2.isSuccess() && alt0_2.node != null) {
-            children.add(alt0_2.node);
-        }
-        if (alt0_2.isSuccess()) {
-            result = alt0_2;
-        } else if (alt0_2.isCutFailure()) {
-            result = alt0_2;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_3 = matchLiteralCst("int", false);
-        if (alt0_3.isSuccess() && alt0_3.node != null) {
-            children.add(alt0_3.node);
-        }
-        if (alt0_3.isSuccess()) {
-            result = alt0_3;
-        } else if (alt0_3.isCutFailure()) {
-            result = alt0_3;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_4 = matchLiteralCst("long", false);
-        if (alt0_4.isSuccess() && alt0_4.node != null) {
-            children.add(alt0_4.node);
-        }
-        if (alt0_4.isSuccess()) {
-            result = alt0_4;
-        } else if (alt0_4.isCutFailure()) {
-            result = alt0_4;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_5 = matchLiteralCst("float", false);
-        if (alt0_5.isSuccess() && alt0_5.node != null) {
-            children.add(alt0_5.node);
-        }
-        if (alt0_5.isSuccess()) {
-            result = alt0_5;
-        } else if (alt0_5.isCutFailure()) {
-            result = alt0_5;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_6 = matchLiteralCst("double", false);
-        if (alt0_6.isSuccess() && alt0_6.node != null) {
-            children.add(alt0_6.node);
-        }
-        if (alt0_6.isSuccess()) {
-            result = alt0_6;
-        } else if (alt0_6.isCutFailure()) {
-            result = alt0_6;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_7 = matchLiteralCst("char", false);
-        if (alt0_7.isSuccess() && alt0_7.node != null) {
-            children.add(alt0_7.node);
-        }
-        if (alt0_7.isSuccess()) {
-            result = alt0_7;
-        } else if (alt0_7.isCutFailure()) {
-            result = alt0_7;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_8 = matchLiteralCst("void", false);
-        if (alt0_8.isSuccess() && alt0_8.node != null) {
-            children.add(alt0_8.node);
-        }
-        if (alt0_8.isSuccess()) {
-            result = alt0_8;
-        } else if (alt0_8.isCutFailure()) {
-            result = alt0_8;
-        } else {
-            restoreLocation(choiceStart0);
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        if (result == null) {
-            children.clear();
-            children.addAll(savedChildren0);
-            result = CstParseResult.failure("one of alternatives");
+            result = tbElem0;
         }
         
         CstParseResult finalResult;
         if (result.isSuccess()) {
             var endLoc = location();
             var span = SourceSpan.of(startLoc, endLoc);
-            var node = new CstNode.NonTerminal(span, RULE_PRIM_TYPE, children, leadingTrivia, List.of());
+            var node = new CstNode.Token(span, RULE_PRIM_TYPE, result.text, leadingTrivia, List.of());
             finalResult = CstParseResult.success(node, result.text, endLoc);
         } else {
             restoreLocation(startLoc);
@@ -16818,202 +17049,174 @@ public final class Java25Parser {
         
         var children = new ArrayList<CstNode>();
         
-        CstParseResult result = null;
-        var choiceStart0 = location();
-        var savedChildren0 = new ArrayList<>(children);
+        var tbStart0 = location();
+        inTokenBoundary = true;
+        var savedChildrenTb0 = new ArrayList<>(children);
+        CstParseResult tbElem0 = CstParseResult.success(null, "", location());
+        var seqStart1 = location();
+        boolean cut1 = false;
+        if (tbElem0.isSuccess()) {
+            CstParseResult elem1_0 = null;
+            var choiceStart3 = location();
+            var alt3_0 = matchLiteralCst("public", false);
+            if (alt3_0.isSuccess()) {
+                elem1_0 = alt3_0;
+            } else if (alt3_0.isCutFailure()) {
+                elem1_0 = alt3_0;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_1 = matchLiteralCst("protected", false);
+            if (alt3_1.isSuccess()) {
+                elem1_0 = alt3_1;
+            } else if (alt3_1.isCutFailure()) {
+                elem1_0 = alt3_1;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_2 = matchLiteralCst("private", false);
+            if (alt3_2.isSuccess()) {
+                elem1_0 = alt3_2;
+            } else if (alt3_2.isCutFailure()) {
+                elem1_0 = alt3_2;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_3 = matchLiteralCst("static", false);
+            if (alt3_3.isSuccess()) {
+                elem1_0 = alt3_3;
+            } else if (alt3_3.isCutFailure()) {
+                elem1_0 = alt3_3;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_4 = matchLiteralCst("final", false);
+            if (alt3_4.isSuccess()) {
+                elem1_0 = alt3_4;
+            } else if (alt3_4.isCutFailure()) {
+                elem1_0 = alt3_4;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_5 = matchLiteralCst("abstract", false);
+            if (alt3_5.isSuccess()) {
+                elem1_0 = alt3_5;
+            } else if (alt3_5.isCutFailure()) {
+                elem1_0 = alt3_5;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_6 = matchLiteralCst("native", false);
+            if (alt3_6.isSuccess()) {
+                elem1_0 = alt3_6;
+            } else if (alt3_6.isCutFailure()) {
+                elem1_0 = alt3_6;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_7 = matchLiteralCst("synchronized", false);
+            if (alt3_7.isSuccess()) {
+                elem1_0 = alt3_7;
+            } else if (alt3_7.isCutFailure()) {
+                elem1_0 = alt3_7;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_8 = matchLiteralCst("transient", false);
+            if (alt3_8.isSuccess()) {
+                elem1_0 = alt3_8;
+            } else if (alt3_8.isCutFailure()) {
+                elem1_0 = alt3_8;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_9 = matchLiteralCst("volatile", false);
+            if (alt3_9.isSuccess()) {
+                elem1_0 = alt3_9;
+            } else if (alt3_9.isCutFailure()) {
+                elem1_0 = alt3_9;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_10 = matchLiteralCst("strictfp", false);
+            if (alt3_10.isSuccess()) {
+                elem1_0 = alt3_10;
+            } else if (alt3_10.isCutFailure()) {
+                elem1_0 = alt3_10;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_11 = matchLiteralCst("default", false);
+            if (alt3_11.isSuccess()) {
+                elem1_0 = alt3_11;
+            } else if (alt3_11.isCutFailure()) {
+                elem1_0 = alt3_11;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_12 = matchLiteralCst("sealed", false);
+            if (alt3_12.isSuccess()) {
+                elem1_0 = alt3_12;
+            } else if (alt3_12.isCutFailure()) {
+                elem1_0 = alt3_12;
+            } else {
+                restoreLocation(choiceStart3);
+            var alt3_13 = matchLiteralCst("non-sealed", false);
+            if (alt3_13.isSuccess()) {
+                elem1_0 = alt3_13;
+            } else if (alt3_13.isCutFailure()) {
+                elem1_0 = alt3_13;
+            } else {
+                restoreLocation(choiceStart3);
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            if (elem1_0 == null) {
+                elem1_0 = CstParseResult.failure("one of alternatives");
+            }
+            if (elem1_0.isCutFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = elem1_0;
+            } else if (elem1_0.isFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = cut1 ? elem1_0.asCutFailure() : elem1_0;
+            }
+        }
+        if (tbElem0.isSuccess()) {
+            if (!inTokenBoundary) skipWhitespace();
+            var notStart18 = location();
+            var notElem18 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+            restoreLocation(notStart18);
+            var elem1_1 = notElem18.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+            if (elem1_1.isCutFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = elem1_1;
+            } else if (elem1_1.isFailure()) {
+                restoreLocation(seqStart1);
+                tbElem0 = cut1 ? elem1_1.asCutFailure() : elem1_1;
+            }
+        }
+        if (tbElem0.isSuccess()) {
+            tbElem0 = CstParseResult.success(null, substring(seqStart1.offset(), pos), location());
+        }
+        inTokenBoundary = false;
         children.clear();
-        children.addAll(savedChildren0);
-        var alt0_0 = matchLiteralCst("public", false);
-        if (alt0_0.isSuccess() && alt0_0.node != null) {
-            children.add(alt0_0.node);
-        }
-        if (alt0_0.isSuccess()) {
-            result = alt0_0;
-        } else if (alt0_0.isCutFailure()) {
-            result = alt0_0;
+        children.addAll(savedChildrenTb0);
+        CstParseResult result;
+        if (tbElem0.isSuccess()) {
+            var tbText0 = substring(tbStart0.offset(), pos);
+            var tbSpan0 = SourceSpan.of(tbStart0, location());
+            var tbNode0 = new CstNode.Token(tbSpan0, RULE_PEG_TOKEN, tbText0, List.of(), List.of());
+            children.add(tbNode0);
+            result = CstParseResult.success(tbNode0, tbText0, location());
         } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_1 = matchLiteralCst("protected", false);
-        if (alt0_1.isSuccess() && alt0_1.node != null) {
-            children.add(alt0_1.node);
-        }
-        if (alt0_1.isSuccess()) {
-            result = alt0_1;
-        } else if (alt0_1.isCutFailure()) {
-            result = alt0_1;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_2 = matchLiteralCst("private", false);
-        if (alt0_2.isSuccess() && alt0_2.node != null) {
-            children.add(alt0_2.node);
-        }
-        if (alt0_2.isSuccess()) {
-            result = alt0_2;
-        } else if (alt0_2.isCutFailure()) {
-            result = alt0_2;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_3 = matchLiteralCst("static", false);
-        if (alt0_3.isSuccess() && alt0_3.node != null) {
-            children.add(alt0_3.node);
-        }
-        if (alt0_3.isSuccess()) {
-            result = alt0_3;
-        } else if (alt0_3.isCutFailure()) {
-            result = alt0_3;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_4 = matchLiteralCst("final", false);
-        if (alt0_4.isSuccess() && alt0_4.node != null) {
-            children.add(alt0_4.node);
-        }
-        if (alt0_4.isSuccess()) {
-            result = alt0_4;
-        } else if (alt0_4.isCutFailure()) {
-            result = alt0_4;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_5 = matchLiteralCst("abstract", false);
-        if (alt0_5.isSuccess() && alt0_5.node != null) {
-            children.add(alt0_5.node);
-        }
-        if (alt0_5.isSuccess()) {
-            result = alt0_5;
-        } else if (alt0_5.isCutFailure()) {
-            result = alt0_5;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_6 = matchLiteralCst("native", false);
-        if (alt0_6.isSuccess() && alt0_6.node != null) {
-            children.add(alt0_6.node);
-        }
-        if (alt0_6.isSuccess()) {
-            result = alt0_6;
-        } else if (alt0_6.isCutFailure()) {
-            result = alt0_6;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_7 = matchLiteralCst("synchronized", false);
-        if (alt0_7.isSuccess() && alt0_7.node != null) {
-            children.add(alt0_7.node);
-        }
-        if (alt0_7.isSuccess()) {
-            result = alt0_7;
-        } else if (alt0_7.isCutFailure()) {
-            result = alt0_7;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_8 = matchLiteralCst("transient", false);
-        if (alt0_8.isSuccess() && alt0_8.node != null) {
-            children.add(alt0_8.node);
-        }
-        if (alt0_8.isSuccess()) {
-            result = alt0_8;
-        } else if (alt0_8.isCutFailure()) {
-            result = alt0_8;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_9 = matchLiteralCst("volatile", false);
-        if (alt0_9.isSuccess() && alt0_9.node != null) {
-            children.add(alt0_9.node);
-        }
-        if (alt0_9.isSuccess()) {
-            result = alt0_9;
-        } else if (alt0_9.isCutFailure()) {
-            result = alt0_9;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_10 = matchLiteralCst("strictfp", false);
-        if (alt0_10.isSuccess() && alt0_10.node != null) {
-            children.add(alt0_10.node);
-        }
-        if (alt0_10.isSuccess()) {
-            result = alt0_10;
-        } else if (alt0_10.isCutFailure()) {
-            result = alt0_10;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_11 = matchLiteralCst("default", false);
-        if (alt0_11.isSuccess() && alt0_11.node != null) {
-            children.add(alt0_11.node);
-        }
-        if (alt0_11.isSuccess()) {
-            result = alt0_11;
-        } else if (alt0_11.isCutFailure()) {
-            result = alt0_11;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_12 = matchLiteralCst("sealed", false);
-        if (alt0_12.isSuccess() && alt0_12.node != null) {
-            children.add(alt0_12.node);
-        }
-        if (alt0_12.isSuccess()) {
-            result = alt0_12;
-        } else if (alt0_12.isCutFailure()) {
-            result = alt0_12;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var alt0_13 = matchLiteralCst("non-sealed", false);
-        if (alt0_13.isSuccess() && alt0_13.node != null) {
-            children.add(alt0_13.node);
-        }
-        if (alt0_13.isSuccess()) {
-            result = alt0_13;
-        } else if (alt0_13.isCutFailure()) {
-            result = alt0_13;
-        } else {
-            restoreLocation(choiceStart0);
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        }
-        if (result == null) {
-            children.clear();
-            children.addAll(savedChildren0);
-            result = CstParseResult.failure("one of alternatives");
+            result = tbElem0;
         }
         
         CstParseResult finalResult;
         if (result.isSuccess()) {
             var endLoc = location();
             var span = SourceSpan.of(startLoc, endLoc);
-            var node = new CstNode.NonTerminal(span, RULE_MODIFIER, children, leadingTrivia, List.of());
+            var node = new CstNode.Token(span, RULE_MODIFIER, result.text, leadingTrivia, List.of());
             finalResult = CstParseResult.success(node, result.text, endLoc);
         } else {
             restoreLocation(startLoc);
@@ -17591,9 +17794,79 @@ public final class Java25Parser {
         var savedChildren0 = new ArrayList<>(children);
         children.clear();
         children.addAll(savedChildren0);
-        var alt0_0 = matchLiteralCst("null", false);
-        if (alt0_0.isSuccess() && alt0_0.node != null) {
-            children.add(alt0_0.node);
+        var tbStart1 = location();
+        inTokenBoundary = true;
+        var savedChildrenTb1 = new ArrayList<>(children);
+        CstParseResult tbElem1 = CstParseResult.success(null, "", location());
+        var seqStart2 = location();
+        boolean cut2 = false;
+        if (tbElem1.isSuccess()) {
+            CstParseResult elem2_0 = null;
+            var choiceStart4 = location();
+            var alt4_0 = matchLiteralCst("null", false);
+            if (alt4_0.isSuccess()) {
+                elem2_0 = alt4_0;
+            } else if (alt4_0.isCutFailure()) {
+                elem2_0 = alt4_0;
+            } else {
+                restoreLocation(choiceStart4);
+            var alt4_1 = matchLiteralCst("true", false);
+            if (alt4_1.isSuccess()) {
+                elem2_0 = alt4_1;
+            } else if (alt4_1.isCutFailure()) {
+                elem2_0 = alt4_1;
+            } else {
+                restoreLocation(choiceStart4);
+            var alt4_2 = matchLiteralCst("false", false);
+            if (alt4_2.isSuccess()) {
+                elem2_0 = alt4_2;
+            } else if (alt4_2.isCutFailure()) {
+                elem2_0 = alt4_2;
+            } else {
+                restoreLocation(choiceStart4);
+            }
+            }
+            }
+            if (elem2_0 == null) {
+                elem2_0 = CstParseResult.failure("one of alternatives");
+            }
+            if (elem2_0.isCutFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = elem2_0;
+            } else if (elem2_0.isFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = cut2 ? elem2_0.asCutFailure() : elem2_0;
+            }
+        }
+        if (tbElem1.isSuccess()) {
+            if (!inTokenBoundary) skipWhitespace();
+            var notStart8 = location();
+            var notElem8 = matchCharClassCst("a-zA-Z0-9_$", false, false);
+            restoreLocation(notStart8);
+            var elem2_1 = notElem8.isSuccess() ? CstParseResult.failure("not match") : CstParseResult.success(null, "", location());
+            if (elem2_1.isCutFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = elem2_1;
+            } else if (elem2_1.isFailure()) {
+                restoreLocation(seqStart2);
+                tbElem1 = cut2 ? elem2_1.asCutFailure() : elem2_1;
+            }
+        }
+        if (tbElem1.isSuccess()) {
+            tbElem1 = CstParseResult.success(null, substring(seqStart2.offset(), pos), location());
+        }
+        inTokenBoundary = false;
+        children.clear();
+        children.addAll(savedChildrenTb1);
+        CstParseResult alt0_0;
+        if (tbElem1.isSuccess()) {
+            var tbText1 = substring(tbStart1.offset(), pos);
+            var tbSpan1 = SourceSpan.of(tbStart1, location());
+            var tbNode1 = new CstNode.Token(tbSpan1, RULE_PEG_TOKEN, tbText1, List.of(), List.of());
+            children.add(tbNode1);
+            alt0_0 = CstParseResult.success(tbNode1, tbText1, location());
+        } else {
+            alt0_0 = tbElem1;
         }
         if (alt0_0.isSuccess()) {
             result = alt0_0;
@@ -17603,7 +17876,8 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var alt0_1 = matchLiteralCst("true", false);
+        var trivia10 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+        var alt0_1 = parse_CharLit(trivia10);
         if (alt0_1.isSuccess() && alt0_1.node != null) {
             children.add(alt0_1.node);
         }
@@ -17615,7 +17889,8 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var alt0_2 = matchLiteralCst("false", false);
+        var trivia11 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+        var alt0_2 = parse_StringLit(trivia11);
         if (alt0_2.isSuccess() && alt0_2.node != null) {
             children.add(alt0_2.node);
         }
@@ -17627,8 +17902,8 @@ public final class Java25Parser {
             restoreLocation(choiceStart0);
         children.clear();
         children.addAll(savedChildren0);
-        var trivia4 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-        var alt0_3 = parse_CharLit(trivia4);
+        var trivia12 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
+        var alt0_3 = parse_NumLit(trivia12);
         if (alt0_3.isSuccess() && alt0_3.node != null) {
             children.add(alt0_3.node);
         }
@@ -17638,34 +17913,6 @@ public final class Java25Parser {
             result = alt0_3;
         } else {
             restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var trivia5 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-        var alt0_4 = parse_StringLit(trivia5);
-        if (alt0_4.isSuccess() && alt0_4.node != null) {
-            children.add(alt0_4.node);
-        }
-        if (alt0_4.isSuccess()) {
-            result = alt0_4;
-        } else if (alt0_4.isCutFailure()) {
-            result = alt0_4;
-        } else {
-            restoreLocation(choiceStart0);
-        children.clear();
-        children.addAll(savedChildren0);
-        var trivia6 = inTokenBoundary ? List.<Trivia>of() : skipWhitespace();
-        var alt0_5 = parse_NumLit(trivia6);
-        if (alt0_5.isSuccess() && alt0_5.node != null) {
-            children.add(alt0_5.node);
-        }
-        if (alt0_5.isSuccess()) {
-            result = alt0_5;
-        } else if (alt0_5.isCutFailure()) {
-            result = alt0_5;
-        } else {
-            restoreLocation(choiceStart0);
-        }
-        }
         }
         }
         }
