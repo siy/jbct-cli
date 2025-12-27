@@ -118,4 +118,68 @@ class Java25ParserTest {
         var root = (CstNode.NonTerminal) cst;
         assertFalse(root.children().isEmpty());
     }
+
+    @Test
+    void parseSwitchExpressionWithThrow() {
+        // Test switch expression with throw in default case
+        var result = parser.parse("""
+            class C {
+                String test(Object o) {
+                    return switch (o) {
+                        default -> throw new IllegalStateException();
+                    };
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseSwitchExpressionSimple() {
+        // Test simple switch expression without throw
+        var result = parser.parse("""
+            class C {
+                String test(Object o) {
+                    return switch (o) {
+                        default -> "foo";
+                    };
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseGuardWithWhenKeyword() {
+        // Test 'when' guard in switch - ensure word boundary works
+        var result = parser.parse("""
+            class C {
+                String test(Object o) {
+                    return switch (o) {
+                        case String s when s.isEmpty() -> "empty";
+                        default -> "other";
+                    };
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseIdentifierStartingWithKeyword() {
+        // Test that identifiers starting with keywords are parsed correctly
+        var result = parser.parse("""
+            class C {
+                void switchCase() {}
+                void ifCondition() {}
+                void whileLoop() {}
+                void forLoop() {}
+                void doWork() {}
+                void tryAgain() {}
+                void catchError() {}
+                void finallyDone() {}
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
 }

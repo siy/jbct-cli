@@ -70,39 +70,49 @@ LocalVarType <- < 'var' ![a-zA-Z0-9_$] > / Type
 # NOTE: Cuts must NOT be placed after token boundary rules (< ... >) like *KW rules
 #       as this breaks trivia handling and causes missing spaces after keywords
 Stmt <- Block
-     / 'if' ^ '(' Expr ')' Stmt ('else' Stmt)?
-     / 'while' ^ '(' Expr ')' Stmt
-     / 'for' ^ '(' ForCtrl ')' Stmt
-     / 'do' ^ Stmt 'while' '(' Expr ')' ';'
-     / 'try' ^ ResourceSpec? Block Catch* Finally?
-     / 'switch' ^ '(' Expr ')' SwitchBlock
+     / IfKW ^ '(' Expr ')' Stmt ('else' Stmt)?
+     / WhileKW ^ '(' Expr ')' Stmt
+     / ForKW ^ '(' ForCtrl ')' Stmt
+     / DoKW ^ Stmt 'while' '(' Expr ')' ';'
+     / TryKW ^ ResourceSpec? Block Catch* Finally?
+     / SwitchKW ^ '(' Expr ')' SwitchBlock
      / ReturnKW Expr? ';'
      / ThrowKW Expr ';'
      / BreakKW Identifier? ';'
      / ContinueKW Identifier? ';'
      / AssertKW Expr (':' Expr)? ';'
-     / 'synchronized' ^ '(' Expr ')' Block
+     / SynchronizedKW ^ '(' Expr ')' Block
      / YieldKW Expr ';'
      / Identifier ':' Stmt
      / Expr ';'
      / ';'
 
 # Helper rules: keyword with word boundary INSIDE token (prevents whitespace skip before boundary check)
+IfKW <- < 'if' ![a-zA-Z0-9_$] >
+WhileKW <- < 'while' ![a-zA-Z0-9_$] >
+ForKW <- < 'for' ![a-zA-Z0-9_$] >
+DoKW <- < 'do' ![a-zA-Z0-9_$] >
+TryKW <- < 'try' ![a-zA-Z0-9_$] >
+SwitchKW <- < 'switch' ![a-zA-Z0-9_$] >
+SynchronizedKW <- < 'synchronized' ![a-zA-Z0-9_$] >
 ReturnKW <- < 'return' ![a-zA-Z0-9_$] >
 ThrowKW <- < 'throw' ![a-zA-Z0-9_$] >
 BreakKW <- < 'break' ![a-zA-Z0-9_$] >
 ContinueKW <- < 'continue' ![a-zA-Z0-9_$] >
 AssertKW <- < 'assert' ![a-zA-Z0-9_$] >
 YieldKW <- < 'yield' ![a-zA-Z0-9_$] >
+CatchKW <- < 'catch' ![a-zA-Z0-9_$] >
+FinallyKW <- < 'finally' ![a-zA-Z0-9_$] >
+WhenKW <- < 'when' ![a-zA-Z0-9_$] >
 ForCtrl <- ForInit? ';' Expr? ';' ExprList? / LocalVarType Identifier ':' Expr
 ForInit <- LocalVarNoSemi / ExprList
 LocalVarNoSemi <- Modifier* LocalVarType VarDecls
 ResourceSpec <- '(' Resource (';' Resource)* ';'? ')'
 Resource <- Modifier* LocalVarType Identifier '=' Expr / QualifiedName
-Catch <- 'catch' ^ '(' Modifier* Type ('|' Type)* Identifier ')' Block
-Finally <- 'finally' ^ Block
+Catch <- CatchKW ^ '(' Modifier* Type ('|' Type)* Identifier ')' Block
+Finally <- FinallyKW ^ Block
 SwitchBlock <- '{' SwitchRule* '}'
-SwitchRule <- SwitchLabel '->' (Expr ';' / Block / 'throw' Expr ';') / SwitchLabel ':' BlockStmt*
+SwitchRule <- SwitchLabel '->' (Expr ';' / Block / ThrowKW Expr ';') / SwitchLabel ':' BlockStmt*
 # === Switch Labels and Patterns (JLS 14.11, 14.30) ===
 SwitchLabel <- 'case' ^ ('null' (',' 'default')? / CaseItem (',' CaseItem)* Guard?) / 'default'
 CaseItem <- Pattern / QualifiedName &('->' / ',' / ':' / 'when') / Expr
@@ -110,7 +120,7 @@ Pattern <- RecordPattern / TypePattern
 TypePattern <- &(LocalVarType Identifier) LocalVarType Identifier / '_'
 RecordPattern <- RefType '(' PatternList? ')'
 PatternList <- Pattern (',' Pattern)*
-Guard <- 'when' Expr
+Guard <- WhenKW Expr
 
 Expr <- Assignment
 Assignment <- Ternary (('=' / '>>>=' / '>>=' / '<<=' / '+=' / '-=' / '*=' / '/=' / '%=' / '&=' / '|=' / '^=') Assignment)?
@@ -128,7 +138,7 @@ Multiplicative <- Unary ((!'*=' '*' / !'/=' '/' / !'%=' '%') Unary)*
 Unary <- ('++' / '--' / '+' / '-' / '!' / '~') Unary / '(' Type ('&' Type)* ')' Unary / Postfix
 Postfix <- Primary PostOp*
 PostOp <- '.' TypeArgs? Identifier ('(' Args? ')')? / '.' 'class' / '.' 'this' / '[' Expr ']' / '(' Args? ')' / '++' / '--' / '::' TypeArgs? (Identifier / 'new')
-Primary <- Literal / < 'this' ![a-zA-Z0-9_$] > / < 'super' ![a-zA-Z0-9_$] > / < 'new' ![a-zA-Z0-9_$] > TypeArgs? Type ('(' Args? ')' ClassBody? / Dims? VarInit?) / 'switch' '(' Expr ')' SwitchBlock / Lambda / '(' Expr ')' / QualifiedName
+Primary <- Literal / < 'this' ![a-zA-Z0-9_$] > / < 'super' ![a-zA-Z0-9_$] > / < 'new' ![a-zA-Z0-9_$] > TypeArgs? Type ('(' Args? ')' ClassBody? / Dims? VarInit?) / SwitchKW '(' Expr ')' SwitchBlock / Lambda / '(' Expr ')' / QualifiedName
 Lambda <- LambdaParams '->' (Expr / Block)
 LambdaParams <- Identifier / '_' / '(' LambdaParam? (',' LambdaParam)* ')'
 LambdaParam <- Annotation* Modifier* ((< 'var' ![a-zA-Z0-9_$] > / Type) &('...' / Identifier / '_'))? '...'? (Identifier / '_')

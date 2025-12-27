@@ -192,6 +192,20 @@ jbct-VERSION/
 ## Golden Examples Location
 `jbct-core/src/test/resources/format-examples/`
 
+## Debugging Parse Errors
+
+When a file fails to parse with an unhelpful error like "Parse error at file.java:1:1":
+
+1. **Copy file to test resources** - `jbct-core/src/test/resources/format-examples/`
+2. **Create minimal version** - Strip comments, reduce to skeleton class with one method
+3. **Binary search** - Comment out half the class body, test if it parses:
+   - If parses: issue is in commented-out half
+   - If fails: issue is in remaining half
+4. **Repeat** - Keep halving until you isolate the problematic construct
+5. **Create unit test** - Add test case to `Java25ParserTest.java` for the specific construct
+
+This technique quickly narrows down issues that would otherwise be hard to locate.
+
 ## Known Limitations
 
 ### Parser (java25.peg)
