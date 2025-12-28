@@ -2,14 +2,13 @@
 
 ## [0.3.11] - 2025-12-28
 
-### Added
-- TBD
-
-### Changed
-- TBD
-
 ### Fixed
-- TBD
+- Parser: add TypeExpr rule for class literals (`byte[].class`, `int.class`, `String[].class`)
+- Parser: add lookahead to RefType to prevent capturing `.` before keywords like `.class`
+
+### Added
+- Unit tests for primitive and reference type class literals
+- Golden test ClassLiterals.java for class literal formatting
 
 ## [0.3.10] - 2025-12-27
 

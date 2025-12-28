@@ -182,4 +182,95 @@ class Java25ParserTest {
             """);
         assertTrue(result.isSuccess(), () -> "Failed: " + result);
     }
+
+    @Test
+    void parsePrimitiveArrayClassLiteral() {
+        // Test byte[].class - primitive array class literal
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    var c = byte[].class;
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parsePrimitiveClassLiteral() {
+        // Test int.class - primitive class literal
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    var c = int.class;
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseReferenceArrayClassLiteral() {
+        // Test String[].class - reference array class literal
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    var c = String[].class;
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseReferenceClassLiteral() {
+        // Test String.class - reference class literal
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    var c = String.class;
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseChainedGetClass() {
+        // Test List.of().getClass() - chained method with getClass
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    var c = List.of().getClass();
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseVoidClassLiteral() {
+        // Test void.class
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    var c = void.class;
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseMultiDimensionalArrayClassLiteral() {
+        // Test int[][].class - multi-dimensional array class literal
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    var c = int[][].class;
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
 }
