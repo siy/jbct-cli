@@ -6,7 +6,7 @@
 
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-parent</artifactId>
-    <version>0.3.12</version>
+    <version>0.4.0</version>
     <packaging>pom</packaging>
 
     <name>JBCT Tools Parent</name>
@@ -243,6 +243,19 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.pragmatica-lite</groupId>
+                <artifactId>jbct-maven-plugin</artifactId>
+                <version>0.3.12</version>
+                <executions>
+                    <execution>
+                        <id>check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -174,9 +174,17 @@ mvn test
 # Build distribution (creates tar.gz/zip)
 mvn package -DskipTests
 
-# Full verify
+# Full verify (includes jbct:check)
 mvn verify
+
+# Format all source files
+mvn jbct:format
+
+# Check formatting and lint
+mvn jbct:check
 ```
+
+**Note**: This project uses its own jbct-maven-plugin (dogfooding). The `jbct:check` goal runs automatically during `mvn verify`.
 
 ## Distribution
 
@@ -265,8 +273,11 @@ Created by `jbct init --slice`:
 
 ```
 my-slice/
-├── pom.xml                      # With slice-parent and jbct plugin
+├── pom.xml                      # With slice-parent, jbct plugin, and deploy profiles
 ├── jbct.toml                    # JBCT configuration
+├── deploy-forge.sh              # Deploy to local Aether Forge
+├── deploy-test.sh               # Deploy to test environment
+├── deploy-prod.sh               # Deploy to production (with confirmation)
 └── src/
     ├── main/java/org/example/myslice/
     │   ├── MySlice.java         # @Slice interface with factory method
@@ -275,6 +286,23 @@ my-slice/
     │   └── SampleResponse.java  # Response record
     └── test/java/org/example/myslice/
         └── MySliceTest.java     # Unit test
+```
+
+### Deploy Scripts
+
+Slice projects include Maven profiles and deploy scripts for Aether deployment:
+
+| Script | Profile | Description |
+|--------|---------|-------------|
+| `deploy-forge.sh` | `deploy-forge` | Deploy to local Forge (localhost:8080) |
+| `deploy-test.sh` | `deploy-test` | Deploy to test environment |
+| `deploy-prod.sh` | `deploy-prod` | Deploy to production (prompts for confirmation) |
+
+Configure URLs in `pom.xml` properties:
+```xml
+<aether.forge.url>http://localhost:8080</aether.forge.url>
+<aether.test.url>http://test.example.com:8080</aether.test.url>
+<aether.prod.url>http://prod.example.com:8080</aether.prod.url>
 ```
 
 ### Generated Artifacts
