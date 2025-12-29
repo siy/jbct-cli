@@ -46,7 +46,7 @@ Add to your `pom.xml`:
         <plugin>
             <groupId>org.pragmatica-lite</groupId>
             <artifactId>jbct-maven-plugin</artifactId>
-            <version>0.3.11</version>
+            <version>0.3.12</version>
         </plugin>
     </plugins>
 </build>
@@ -121,12 +121,19 @@ Create a new JBCT-compliant project:
 jbct init my-project                           # Create in new directory
 jbct init .                                    # Initialize current directory
 jbct init --group-id com.example my-project    # Custom group ID
+jbct init --slice my-slice                     # Create Aether slice project
 ```
 
 Creates Maven project with:
 - JBCT-compliant `pom.xml`
 - `jbct.toml` configuration
 - AI tools installed to `~/.claude/`
+
+For slice projects (`--slice`), also creates:
+- `@Slice` annotated interface with factory method
+- Implementation class
+- Sample request/response records
+- Unit test
 
 ### Update
 
@@ -137,6 +144,21 @@ jbct update           # Update if new version available
 jbct update --force   # Force update
 jbct update --check   # Check only
 ```
+
+### Verify Slice
+
+Validate Aether slice project configuration:
+
+```bash
+jbct verify-slice              # Validate current directory
+jbct verify-slice my-slice     # Validate specific directory
+jbct verify-slice --strict     # Fail on warnings
+```
+
+Checks for:
+- Missing `pom.xml` or `slice.class` property
+- Missing `slice-api.properties` (annotation processor not run)
+- Missing manifest entries
 
 ## Configuration
 
@@ -151,6 +173,7 @@ alignChainedCalls = true
 [lint]
 failOnWarning = false
 businessPackages = ["**.usecase.**", "**.domain.**"]
+slicePackages = ["**.usecase.**"]  # Required for JBCT-SLICE-01
 
 [lint.rules]
 JBCT-RET-01 = "error"
@@ -174,6 +197,8 @@ Priority chain:
 | `jbct:format-check` | Check formatting (fail if issues) | verify |
 | `jbct:lint` | Run lint rules | verify |
 | `jbct:check` | Combined format-check + lint | verify |
+| `jbct:collect-slice-deps` | Collect slice API dependencies | generate-sources |
+| `jbct:verify-slice` | Validate slice configuration | verify |
 
 ### Examples
 
@@ -209,7 +234,7 @@ Add executions to run automatically:
 <plugin>
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-maven-plugin</artifactId>
-    <version>0.3.11</version>
+    <version>0.3.12</version>
     <executions>
         <execution>
             <id>check</id>
@@ -230,7 +255,7 @@ All formatting and linting settings are shared between CLI and Maven plugin.
 <plugin>
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-maven-plugin</artifactId>
-    <version>0.3.11</version>
+    <version>0.3.12</version>
     <configuration>
         <!-- Skip JBCT processing -->
         <skip>false</skip>
@@ -252,6 +277,7 @@ alignChainedCalls = true
 [lint]
 failOnWarning = false
 businessPackages = ["**.usecase.**", "**.domain.**"]
+slicePackages = ["**.usecase.**"]  # Required for JBCT-SLICE-01
 
 [lint.rules]
 JBCT-RET-01 = "error"
@@ -259,7 +285,7 @@ JBCT-STY-01 = "warning"
 JBCT-LOG-01 = "off"
 ```
 
-## Lint Rules (36 total)
+## Lint Rules (37 total)
 
 ### Return Kinds
 
@@ -371,6 +397,18 @@ JBCT-LOG-01 = "off"
 | Rule | Severity | Description |
 |------|----------|-------------|
 | `JBCT-SEAL-01` | WARNING | Error interfaces extending Cause should be sealed |
+
+### Slice Architecture
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| `JBCT-SLICE-01` | ERROR | External slice dependencies must use API interface (requires `slicePackages` config) |
+
+**Note:** JBCT-SLICE-01 requires `slicePackages` configuration:
+```toml
+[lint]
+slicePackages = ["**.usecase.**"]  # Configure your slice package patterns
+```
 
 ## Formatter Style
 
