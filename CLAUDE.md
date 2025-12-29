@@ -10,6 +10,7 @@ jbct-cli/
 ├── jbct-core/          # Core formatting, linting, config, upgrade, init, update logic
 ├── jbct-cli/           # Picocli CLI commands
 ├── jbct-maven-plugin/  # Maven plugin wrapper
+├── slice-processor/    # Annotation processor for Aether slice development
 └── pom.xml             # Parent POM
 ```
 
@@ -21,7 +22,9 @@ jbct lint <path>        # Analyze for JBCT compliance
 jbct check <path>       # Format check + lint (for CI)
 jbct upgrade            # Update CLI from GitHub Releases
 jbct init [dir]         # Create new JBCT project + install AI tools
+jbct init --slice [dir] # Create new Aether slice project
 jbct update             # Update AI tools from coding-technology repo
+jbct verify-slice [dir] # Validate slice project configuration
 ```
 
 ## Configuration
@@ -227,3 +230,58 @@ These rules are planned but not yet implemented:
 | JBCT-DEP-01 | Correct Pragmatica Lite dependency | Easy | Requires build file analysis (pom.xml/gradle), not Java source |
 | JBCT-MUT-01 | No mutation of input parameters | Hard | Requires data-flow analysis |
 | JBCT-FJ-01 | Fork-Join inputs must be immutable | Hard | Requires data-flow analysis |
+
+## Slice Processor Module
+
+The `slice-processor` module provides annotation processing for Aether slice development.
+
+### Components
+
+```
+slice-processor/
+├── SliceProcessor.java           # Main annotation processor (@Slice)
+├── generator/
+│   ├── ApiInterfaceGenerator.java    # Generates API interface in .api package
+│   ├── ProxyClassGenerator.java      # Generates proxy for dependencies
+│   ├── FactoryClassGenerator.java    # Generates factory with proxy wiring
+│   ├── ManifestGenerator.java        # Generates META-INF/slice-api.properties
+│   └── DependencyVersionResolver.java # Resolves versions from slice-deps.properties
+└── model/
+    ├── SliceModel.java           # Slice metadata from @Slice interface
+    ├── MethodModel.java          # Method info (name, returnType, parameterType)
+    └── DependencyModel.java      # Dependency info from factory method params
+```
+
+### Maven Plugin Goals
+
+| Goal | Phase | Description |
+|------|-------|-------------|
+| `jbct:collect-slice-deps` | generate-sources | Collect provided dependencies to slice-deps.properties |
+| `jbct:verify-slice` | verify | Validate slice configuration |
+
+### Slice Project Structure
+
+Created by `jbct init --slice`:
+
+```
+my-slice/
+├── pom.xml                      # With slice-parent and jbct plugin
+├── jbct.toml                    # JBCT configuration
+└── src/
+    ├── main/java/org/example/myslice/
+    │   ├── MySlice.java         # @Slice interface with factory method
+    │   ├── MySliceImpl.java     # Implementation
+    │   ├── SampleRequest.java   # Request record
+    │   └── SampleResponse.java  # Response record
+    └── test/java/org/example/myslice/
+        └── MySliceTest.java     # Unit test
+```
+
+### Generated Artifacts
+
+From `@Slice` annotation processor:
+
+1. **API Interface** (`api/MySlice.java`) - Public interface for consumers
+2. **Proxy Classes** (`api/*Proxy.java`) - Delegates to SliceInvokerFacade
+3. **Factory Class** (`MySliceFactory.java`) - Creates instance with proxied dependencies
+4. **Manifest** (`META-INF/slice-api.properties`) - Maps artifact to interface

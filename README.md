@@ -121,12 +121,19 @@ Create a new JBCT-compliant project:
 jbct init my-project                           # Create in new directory
 jbct init .                                    # Initialize current directory
 jbct init --group-id com.example my-project    # Custom group ID
+jbct init --slice my-slice                     # Create Aether slice project
 ```
 
 Creates Maven project with:
 - JBCT-compliant `pom.xml`
 - `jbct.toml` configuration
 - AI tools installed to `~/.claude/`
+
+For slice projects (`--slice`), also creates:
+- `@Slice` annotated interface with factory method
+- Implementation class
+- Sample request/response records
+- Unit test
 
 ### Update
 
@@ -137,6 +144,21 @@ jbct update           # Update if new version available
 jbct update --force   # Force update
 jbct update --check   # Check only
 ```
+
+### Verify Slice
+
+Validate Aether slice project configuration:
+
+```bash
+jbct verify-slice              # Validate current directory
+jbct verify-slice my-slice     # Validate specific directory
+jbct verify-slice --strict     # Fail on warnings
+```
+
+Checks for:
+- Missing `pom.xml` or `slice.class` property
+- Missing `slice-api.properties` (annotation processor not run)
+- Missing manifest entries
 
 ## Configuration
 
@@ -174,6 +196,8 @@ Priority chain:
 | `jbct:format-check` | Check formatting (fail if issues) | verify |
 | `jbct:lint` | Run lint rules | verify |
 | `jbct:check` | Combined format-check + lint | verify |
+| `jbct:collect-slice-deps` | Collect slice API dependencies | generate-sources |
+| `jbct:verify-slice` | Validate slice configuration | verify |
 
 ### Examples
 
