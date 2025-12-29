@@ -22,6 +22,9 @@ public class DependencyVersionResolver {
         loadIfNeeded();
 
         var interfacePackage = dependency.interfacePackage();
+        if (interfacePackage == null || interfacePackage.isEmpty()) {
+            return dependency.withResolved("unknown:unknown", "UNRESOLVED");
+        }
 
         var sliceArtifact = findSliceArtifact(interfacePackage);
         var version = findVersion(sliceArtifact);
