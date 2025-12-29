@@ -33,8 +33,16 @@ public final class SliceProjectInitializer {
 
     /**
      * Create initializer with project parameters.
+     *
+     * @throws IllegalArgumentException if artifactId is null or empty
      */
     public static SliceProjectInitializer sliceProjectInitializer(Path projectDir, String groupId, String artifactId) {
+        if (artifactId == null || artifactId.isBlank()) {
+            throw new IllegalArgumentException("artifactId must not be null or empty");
+        }
+        if (groupId == null || groupId.isBlank()) {
+            throw new IllegalArgumentException("groupId must not be null or empty");
+        }
         var basePackage = groupId + "." + artifactId.replace("-", "");
         return new SliceProjectInitializer(projectDir, groupId, artifactId, basePackage);
     }
@@ -68,43 +76,57 @@ public final class SliceProjectInitializer {
             Files.createDirectories(srcTestJava.resolve(packagePath));
 
             var createdFiles = new ArrayList<Path>();
+            var errors = new ArrayList<String>();
 
             // Create pom.xml
             createFile("pom.xml.template", projectDir.resolve("pom.xml"))
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
 
             // Create jbct.toml
             createFile("jbct.toml.template", projectDir.resolve("jbct.toml"))
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
 
             // Create .gitignore
             createFile("gitignore.template", projectDir.resolve(".gitignore"))
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
 
             // Create slice interface
             var slicePath = srcMainJava.resolve(packagePath).resolve(sliceName + ".java");
             createFile("Slice.java.template", slicePath)
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
 
             // Create slice implementation
             var implPath = srcMainJava.resolve(packagePath).resolve(sliceName + "Impl.java");
             createFile("SliceImpl.java.template", implPath)
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
 
             // Create sample request
             var requestPath = srcMainJava.resolve(packagePath).resolve("SampleRequest.java");
             createFile("SampleRequest.java.template", requestPath)
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
 
             // Create sample response
             var responsePath = srcMainJava.resolve(packagePath).resolve("SampleResponse.java");
             createFile("SampleResponse.java.template", responsePath)
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
 
             // Create test
             var testPath = srcTestJava.resolve(packagePath).resolve(sliceName + "Test.java");
             createFile("SliceTest.java.template", testPath)
-                .onSuccess(createdFiles::add);
+                .onSuccess(createdFiles::add)
+                .onFailure(cause -> errors.add(cause.message()));
+
+            // Check for accumulated errors
+            if (!errors.isEmpty()) {
+                return Result.failure(Causes.cause("File creation errors: " + String.join("; ", errors)));
+            }
 
             // Create dependency manifest placeholder
             var dependencyFile = resources.resolve(basePackage + "." + sliceName);

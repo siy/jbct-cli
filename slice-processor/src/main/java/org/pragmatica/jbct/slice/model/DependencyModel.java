@@ -45,6 +45,9 @@ public record DependencyModel(
     }
 
     public String fullArtifact() {
+        if (sliceArtifact == null || version == null) {
+            throw new IllegalStateException("Dependency not resolved: call resolve() first");
+        }
         return sliceArtifact + ":" + version;
     }
 

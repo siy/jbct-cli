@@ -69,14 +69,9 @@ public class DependencyVersionResolver {
     }
 
     private String findVersion(String sliceArtifact) {
-        var key = sliceArtifact.replace(":", "\\:") + "\\:api";
+        // Properties keys are stored unescaped after loading
+        var key = sliceArtifact + ":api";
         var version = sliceDeps.getProperty(key);
-
-        if (version == null) {
-            // Try without escaping
-            key = sliceArtifact + ":api";
-            version = sliceDeps.getProperty(key);
-        }
 
         return version != null ? version : "UNRESOLVED";
     }
