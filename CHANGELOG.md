@@ -2,6 +2,14 @@
 
 ## [0.3.12] - 2025-12-29
 
+### Added
+- **Aether Slice Support**: New `slice-processor` module for Aether slice development
+  - Annotation processor generates API interfaces, proxy classes, factory classes, and manifests from `@Slice` annotated interfaces
+  - Maven plugin goals: `jbct:collect-slice-deps` and `jbct:verify-slice`
+  - CLI commands: `jbct init --slice` and `jbct verify-slice`
+  - Model classes: `SliceModel`, `MethodModel`, `DependencyModel`
+  - Generators: `ApiInterfaceGenerator`, `ProxyClassGenerator`, `FactoryClassGenerator`, `ManifestGenerator`
+
 ### Fixed
 - Parser: add word boundaries to type declaration keywords (`class`, `interface`, `enum`, `record`)
 - Grammar: identifiers like `className`, `interfaceType`, `enumValue`, `recordData` now parse correctly

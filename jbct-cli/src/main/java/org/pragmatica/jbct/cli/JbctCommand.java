@@ -18,7 +18,8 @@ import picocli.CommandLine.Option;
                 CheckCommand.class,
                 UpgradeCommand.class,
                 InitCommand.class,
-                UpdateCommand.class
+                UpdateCommand.class,
+                VerifySliceCommand.class
         }
 )
 public class JbctCommand implements Runnable {

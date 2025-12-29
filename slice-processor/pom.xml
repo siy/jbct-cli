@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.pragmatica-lite</groupId>
+        <artifactId>jbct-parent</artifactId>
+        <version>0.3.12</version>
+    </parent>
+
+    <artifactId>slice-processor</artifactId>
+    <packaging>jar</packaging>
+
+    <name>JBCT Slice Processor</name>
+    <description>Annotation processor for Aether slice development</description>
+
+    <properties>
+        <auto-service.version>1.1.1</auto-service.version>
+        <javapoet.version>1.13.0</javapoet.version>
+        <compile-testing.version>0.21.0</compile-testing.version>
+    </properties>
+
+    <dependencies>
+        <!-- Annotation processing API -->
+        <dependency>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service</artifactId>
+            <version>${auto-service.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service-annotations</artifactId>
+            <version>${auto-service.version}</version>
+        </dependency>
+
+        <!-- Code generation -->
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>${javapoet.version}</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.testing.compile</groupId>
+            <artifactId>compile-testing</artifactId>
+            <version>${compile-testing.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${java.version}</release>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.auto.service</groupId>
+                            <artifactId>auto-service</artifactId>
+                            <version>${auto-service.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
