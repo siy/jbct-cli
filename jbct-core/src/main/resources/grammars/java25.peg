@@ -31,7 +31,10 @@ AnnotationBody <- '{' AnnotationMember* '}'
 AnnotationMember <- Annotation* Modifier* (AnnotationElemDecl / FieldDecl / TypeKind) / ';'
 AnnotationElemDecl <- Type Identifier '(' ')' ('default' AnnotationElem)? ';'
 EnumDecl <- EnumKW ^ Identifier ImplementsClause? EnumBody
-RecordDecl <- RecordKW ^ Identifier TypeParams? '(' RecordComponents? ')' ImplementsClause? RecordBody
+# Lookahead ensures this is a record declaration (record Name(...)) not:
+# - method call: record(...)
+# - field/variable of type 'record': record field;
+RecordDecl <- RecordKW &(Identifier TypeParams? '(') Identifier ^ TypeParams? '(' RecordComponents? ')' ImplementsClause? RecordBody
 EnumKW <- < 'enum' ![a-zA-Z0-9_$] >
 RecordKW <- < 'record' ![a-zA-Z0-9_$] >
 ImplementsClause <- 'implements' ^ TypeList

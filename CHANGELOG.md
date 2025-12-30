@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- Parser: `record` as contextual keyword - works as method name, type name, field type, variable type
 
 ## [0.4.1] - 2025-12-30
 
