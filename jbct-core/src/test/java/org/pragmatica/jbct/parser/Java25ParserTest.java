@@ -326,4 +326,33 @@ class Java25ParserTest {
             """);
         assertTrue(result.isSuccess(), () -> "Failed: " + result);
     }
+
+    @Test
+    void parseRecordAsMethodName() {
+        // 'record' is a contextual keyword - can be used as method/variable name
+        var result = parser.parse("""
+            class C {
+                void test() {
+                    record("hello", 42);
+                }
+                void record(String s, int i) {}
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
+
+    @Test
+    void parseRecordAsTypeName() {
+        // 'record' as a class name (valid before Java 14)
+        var result = parser.parse("""
+            class record {}
+            class C {
+                record field;
+                void test(record r) {
+                    record local = new record();
+                }
+            }
+            """);
+        assertTrue(result.isSuccess(), () -> "Failed: " + result);
+    }
 }
