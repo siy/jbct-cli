@@ -45,9 +45,24 @@ public class CstFormatter {
     }
 
     private Result<CstNode> parse(SourceFile source) {
-        var result = parser.parse(source.content());
-        if (result.isSuccess()) {
-            return result;
+        var result = parser.parseWithDiagnostics(source.content());
+        if (result.isSuccess() && result.node().isPresent()) {
+            return Result.success(result.node().unwrap());
+        }
+        var diag = result.diagnostics()
+                         .stream()
+                         .findFirst();
+        if (diag.isPresent()) {
+            var span = diag.get()
+                           .span();
+            return FormattingError.parseError(source.fileName(),
+                                              span.start()
+                                                  .line(),
+                                              span.start()
+                                                  .column(),
+                                              diag.get()
+                                                  .message())
+                                  .result();
         }
         return FormattingError.parseError(source.fileName(),
                                           1,

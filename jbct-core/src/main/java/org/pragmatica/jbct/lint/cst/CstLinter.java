@@ -72,11 +72,23 @@ public class CstLinter {
     }
 
     private Result<CstNode> parse(SourceFile source) {
-        var result = parser.parse(source.content());
-        if (result.isSuccess()) {
-            return result;
+        var result = parser.parseWithDiagnostics(source.content());
+        if (result.isSuccess() && result.node().isPresent()) {
+            return Result.success(result.node().unwrap());
         }
-        return Causes.cause("Parse error in " + source.fileName() + ": " + result)
+        var errorMsg = result.diagnostics()
+                             .stream()
+                             .findFirst()
+                             .map(d -> "%s:%d:%d - %s".formatted(source.fileName(),
+                                                                  d.span()
+                                                                   .start()
+                                                                   .line(),
+                                                                  d.span()
+                                                                   .start()
+                                                                   .column(),
+                                                                  d.message()))
+                             .orElse("Parse error in " + source.fileName());
+        return Causes.cause(errorMsg)
                      .result();
     }
 
