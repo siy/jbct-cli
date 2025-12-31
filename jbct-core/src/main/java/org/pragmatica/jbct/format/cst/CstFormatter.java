@@ -46,8 +46,10 @@ public class CstFormatter {
 
     private Result<CstNode> parse(SourceFile source) {
         var result = parser.parseWithDiagnostics(source.content());
-        if (result.isSuccess() && result.node().isPresent()) {
-            return Result.success(result.node().unwrap());
+        if (result.isSuccess() && result.node()
+                                        .isPresent()) {
+            return Result.success(result.node()
+                                        .unwrap());
         }
         var diag = result.diagnostics()
                          .stream()

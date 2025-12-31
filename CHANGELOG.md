@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- Parser: error messages now report actual error position instead of 1:1 (farthest failure tracking)
 
 ## [0.4.2] - 2025-12-30
 
