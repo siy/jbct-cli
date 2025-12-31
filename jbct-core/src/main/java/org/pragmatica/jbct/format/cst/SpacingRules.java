@@ -11,6 +11,9 @@ final class SpacingRules {
     private static final Set<String>SPACE_BEFORE_PAREN_KEYWORDS = Set.of(
     "if", "else", "for", "while", "do", "try", "catch", "finally", "switch", "synchronized", "assert");
 
+    // Keywords that need space after }
+    private static final Set<String>SPACE_AFTER_BRACE_KEYWORDS = Set.of("else", "catch", "finally", "while");
+
     // Binary operators that need space around them (excluding <> which are also used for generics)
     private static final Set<String>BINARY_OPS = Set.of(
     "=",
@@ -58,7 +61,7 @@ final class SpacingRules {
         }
         char firstChar = text.charAt(0);
         // Check rules in order of frequency/importance
-        return checkCommaRule(ctx) || checkParenthesesRules(ctx, text, firstChar) || checkBracketRules(ctx, firstChar) || checkDotRules(ctx,
+        return checkCommaRule(ctx) || checkClosingBraceKeywordRule(ctx, text) || checkParenthesesRules(ctx, text, firstChar) || checkBracketRules(ctx, firstChar) || checkDotRules(ctx,
                                                                                                                                         text,
                                                                                                                                         firstChar) || checkAnnotationRules(ctx,
                                                                                                                                                                            firstChar) || checkMethodReferenceRule(ctx,
@@ -74,6 +77,11 @@ final class SpacingRules {
 
     private static boolean checkCommaRule(SpacingContext ctx) {
         return ctx.lastChar() == ',';
+    }
+
+    private static boolean checkClosingBraceKeywordRule(SpacingContext ctx, String text) {
+        // Space between } and keywords like else, catch, finally, while (do-while)
+        return ctx.lastChar() == '}' && SPACE_AFTER_BRACE_KEYWORDS.contains(text);
     }
 
     private static boolean checkParenthesesRules(SpacingContext ctx, String text, char firstChar) {

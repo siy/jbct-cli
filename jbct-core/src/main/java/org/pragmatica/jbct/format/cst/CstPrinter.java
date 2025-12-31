@@ -206,7 +206,10 @@ public class CstPrinter {
             case RuleId.LambdaParam _ -> printLambdaParam(nt);
             case RuleId.Param _ -> printParam(nt);
             case RuleId.Params _ -> printParams(nt);
+            case RuleId.Primary _ -> printPrimary(nt);
+            case RuleId.RecordDecl _ -> printRecordDecl(nt);
             case RuleId.RecordComponents _ -> printRecordComponents(nt);
+            case RuleId.ResourceSpec _ -> printResourceSpec(nt);
             case RuleId.Ternary _ -> printTernary(nt);
             case RuleId.Additive _ -> printAdditive(nt);
             default -> printChildren(nt);
@@ -502,6 +505,19 @@ public class CstPrinter {
         };
     }
 
+    /**
+     * Check if a node has newlines in its immediate leading trivia.
+     */
+    private boolean hasNewlineInLeadingTrivia(CstNode node) {
+        for (var trivia : node.leadingTrivia()) {
+            if (trivia instanceof Trivia.Whitespace ws && ws.text()
+                                                            .contains("\n")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void printBlock(CstNode.NonTerminal block) {
         var children = children(block);
         // Check if we're inside broken arguments with lambda alignment
@@ -525,22 +541,28 @@ public class CstPrinter {
             if (useLambdaAlign) {
                 // Lambda body in broken args: align to arg column + indent
                 int bodyCol = lambdaAlignCol + config.indentSize();
-                for (var stmt : stmts) {
-                    printAlignedTo(bodyCol);
-                    printNodeSkipTrivia(stmt);
-                    // Skip trivia - we control layout
-                    println();
+                // Push new alignment context for nested blocks
+                try (var ignored = alignment.pushLambdaAlign(bodyCol)) {
+                    for (var stmt : stmts) {
+                        printAlignedTo(bodyCol);
+                        printNodeSkipTrivia(stmt);
+                        // Skip trivia - we control layout
+                        println();
+                    }
                 }
                 // Close brace aligns with lambda arg
                 printAlignedTo(lambdaAlignCol);
             }else if (useChainAlign) {
                 // Lambda body in chain: body aligns to chain + indent, close aligns to chain
                 int bodyCol = chainAlignCol + config.indentSize();
-                for (var stmt : stmts) {
-                    printAlignedTo(bodyCol);
-                    printNodeSkipTrivia(stmt);
-                    // Skip trivia - we control layout
-                    println();
+                // Push new alignment context for nested blocks
+                try (var ignored = alignment.pushLambdaAlign(bodyCol)) {
+                    for (var stmt : stmts) {
+                        printAlignedTo(bodyCol);
+                        printNodeSkipTrivia(stmt);
+                        // Skip trivia - we control layout
+                        println();
+                    }
                 }
                 // Close brace aligns with chain
                 printAlignedTo(chainAlignCol);
@@ -633,6 +655,8 @@ public class CstPrinter {
     private void printPostOp(CstNode.NonTerminal postOp) {
         var children = children(postOp);
         boolean afterTypeArgs = false;
+        boolean afterOpenParen = false;
+        int openParenCol = 0;
         for (var child : children) {
             if (child.rule() instanceof RuleId.TypeArgs) {
                 printNode(child);
@@ -644,8 +668,23 @@ public class CstPrinter {
                                 .trim();
                 print(identText);
                 afterTypeArgs = false;
+            }else if (isTerminalWithText(child, "(")) {
+                printNode(child);
+                openParenCol = currentColumn;
+                afterOpenParen = true;
+                afterTypeArgs = false;
+            }else if (afterOpenParen && child.rule() instanceof RuleId.Args) {
+                // Handle Args with leading newlines - align to opening paren
+                if (hasNewlineInLeadingTrivia(child)) {
+                    println();
+                    printAlignedTo(openParenCol);
+                }
+                printNodeSkipTrivia(child);
+                afterOpenParen = false;
+                afterTypeArgs = false;
             }else {
                 printNode(child);
+                afterOpenParen = false;
                 afterTypeArgs = false;
             }
         }
@@ -821,11 +860,12 @@ public class CstPrinter {
                     println();
                     printAlignedTo(alignCol);
                 }else if (child.rule() instanceof RuleId.Expr) {
-                    if (first) {
-                        printNode(child);
-                    }else {
-                        printNodeSkipTrivia(child);
+                    if (first && hasNewlineInLeadingTrivia(child)) {
+                        // First arg with leading newlines - align to opening paren
+                        println();
+                        printAlignedTo(alignCol);
                     }
+                    printNodeSkipTrivia(child);
                     first = false;
                 }else {
                     printNode(child);
@@ -879,13 +919,72 @@ public class CstPrinter {
     private void printBrokenParams(CstNode.NonTerminal params) {
         var children = children(params);
         int alignCol = currentColumn;
+        boolean first = true;
         for (var child : children) {
             if (isTerminalWithText(child, ",")) {
                 print(",");
                 println();
                 printAlignedTo(alignCol);
             }else if (child.rule() instanceof RuleId.Param) {
+                if (first && hasNewlineInLeadingTrivia(child)) {
+                    // First param with leading newlines - align to opening paren
+                    println();
+                    printAlignedTo(alignCol);
+                }
                 printNodeSkipTrivia(child);
+                first = false;
+            }
+        }
+    }
+
+    private void printPrimary(CstNode.NonTerminal primary) {
+        // Primary includes constructor calls: 'new' Type '(' Args? ')' ClassBody?
+        // Handle alignment of constructor args to opening paren
+        var children = children(primary);
+        boolean afterOpenParen = false;
+        int openParenCol = 0;
+        for (var child : children) {
+            if (isTerminalWithText(child, "(")) {
+                printNode(child);
+                openParenCol = currentColumn;
+                afterOpenParen = true;
+            }else if (afterOpenParen && child.rule() instanceof RuleId.Args) {
+                // Handle Args with leading newlines - align to opening paren
+                if (hasNewlineInLeadingTrivia(child)) {
+                    println();
+                    printAlignedTo(openParenCol);
+                }
+                printNodeSkipTrivia(child);
+                afterOpenParen = false;
+            }else {
+                printNode(child);
+                afterOpenParen = false;
+            }
+        }
+    }
+
+    private void printRecordDecl(CstNode.NonTerminal recordDecl) {
+        // RecordDecl <- RecordKW Identifier TypeParams? '(' RecordComponents? ')' ImplementsClause? RecordBody
+        // Handle alignment of record components to opening paren
+        var children = children(recordDecl);
+        boolean afterOpenParen = false;
+        int openParenCol = 0;
+        for (var child : children) {
+            if (isTerminalWithText(child, "(")) {
+                printNode(child);
+                openParenCol = currentColumn;
+                afterOpenParen = true;
+            }else if (afterOpenParen && child.rule() instanceof RuleId.RecordComponents) {
+                // Handle RecordComponents with leading newlines - align to opening paren
+                if (hasNewlineInLeadingTrivia(child)) {
+                    println();
+                    printAlignedTo(openParenCol);
+                }
+                printNodeSkipTrivia(child);
+                afterOpenParen = false;
+            }else {
+                printNode(child);
+                afterOpenParen = false;
             }
         }
     }
@@ -916,13 +1015,63 @@ public class CstPrinter {
     private void printBrokenRecordComponents(CstNode.NonTerminal components) {
         var children = children(components);
         int alignCol = currentColumn;
+        boolean first = true;
         for (var child : children) {
             if (isTerminalWithText(child, ",")) {
                 print(",");
                 println();
                 printAlignedTo(alignCol);
             }else if (child.rule() instanceof RuleId.RecordComp) {
+                if (first && hasNewlineInLeadingTrivia(child)) {
+                    // First component with leading newlines - align to opening paren
+                    println();
+                    printAlignedTo(alignCol);
+                }
                 printNodeSkipTrivia(child);
+                first = false;
+            }
+        }
+    }
+
+    private void printResourceSpec(CstNode.NonTerminal resourceSpec) {
+        // ResourceSpec <- '(' Resource (';' Resource)* ';'? ')'
+        // Align multiple resources to opening paren like params
+        var children = children(resourceSpec);
+        boolean hasBreaks = hasNewlinesInTrivia(resourceSpec);
+        if (!hasBreaks) {
+            // Fits on one line
+            printChildren(resourceSpec);
+            return;
+        }
+        // Multi-line resources - align to opening paren
+        boolean afterOpen = false;
+        int alignCol = 0;
+        boolean first = true;
+        for (var child : children) {
+            if (isTerminalWithText(child, "(")) {
+                printWithSpacing("(");
+                alignCol = currentColumn;
+                afterOpen = true;
+            }else if (isTerminalWithText(child, ")")) {
+                printWithSpacing(")");
+            }else if (isTerminalWithText(child, ";")) {
+                printWithSpacing(";");
+            }else if (child.rule() instanceof RuleId.Resource) {
+                if (afterOpen) {
+                    if (first && hasNewlineInLeadingTrivia(child)) {
+                        // First resource with leading newlines - align
+                        println();
+                        printAlignedTo(alignCol);
+                    }else if (!first) {
+                        // Subsequent resources - newline and align
+                        println();
+                        printAlignedTo(alignCol);
+                    }
+                    printNodeSkipTrivia(child);
+                    first = false;
+                }else {
+                    printNode(child);
+                }
             }
         }
     }

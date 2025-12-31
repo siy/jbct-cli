@@ -10,6 +10,12 @@
 
 ### Fixed
 - Parser: error messages now report actual error position instead of 1:1 (farthest failure tracking)
+- Formatter: `}else {` spacing (now `} else {`)
+- Formatter: args/params/record components alignment to opening paren when source has newlines
+- Formatter: try-with-resources alignment to opening paren
+- Formatter: nested blocks inside lambda bodies now properly indented
+- Formatter: constructor call args alignment (`new Type(args...)`)
+- Formatter: record declaration component alignment
 
 ## [0.4.2] - 2025-12-30
 
