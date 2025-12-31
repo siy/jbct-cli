@@ -674,11 +674,8 @@ public class CstPrinter {
                 afterOpenParen = true;
                 afterTypeArgs = false;
             }else if (afterOpenParen && child.rule() instanceof RuleId.Args) {
-                // Handle Args with leading newlines - align to opening paren
-                if (hasNewlineInLeadingTrivia(child)) {
-                    println();
-                    printAlignedTo(openParenCol);
-                }
+                // Skip leading trivia - first arg stays on same line as opening paren
+                // Alignment is handled by printArgs/printBrokenArgs
                 printNodeSkipTrivia(child);
                 afterOpenParen = false;
                 afterTypeArgs = false;
@@ -711,6 +708,11 @@ public class CstPrinter {
                 alignColumn = startColumn + dotPos;
             }
             printNodeContent(primary);
+            // If no dot in primary (e.g., `new Type()`), align to current position
+            // This is where the first PostOp's `.` will be
+            if (dotPos < 0) {
+                alignColumn = currentColumn;
+            }
         }
         // Enter chain context for nested lambdas
         try (var ignored = alignment.enterChain(alignColumn)) {
@@ -853,20 +855,14 @@ public class CstPrinter {
         // Align to current position (after opening paren)
         // Push alignment column for lambda body indentation
         try (var ignored = alignment.pushLambdaAlign(alignCol)) {
-            boolean first = true;
             for (var child : children) {
                 if (isTerminalWithText(child, ",")) {
                     print(",");
                     println();
                     printAlignedTo(alignCol);
                 }else if (child.rule() instanceof RuleId.Expr) {
-                    if (first && hasNewlineInLeadingTrivia(child)) {
-                        // First arg with leading newlines - align to opening paren
-                        println();
-                        printAlignedTo(alignCol);
-                    }
+                    // First arg stays on same line, subsequent args after comma+newline
                     printNodeSkipTrivia(child);
-                    first = false;
                 }else {
                     printNode(child);
                 }
@@ -919,20 +915,14 @@ public class CstPrinter {
     private void printBrokenParams(CstNode.NonTerminal params) {
         var children = children(params);
         int alignCol = currentColumn;
-        boolean first = true;
         for (var child : children) {
             if (isTerminalWithText(child, ",")) {
                 print(",");
                 println();
                 printAlignedTo(alignCol);
             }else if (child.rule() instanceof RuleId.Param) {
-                if (first && hasNewlineInLeadingTrivia(child)) {
-                    // First param with leading newlines - align to opening paren
-                    println();
-                    printAlignedTo(alignCol);
-                }
+                // First param stays on same line, subsequent params after comma+newline
                 printNodeSkipTrivia(child);
-                first = false;
             }
         }
     }
@@ -949,11 +939,7 @@ public class CstPrinter {
                 openParenCol = currentColumn;
                 afterOpenParen = true;
             }else if (afterOpenParen && child.rule() instanceof RuleId.Args) {
-                // Handle Args with leading newlines - align to opening paren
-                if (hasNewlineInLeadingTrivia(child)) {
-                    println();
-                    printAlignedTo(openParenCol);
-                }
+                // Skip leading trivia - first arg stays on same line as opening paren
                 printNodeSkipTrivia(child);
                 afterOpenParen = false;
             }else {
@@ -975,11 +961,7 @@ public class CstPrinter {
                 openParenCol = currentColumn;
                 afterOpenParen = true;
             }else if (afterOpenParen && child.rule() instanceof RuleId.RecordComponents) {
-                // Handle RecordComponents with leading newlines - align to opening paren
-                if (hasNewlineInLeadingTrivia(child)) {
-                    println();
-                    printAlignedTo(openParenCol);
-                }
+                // Skip leading trivia - first component stays on same line as opening paren
                 printNodeSkipTrivia(child);
                 afterOpenParen = false;
             }else {
@@ -1015,20 +997,14 @@ public class CstPrinter {
     private void printBrokenRecordComponents(CstNode.NonTerminal components) {
         var children = children(components);
         int alignCol = currentColumn;
-        boolean first = true;
         for (var child : children) {
             if (isTerminalWithText(child, ",")) {
                 print(",");
                 println();
                 printAlignedTo(alignCol);
             }else if (child.rule() instanceof RuleId.RecordComp) {
-                if (first && hasNewlineInLeadingTrivia(child)) {
-                    // First component with leading newlines - align to opening paren
-                    println();
-                    printAlignedTo(alignCol);
-                }
+                // First component stays on same line, subsequent components after comma+newline
                 printNodeSkipTrivia(child);
-                first = false;
             }
         }
     }
@@ -1058,15 +1034,12 @@ public class CstPrinter {
                 printWithSpacing(";");
             }else if (child.rule() instanceof RuleId.Resource) {
                 if (afterOpen) {
-                    if (first && hasNewlineInLeadingTrivia(child)) {
-                        // First resource with leading newlines - align
-                        println();
-                        printAlignedTo(alignCol);
-                    }else if (!first) {
+                    if (!first) {
                         // Subsequent resources - newline and align
                         println();
                         printAlignedTo(alignCol);
                     }
+                    // First resource stays on same line
                     printNodeSkipTrivia(child);
                     first = false;
                 }else {

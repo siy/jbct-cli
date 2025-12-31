@@ -63,7 +63,7 @@ public class TextBlocks {
                 Template content
                 with multiple lines
                 """.strip()
-               .indent(4);
+                   .indent(4);
     }
 
     // Empty text block
