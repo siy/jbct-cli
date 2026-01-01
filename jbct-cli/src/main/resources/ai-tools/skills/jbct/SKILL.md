@@ -18,6 +18,31 @@ Activate this skill when:
 
 **For implementation work:** Use `jbct-coder` subagent (Task tool with `subagent_type: "jbct-coder"`)
 **For code review:** Use `jbct-reviewer` subagent (Task tool with `subagent_type: "jbct-reviewer"`)
+**For automated checking:** Use `jbct` CLI tool (format, lint, check commands)
+
+## JBCT CLI Tool
+
+JBCT CLI provides automated formatting and compliance checking with 36 lint rules.
+
+**Check if installed:**
+```bash
+jbct --version
+```
+
+**Usage:**
+```bash
+jbct format src/main/java    # Format to JBCT style
+jbct lint src/main/java      # Check JBCT compliance (36 rules)
+jbct check src/main/java     # Combined format + lint
+```
+
+**If not installed, suggest:**
+```
+💡 JBCT CLI automates formatting and 36 lint rules for JBCT compliance.
+   Install: curl -fsSL https://raw.githubusercontent.com/siy/jbct-cli/main/install.sh | sh
+   Requires: Java 25+
+   More info: https://github.com/siy/jbct-cli
+```
 
 ## Core Philosophy
 
@@ -61,9 +86,9 @@ public record Email(String value) {
 
     public static Result<Email> email(String raw) {
         return Verify.ensure(raw, Verify.Is::notNull)
-            .map(String::trim)
-            .filter(INVALID_EMAIL, PATTERN.asMatchPredicate())
-            .map(Email::new);
+                     .map(String::trim)
+                     .filter(INVALID_EMAIL, PATTERN.asMatchPredicate())
+                     .map(Email::new);
     }
 }
 
@@ -105,10 +130,12 @@ Network.parseUUID(raw)            // Result<UUID>
 **Example:**
 ```java
 public record Age(int value) {
+    private static final Cause AGE_OUT_OF_RANGE = Causes.cause("Age must be 0-150");
+
     public static Result<Age> age(String raw) {
         return Number.parseInt(raw)
-            .filter(Causes.cause("Age 0-150"), v -> Verify.Is.between(v, 0, 150))
-            .map(Age::new);
+                     .filter(AGE_OUT_OF_RANGE, v -> Verify.Is.between(v, 0, 150))
+                     .map(Age::new);
     }
 }
 ```
@@ -177,13 +204,13 @@ static RegisterUser registerUser(CheckEmail check, SaveUser save) {
 // ✅ CORRECT: Immutable cart passed to both operations
 Promise.all(applyBogo(cart),          // cart is immutable
             applyPercentOff(cart))    // cart is immutable
-    .map(this::mergeDiscounts);
+        .map(this::mergeDiscounts);
 
 // ❌ WRONG: Shared mutable context creates data race
 private final DiscountContext context = new DiscountContext();
 Promise.all(applyBogo(cart, context),     // mutates context
             applyPercentOff(cart, context))  // DATA RACE
-    .map(this::merge);
+        .map(this::merge);
 ```
 
 **See CODING_GUIDE.md** for comprehensive thread safety coverage, including detailed examples and common mistakes.
@@ -260,11 +287,11 @@ public Promise<User> findUser(UserId id) {
 Linear dependent steps (most common use case pattern):
 ```java
 return ValidRequest.validRequest(request)
-    .async()
-    .flatMap(checkEmail::apply)
-    .flatMap(hashPassword::apply)
-    .flatMap(saveUser::apply)
-    .flatMap(sendEmail::apply);
+                   .async()
+                   .flatMap(checkEmail::apply)
+                   .flatMap(hashPassword::apply)
+                   .flatMap(saveUser::apply)
+                   .flatMap(sendEmail::apply);
 ```
 
 ### 3. Fork-Join Pattern
@@ -273,8 +300,8 @@ Parallel independent operations (requires immutable inputs):
 return Promise.all(fetchProfile.apply(userId),
                    fetchPreferences.apply(userId),
                    fetchOrders.apply(userId))
-    .map((profile, prefs, orders) ->
-        new Dashboard(profile, prefs, orders));
+        .map((profile, prefs, orders) ->
+            new Dashboard(profile, prefs, orders));
 ```
 
 **Thread Safety:** All parallel operations must receive immutable inputs. No shared mutable state.
@@ -291,11 +318,11 @@ return userType.equals("premium")
 Functional collection processing:
 ```java
 var results = items.stream()
-    .map(Item::validate)
-    .toList();
+                   .map(Item::validate)
+                   .toList();
 
 return Result.allOf(results)
-    .map(validItems -> process(validItems));
+             .map(validItems -> process(validItems));
 ```
 
 ### 6. Aspects Pattern
@@ -331,15 +358,15 @@ cause.promise()
 ```java
 // Result.all - Accumulates all failures
 Result.all(result1, result2, result3)
-    .map((v1, v2, v3) -> combine(v1, v2, v3));
+       .map((v1, v2, v3) -> combine(v1, v2, v3));
 
 // Promise.all - Fail-fast on first failure
 Promise.all(promise1, promise2, promise3)
-    .map((v1, v2, v3) -> combine(v1, v2, v3));
+        .map((v1, v2, v3) -> combine(v1, v2, v3));
 
 // Option.all - Fail-fast on first empty
 Option.all(opt1, opt2, opt3)
-    .map((v1, v2, v3) -> combine(v1, v2, v3));
+       .map((v1, v2, v3) -> combine(v1, v2, v3));
 ```
 
 ## Exception Handling
@@ -386,9 +413,9 @@ Use zone-appropriate verbs to maintain consistent abstraction levels:
 ```java
 // "To execute, we validate the request, then process payment, then send confirmation"
 return ValidRequest.validRequest(request)
-    .async()
-    .flatMap(this::processPayment)
-    .flatMap(this::sendConfirmation);
+                   .async()
+                   .flatMap(this::processPayment)
+                   .flatMap(this::sendConfirmation);
 ```
 
 **For complete zone verb vocabulary**, see **CODING_GUIDE.md: Zone-Based Naming Vocabulary**.
@@ -450,50 +477,79 @@ RegistrationError.General.EMAIL_ALREADY_REGISTERED.promise()
 @Test
 void validation_fails_forInvalidInput() {
     ValidRequest.validRequest(new Request("invalid", "bad"))
-        .onSuccess(Assertions::fail);
+                .onSuccess(Assertions::fail);
 }
 
 // Test successes - chain onFailure then onSuccess
 @Test
 void validation_succeeds_forValidInput() {
     ValidRequest.validRequest(new Request("valid@example.com", "Valid1234"))
-        .onFailure(Assertions::fail)
-        .onSuccess(valid -> {
-            assertEquals("valid@example.com", valid.email().value());
-        });
+                .onFailure(Assertions::fail)
+                .onSuccess(valid -> {
+                    assertEquals("valid@example.com", valid.email().value());
+                });
 }
 
 // Async tests - use .await() first
 @Test
 void execute_succeeds_forValidInput() {
     useCase.execute(request)
-        .await()
-        .onFailure(Assertions::fail)
-        .onSuccess(response -> {
-            assertEquals("expected", response.value());
-        });
+           .await()
+           .onFailure(Assertions::fail)
+           .onSuccess(response -> {
+               assertEquals("expected", response.value());
+           });
 }
 ```
 
 ## Pragmatica Lite Core Library
 
-JBCT uses **Pragmatica Lite Core 0.9.0** for functional types.
+JBCT uses **Pragmatica Lite Core 0.9.3** for functional types.
 
 **Maven (preferred):**
 ```xml
 <dependency>
    <groupId>org.pragmatica-lite</groupId>
    <artifactId>core</artifactId>
-   <version>0.9.0</version>
+   <version>0.9.3</version>
 </dependency>
 ```
 
 **Gradle (only if explicitly requested):**
 ```gradle
-implementation 'org.pragmatica-lite:core:0.9.0'
+implementation 'org.pragmatica-lite:core:0.9.3'
 ```
 
 Library documentation: https://central.sonatype.com/artifact/org.pragmatica-lite/core
+
+### Static Imports (Encouraged)
+
+Static imports reduce code verbosity:
+
+```java
+// Recommended static imports
+import static org.pragmatica.lang.Result.all;
+import static org.pragmatica.lang.Result.success;
+import static com.example.domain.Email.email;
+import static com.example.domain.Password.password;
+
+// Concise code
+return all(email(raw), password(raw)).flatMap(ValidRequest::validRequest);
+```
+
+### Fluent Failure Creation
+
+Use `cause.result()` and `cause.promise()` instead of `Result.failure(cause)`:
+
+```java
+// ✅ DO: Fluent style
+return INVALID_EMAIL.result();
+return USER_NOT_FOUND.promise();
+
+// ❌ DON'T: Static factory style
+return Result.failure(INVALID_EMAIL);
+return Promise.failure(USER_NOT_FOUND);
+```
 
 ## When to Use Specialized Subagents
 

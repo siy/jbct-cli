@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.4] - 2026-01-01
+
+### Added
+
+### Changed
+- AI tools: update to JBCT v2.0.10 with Pragmatica Lite Core 0.9.3
+- Build: bump Pragmatica Lite to 0.9.3
+
+### Fixed
+
 ## [0.4.3] - 2025-12-31
 
 ### Added

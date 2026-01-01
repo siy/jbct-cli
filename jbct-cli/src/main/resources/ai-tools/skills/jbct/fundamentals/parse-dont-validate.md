@@ -26,7 +26,7 @@ public record Email(String value) {
         Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     private static final Fn1<Cause, String> INVALID_EMAIL =
-        Causes.forOneValue("Invalid email: %s");
+        Causes.forValue("Invalid email: {}");
 
     // Private constructor - cannot construct directly
     private Email {}
@@ -93,7 +93,7 @@ public static Result<Email> email(String raw) {
 ```java
 public record UserId(UUID value) {
     private static final Fn1<Cause, String> INVALID_USER_ID =
-        Causes.forOneValue("Invalid user ID: %s");
+        Causes.forValue("Invalid user ID: {}");
 
     private UserId {}
 
@@ -102,13 +102,13 @@ public record UserId(UUID value) {
             .map(String::trim)
             .filter(INVALID_USER_ID, Verify.Is::notEmpty)
             .flatMap(str -> Result.lift(() -> UUID.fromString(str))
-                                  .mapError(_ -> INVALID_USER_ID.apply(raw)))
+                                  .mapError(e -> INVALID_USER_ID.apply(raw)))
             .map(UserId::new);
     }
 
     public static Result<UserId> userId(UUID value) {
         return Verify.ensure(value, Verify.Is::notNull)
-            .mapFailure(e -> INVALID_USER_ID.apply("null"))
+            .mapError(e -> INVALID_USER_ID.apply("null"))
             .map(UserId::new);
     }
 }
@@ -123,11 +123,11 @@ public record Password(String value) {
     private static final Pattern HAS_UPPER = Pattern.compile(".*[A-Z].*");
 
     private static final Fn1<Cause, String> TOO_SHORT =
-        Causes.forOneValue("Password too short (min " + MIN_LENGTH + "): %s");
+        Causes.forValue("Password too short (min " + MIN_LENGTH + "): {}");
     private static final Fn1<Cause, String> NO_DIGIT =
-        Causes.forOneValue("Password must contain digit: %s");
+        Causes.forValue("Password must contain digit: {}");
     private static final Fn1<Cause, String> NO_UPPER =
-        Causes.forOneValue("Password must contain uppercase: %s");
+        Causes.forValue("Password must contain uppercase: {}");
 
     private Password {}
 
@@ -175,10 +175,10 @@ Use constants with descriptive names:
 
 ```java
 private static final Fn1<Cause, String> INVALID_EMAIL =
-    Causes.forOneValue("Invalid email: %s");
+    Causes.forValue("Invalid email: {}");
 
 private static final Fn1<Cause, String> TOO_SHORT =
-    Causes.forOneValue("Password too short: %s");
+    Causes.forValue("Password too short: {}");
 ```
 
 ## Validated Inputs
@@ -299,7 +299,7 @@ public record UserProfile(
 ```java
 public record OrderItems(List<Item> items) {
     private static final Fn1<Cause, Integer> MIN_ITEMS_ERROR =
-        Causes.forOneValue("Order must have at least %d items");
+        Causes.forValue("Order must have at least {} items");
 
     private OrderItems {}
 

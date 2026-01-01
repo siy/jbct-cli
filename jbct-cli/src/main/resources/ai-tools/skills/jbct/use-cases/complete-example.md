@@ -42,7 +42,7 @@ public record Email(String value) {
         Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     private static final Fn1<Cause, String> INVALID_EMAIL =
-        Causes.forOneValue("Invalid email: %s");
+        Causes.forValue("Invalid email: {}");
 
     private Email {}
 
@@ -66,11 +66,11 @@ public record Password(String value) {
     private static final Pattern HAS_UPPER = Pattern.compile(".*[A-Z].*");
 
     private static final Fn1<Cause, String> TOO_SHORT =
-        Causes.forOneValue("Password too short (min " + MIN_LENGTH + ")");
+        Causes.forValue("Password too short (min " + MIN_LENGTH + ")");
     private static final Fn1<Cause, String> NO_DIGIT =
-        Causes.forOneValue("Password must contain digit");
+        Causes.forValue("Password must contain digit");
     private static final Fn1<Cause, String> NO_UPPER =
-        Causes.forOneValue("Password must contain uppercase letter");
+        Causes.forValue("Password must contain uppercase letter");
 
     private Password {}
 
