@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.5] - 2026-01-02
+
+### Added
+
+### Changed
+- Build: bump Pragmatica Lite to 0.9.4
+
+### Fixed
+
 ## [0.4.4] - 2026-01-01
 
 ### Added
