@@ -5,6 +5,7 @@
 ### Added
 
 ### Changed
+- Build: bump Pragmatica Lite to 0.9.4
 
 ### Fixed
 
