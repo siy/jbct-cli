@@ -1,12 +1,13 @@
 # Changelog
 
-## [0.4.6] - 2026-01-04
+## [0.4.6] - 2026-01-05
 
 ### Added
 
 ### Changed
 
 ### Fixed
+- Parser: add support for array creation with dimension expressions (`new int[10][]`, `new float[rows][cols]`)
 
 ## [0.4.5] - 2026-01-02
 
