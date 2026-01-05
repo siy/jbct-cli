@@ -138,7 +138,8 @@ public class CstPrinter {
         // Handle leading trivia
         // TypeArgs/TypeParams: skip leading whitespace to prevent errant space before '<'
         var effectiveMode = (node.rule() instanceof RuleId.TypeArgs || node.rule() instanceof RuleId.TypeParams)
-                            ? TriviaMode.SKIP_LEADING : mode;
+                            ? TriviaMode.SKIP_LEADING
+                            : mode;
         switch (effectiveMode) {
             case FULL -> printTrivia(node.leadingTrivia());
             case COMMENTS_ONLY, SKIP_LEADING -> printCommentsOnly(node.leadingTrivia());
