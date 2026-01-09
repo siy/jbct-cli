@@ -560,4 +560,45 @@ class CstFormatterTest {
                 assertEquals(content, formatted.content(), "CstFormatter changed golden example: " + fileName);
             });
     }
+
+    @ParameterizedTest(name = "Multi-pass idempotency: {0}")
+    @ValueSource(strings = {
+        "BlankLines.java",
+        "ChainAlignment.java",
+        "Lambdas.java",
+        "Comments.java",
+        "Enums.java",
+        "Records.java"
+    })
+    void cstFormatter_isIdempotent_afterMultiplePasses(String fileName) throws IOException {
+        var path = EXAMPLES_DIR.resolve(fileName);
+        var content = Files.readString(path);
+        var source = new SourceFile(path, content);
+
+        // Format once
+        var firstPass = formatter.format(source)
+            .onFailure(cause -> fail("First format failed for " + fileName + ": " + cause.message()))
+            .unwrap();
+
+        // Format 10 more times and verify no growth
+        var current = firstPass;
+        int firstLength = firstPass.content().length();
+        int firstLines = firstPass.content().split("\n").length;
+
+        for (int i = 2; i <= 10; i++) {
+            final var toFormat = current;
+            final int passNum = i;
+            current = formatter.format(toFormat)
+                .onFailure(cause -> fail("Format pass " + passNum + " failed for " + fileName + ": " + cause.message()))
+                .unwrap();
+
+            int currentLength = current.content().length();
+            int currentLines = current.content().split("\n").length;
+
+            assertEquals(firstLength, currentLength,
+                "File length changed on pass " + i + " for " + fileName + ": " + firstLength + " -> " + currentLength);
+            assertEquals(firstLines, currentLines,
+                "Line count changed on pass " + i + " for " + fileName + ": " + firstLines + " -> " + currentLines);
+        }
+    }
 }

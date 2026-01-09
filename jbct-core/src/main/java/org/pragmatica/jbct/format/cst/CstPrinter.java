@@ -364,7 +364,8 @@ public class CstPrinter {
         indentLevel--;
         println();
         printIndent();
-        printTerminalFrom(children, "}");
+        // Skip whitespace trivia since we control newlines
+        printTerminalFromSkipTrivia(children, "}");
     }
 
     private void printRecordBody(CstNode.NonTerminal recordBody) {
@@ -456,17 +457,29 @@ public class CstPrinter {
             indentLevel--;
             printIndent();
         }
-        // Print closing brace
-        printTerminalFrom(children, "}");
+        // Print closing brace - skip whitespace trivia since we control newlines
+        printTerminalFromSkipTrivia(children, "}");
     }
 
     /**
      * Find and print the first terminal with given text from a list of children.
      */
     private void printTerminalFrom(List<CstNode> children, String text) {
+        printTerminalFrom(children, text, TriviaMode.FULL);
+    }
+
+    /**
+     * Find and print the first terminal with given text, skipping whitespace trivia.
+     * Used for closing braces where we control newlines explicitly.
+     */
+    private void printTerminalFromSkipTrivia(List<CstNode> children, String text) {
+        printTerminalFrom(children, text, TriviaMode.COMMENTS_ONLY);
+    }
+
+    private void printTerminalFrom(List<CstNode> children, String text, TriviaMode mode) {
         for (var child : children) {
             if (isTerminalWithText(child, text)) {
-                printNode(child);
+                printNode(child, mode);
                 return;
             }
         }
@@ -589,11 +602,10 @@ public class CstPrinter {
                 printIndent();
             }
         }
-        // Empty block - no indent, just close immediately: {}
-        // Find and print closing brace with its trivia
+        // Find and print closing brace - skip whitespace trivia since we control newlines
         for (var child : children) {
             if (isTerminalWithText(child, "}")) {
-                printNode(child);
+                printNodeSkipTrivia(child);
                 break;
             }
         }

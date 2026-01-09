@@ -1,5 +1,11 @@
 # JBCT CLI Project
 
+## AI Agent Policy
+
+**MANDATORY**: Use ONLY the `jbct-coder` agent for ALL coding and fixing tasks in this project. This ensures code follows JBCT patterns and conventions.
+
+To invoke: Use the `/jbct` skill or spawn the `jbct-coder` agent via the Task tool.
+
 ## Project Overview
 CLI tool and Maven plugin for JBCT (Java Backend Coding Technology) code formatting and linting.
 
