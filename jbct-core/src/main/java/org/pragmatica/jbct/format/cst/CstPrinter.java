@@ -138,8 +138,10 @@ public class CstPrinter {
     private void printNode(CstNode node, TriviaMode mode) {
         // Handle leading trivia
         // TypeArgs/TypeParams: skip leading whitespace to prevent errant space before '<'
+        // OrdinaryUnit: skip leading whitespace since we control file layout
         var isTypeArgsOrParams = node.rule() instanceof RuleId.TypeArgs || node.rule() instanceof RuleId.TypeParams;
-        var effectiveMode = isTypeArgsOrParams
+        var isOrdinaryUnit = node.rule() instanceof RuleId.OrdinaryUnit;
+        var effectiveMode = (isTypeArgsOrParams || isOrdinaryUnit)
                             ? TriviaMode.SKIP_LEADING
                             : mode;
         switch (effectiveMode) {
@@ -240,27 +242,32 @@ public class CstPrinter {
 
     private void printOrdinaryUnit(CstNode.NonTerminal ou) {
         // Print package declaration
-        childByRule(ou, RuleId.PackageDecl.class)
-                   .onPresent(this::printNode);
+        var hasPackage = childByRule(ou, RuleId.PackageDecl.class)
+                                    .onPresent(this::printNode)
+                                    .isPresent();
         // Collect and organize imports
         var imports = childrenByRule(ou, RuleId.ImportDecl.class);
-        if (!imports.isEmpty()) {
+        var hasImports = !imports.isEmpty();
+        if (hasImports) {
             println();
             println();
             printOrganizedImports(imports);
         }
-        // Print type declarations (one blank line after imports)
+        // Print type declarations
         var types = childrenByRule(ou, RuleId.TypeDecl.class);
         boolean first = true;
         for (var type : types) {
             if (first) {
-                println();
+                // Only add newline before first type if there's something before it
+                if (hasPackage || hasImports) {
+                    println();
+                }
             } else {
+                // Blank line between type declarations
                 println();
                 println();
             }
             printNodeSkipLeadingTrivia(type);
-            // Skip leading trivia - we control blank lines
             first = false;
         }
     }
