@@ -8,6 +8,9 @@
 - AI tools: add `fix-all` skill for systematic issue resolution
 - AI tools: add `fold-alternatives.md` pattern documentation
 - Project init: create `CLAUDE.md` with JBCT workflow and conversation style guidelines
+- Slice processor: factory returns `Promise<SliceType>` with `Aspect` parameter
+- Slice processor: add `createDynamic()` for runtime-configurable aspects (logging/metrics)
+- Docs: add slice factory generation design document
 
 ### Changed
 - AI tools: sync `jbct-coder` and `jbct-reviewer` agents from coding-technology
@@ -16,6 +19,7 @@
 - AI tools: `jbct update` now updates project-local AI tools
 
 ### Fixed
+- Slice init: Forge URL port corrected from 8080 to 8888
 
 ## [0.4.7] - 2026-01-10
 
