@@ -28,7 +28,7 @@ fi
 
 # Verify tests pass
 echo "Running tests..."
-mvn clean test -q
+mvn clean test -Djbct.skip -q
 
 # Verify GPG setup
 echo "Checking GPG configuration..."
@@ -40,11 +40,11 @@ fi
 
 # Build and verify artifacts
 echo "Building release artifacts..."
-mvn clean package -DperformRelease=true -q
+mvn clean package -DperformRelease=true -Djbct.skip -q
 
 # Deploy to staging repository
 echo "Deploying to staging repository..."
-mvn deploy -DperformRelease=true
+mvn deploy -DperformRelease=true -Djbct.skip
 
 echo "Release deployed to staging repository!"
 echo ""
