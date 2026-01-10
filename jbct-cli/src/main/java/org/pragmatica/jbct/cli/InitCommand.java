@@ -99,7 +99,7 @@ public class InitCommand implements Callable<Integer> {
         if (!noAi) {
             System.out.println();
             System.out.println("Installing AI tools...");
-            var installer = AiToolsInstaller.aiToolsInstaller();
+            var installer = AiToolsInstaller.aiToolsInstaller(projectDir);
             aiToolsInstalled = installer.install()
                                         .fold(cause -> {
                                                   System.err.println("Warning: Failed to install AI tools: " + cause.message());
@@ -107,9 +107,7 @@ public class InitCommand implements Callable<Integer> {
                                               },
                                               installedFiles -> {
                                                   if (!installedFiles.isEmpty()) {
-                                                      System.out.println("Installed AI tools to: " + installer.claudeDir());
-                                                      System.out.println("  Skills: " + installer.skillsDir());
-                                                      System.out.println("  Agents: " + installer.agentsDir());
+                                                      System.out.println("Installed AI tools to: " + projectDir.relativize(installer.claudeDir()));
                                                       return true;
                                                   }
                                                   return false;

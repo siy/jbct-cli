@@ -12,7 +12,8 @@
 ### Changed
 - AI tools: sync `jbct-coder` and `jbct-reviewer` agents from coding-technology
 - AI tools: update skill files from coding-technology
-- AI tools: installer now installs all skills (not just jbct)
+- AI tools: install to project's `.claude/` directory instead of `~/.claude/`
+- AI tools: `jbct update` now updates project-local AI tools
 
 ### Fixed
 

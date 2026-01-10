@@ -19,7 +19,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 /**
- * Installs AI tools (Claude Code skills and agents) to ~/.claude/.
+ * Installs AI tools (Claude Code skills and agents) to project's .claude/ directory.
  */
 public final class AiToolsInstaller {
     private static final String AI_TOOLS_PATH = "/ai-tools/";
@@ -33,18 +33,11 @@ public final class AiToolsInstaller {
     }
 
     /**
-     * Create installer with default Claude directory (~/.claude/).
+     * Create installer for project directory.
+     * AI tools will be installed to projectDir/.claude/
      */
-    public static AiToolsInstaller aiToolsInstaller() {
-        var userHome = System.getProperty("user.home");
-        return new AiToolsInstaller(Path.of(userHome, ".claude"));
-    }
-
-    /**
-     * Create installer with custom Claude directory.
-     */
-    public static AiToolsInstaller aiToolsInstaller(Path claudeDir) {
-        return new AiToolsInstaller(claudeDir);
+    public static AiToolsInstaller aiToolsInstaller(Path projectDir) {
+        return new AiToolsInstaller(projectDir.resolve(".claude"));
     }
 
     /**

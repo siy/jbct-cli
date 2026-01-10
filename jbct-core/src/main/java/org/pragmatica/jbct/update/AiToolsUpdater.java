@@ -27,7 +27,7 @@ public final class AiToolsUpdater {
     private static final String RAW_CONTENT_BASE = "https://raw.githubusercontent.com/siy/coding-technology/main/";
     private static final Pattern SHA_PATTERN = Pattern.compile("\"sha\"\\s*:\\s*\"([^\"]+)\"");
 
-    private static final String VERSION_FILE = "ai-tools-version.txt";
+    private static final String VERSION_FILE = ".ai-tools-version";
 
     // Files to download - skills/jbct/
     private static final String[] JBCT_SKILL_FILES = {"skills/jbct/SKILL.md", "skills/jbct/README.md", "skills/jbct/fundamentals/four-return-kinds.md", "skills/jbct/fundamentals/parse-dont-validate.md", "skills/jbct/fundamentals/no-business-exceptions.md", "skills/jbct/patterns/leaf.md", "skills/jbct/patterns/sequencer.md", "skills/jbct/patterns/fork-join.md", "skills/jbct/patterns/condition.md", "skills/jbct/patterns/iteration.md", "skills/jbct/patterns/aspects.md", "skills/jbct/patterns/fold-alternatives.md", "skills/jbct/project-structure/organization.md", "skills/jbct/testing/patterns.md", "skills/jbct/use-cases/structure.md", "skills/jbct/use-cases/complete-example.md"};
@@ -39,27 +39,18 @@ public final class AiToolsUpdater {
 
     private final HttpOperations http;
     private final Path claudeDir;
-    private final Path jbctDir;
 
-    private AiToolsUpdater(HttpOperations http, Path claudeDir, Path jbctDir) {
+    private AiToolsUpdater(HttpOperations http, Path claudeDir) {
         this.http = http;
         this.claudeDir = claudeDir;
-        this.jbctDir = jbctDir;
     }
 
     /**
-     * Create updater with default settings.
+     * Create updater for project directory.
+     * AI tools will be updated in projectDir/.claude/
      */
-    public static AiToolsUpdater aiToolsUpdater() {
-        var userHome = System.getProperty("user.home");
-        return new AiToolsUpdater(HttpClients.httpOperations(), Path.of(userHome, ".claude"), Path.of(userHome, ".jbct"));
-    }
-
-    /**
-     * Create updater with custom directories.
-     */
-    public static AiToolsUpdater aiToolsUpdater(Path claudeDir, Path jbctDir) {
-        return new AiToolsUpdater(HttpClients.httpOperations(), claudeDir, jbctDir);
+    public static AiToolsUpdater aiToolsUpdater(Path projectDir) {
+        return new AiToolsUpdater(HttpClients.httpOperations(), projectDir.resolve(".claude"));
     }
 
     /**
@@ -211,7 +202,7 @@ public final class AiToolsUpdater {
     }
 
     private Option<String> getCurrentVersion() {
-        var versionFile = jbctDir.resolve(VERSION_FILE);
+        var versionFile = claudeDir.resolve(VERSION_FILE);
         if (!Files.exists(versionFile)) {
             return Option.none();
         }
@@ -226,8 +217,8 @@ public final class AiToolsUpdater {
 
     private Result<Path> saveCurrentVersion(String commitSha) {
         try{
-            Files.createDirectories(jbctDir);
-            var versionFile = jbctDir.resolve(VERSION_FILE);
+            Files.createDirectories(claudeDir);
+            var versionFile = claudeDir.resolve(VERSION_FILE);
             Files.writeString(versionFile, commitSha);
             return Result.success(versionFile);
         } catch (IOException e) {
@@ -241,12 +232,5 @@ public final class AiToolsUpdater {
      */
     public Path claudeDir() {
         return claudeDir;
-    }
-
-    /**
-     * Get the JBCT configuration directory.
-     */
-    public Path jbctDir() {
-        return jbctDir;
     }
 }
