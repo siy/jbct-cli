@@ -23,7 +23,7 @@ import java.util.zip.ZipEntry;
  */
 public final class AiToolsInstaller {
     private static final String AI_TOOLS_PATH = "/ai-tools/";
-    private static final String SKILLS_SUBPATH = "skills/jbct/";
+    private static final String SKILLS_SUBPATH = "skills/";
     private static final String AGENTS_SUBPATH = "agents/";
 
     private final Path claudeDir;
@@ -59,7 +59,7 @@ public final class AiToolsInstaller {
 
     private Result<Unit> createDirectories() {
         try{
-            var skillsDir = claudeDir.resolve("skills/jbct");
+            var skillsDir = claudeDir.resolve("skills");
             var agentsDir = claudeDir.resolve("agents");
             Files.createDirectories(skillsDir);
             Files.createDirectories(agentsDir);
@@ -71,7 +71,7 @@ public final class AiToolsInstaller {
     }
 
     private Result<List<Path>> installAllResources() {
-        var skillsDir = claudeDir.resolve("skills/jbct");
+        var skillsDir = claudeDir.resolve("skills");
         var agentsDir = claudeDir.resolve("agents");
         // Fork-Join: Install skills and agents in parallel
         return Result.allOf(installFromResources(AI_TOOLS_PATH + SKILLS_SUBPATH, skillsDir),
@@ -176,7 +176,7 @@ public final class AiToolsInstaller {
      * Get the path where skills are installed.
      */
     public Path skillsDir() {
-        return claudeDir.resolve("skills/jbct");
+        return claudeDir.resolve("skills");
     }
 
     /**

@@ -3,8 +3,15 @@
 ## [0.4.8] - 2026-01-10
 
 ### Added
+- AI tools: add `code-reviewer` agent for general-purpose code reviews
+- AI tools: add `jbct-review` skill for parallel JBCT compliance checking
+- AI tools: add `fix-all` skill for systematic issue resolution
+- AI tools: add `fold-alternatives.md` pattern documentation
 
 ### Changed
+- AI tools: sync `jbct-coder` and `jbct-reviewer` agents from coding-technology
+- AI tools: update skill files from coding-technology
+- AI tools: installer now installs all skills (not just jbct)
 
 ### Fixed
 

@@ -29,8 +29,11 @@ public final class AiToolsUpdater {
 
     private static final String VERSION_FILE = "ai-tools-version.txt";
 
-    // Files to download
-    private static final String[] SKILL_FILES = {"skills/jbct/SKILL.md", "skills/jbct/README.md", "skills/jbct/fundamentals/four-return-kinds.md", "skills/jbct/fundamentals/parse-dont-validate.md", "skills/jbct/fundamentals/no-business-exceptions.md", "skills/jbct/patterns/leaf.md", "skills/jbct/patterns/sequencer.md", "skills/jbct/patterns/fork-join.md", "skills/jbct/patterns/condition.md", "skills/jbct/patterns/iteration.md", "skills/jbct/patterns/aspects.md", "skills/jbct/project-structure/organization.md", "skills/jbct/testing/patterns.md", "skills/jbct/use-cases/structure.md", "skills/jbct/use-cases/complete-example.md"};
+    // Files to download - skills/jbct/
+    private static final String[] JBCT_SKILL_FILES = {"skills/jbct/SKILL.md", "skills/jbct/README.md", "skills/jbct/fundamentals/four-return-kinds.md", "skills/jbct/fundamentals/parse-dont-validate.md", "skills/jbct/fundamentals/no-business-exceptions.md", "skills/jbct/patterns/leaf.md", "skills/jbct/patterns/sequencer.md", "skills/jbct/patterns/fork-join.md", "skills/jbct/patterns/condition.md", "skills/jbct/patterns/iteration.md", "skills/jbct/patterns/aspects.md", "skills/jbct/patterns/fold-alternatives.md", "skills/jbct/project-structure/organization.md", "skills/jbct/testing/patterns.md", "skills/jbct/use-cases/structure.md", "skills/jbct/use-cases/complete-example.md"};
+
+    // Files to download - skills/jbct-review/
+    private static final String[] JBCT_REVIEW_SKILL_FILES = {"skills/jbct-review/SKILL.md"};
 
     private static final String[] AGENT_FILES = {"jbct-coder.md", "jbct-reviewer.md"};
 
@@ -132,10 +135,9 @@ public final class AiToolsUpdater {
 
     private Result<Unit> createDirectories() {
         try{
-            var skillsDir = claudeDir.resolve("skills/jbct");
-            var agentsDir = claudeDir.resolve("agents");
-            Files.createDirectories(skillsDir);
-            Files.createDirectories(agentsDir);
+            Files.createDirectories(claudeDir.resolve("skills/jbct"));
+            Files.createDirectories(claudeDir.resolve("skills/jbct-review"));
+            Files.createDirectories(claudeDir.resolve("agents"));
             return Result.success(Unit.unit());
         } catch (Exception e) {
             return Causes.cause("Failed to create directories: " + e.getMessage())
@@ -154,10 +156,12 @@ public final class AiToolsUpdater {
     }
 
     private Result<List<Path>> downloadSkillFiles() {
-        var results = Stream.of(SKILL_FILES)
-                            .map(file -> downloadFile(file,
-                                                      claudeDir.resolve(file)))
-                            .toList();
+        // Combine all skill file arrays
+        var allSkillFiles = Stream.concat(Stream.of(JBCT_SKILL_FILES), Stream.of(JBCT_REVIEW_SKILL_FILES))
+                                  .toList();
+        var results = allSkillFiles.stream()
+                                   .map(file -> downloadFile(file, claudeDir.resolve(file)))
+                                   .toList();
         // Collect successful downloads
         var files = new ArrayList<Path>();
         for (var result : results) {
