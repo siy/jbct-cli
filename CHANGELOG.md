@@ -7,6 +7,7 @@
 - AI tools: add `jbct-review` skill for parallel JBCT compliance checking
 - AI tools: add `fix-all` skill for systematic issue resolution
 - AI tools: add `fold-alternatives.md` pattern documentation
+- Project init: create `CLAUDE.md` with JBCT workflow and conversation style guidelines
 
 ### Changed
 - AI tools: sync `jbct-coder` and `jbct-reviewer` agents from coding-technology

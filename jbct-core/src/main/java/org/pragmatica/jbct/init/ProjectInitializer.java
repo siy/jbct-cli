@@ -84,7 +84,17 @@ public final class ProjectInitializer {
         // Fork-Join: Create template files in parallel
         return Result.allOf(createFile("pom.xml.template", projectDir.resolve("pom.xml")),
                             createFile("jbct.toml.template", projectDir.resolve("jbct.toml")),
-                            createFile("gitignore.template", projectDir.resolve(".gitignore")));
+                            createFile("gitignore.template", projectDir.resolve(".gitignore")),
+                            createClaudeMd());
+    }
+
+    private Result<Path> createClaudeMd() {
+        var targetPath = projectDir.resolve("CLAUDE.md");
+        if (Files.exists(targetPath)) {
+            System.out.println("  Skipped: CLAUDE.md (already exists)");
+            return Result.success(targetPath);
+        }
+        return createFile("CLAUDE.md", targetPath);
     }
 
     private Result<List<Path>> createGitkeepFiles() {
