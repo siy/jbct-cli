@@ -27,6 +27,12 @@ import com.squareup.javapoet.TypeSpec;
  *   <li>Returns Promise&lt;SliceType&gt; (never Result wrapped in Promise)</li>
  *   <li>Always applies aspect (use identity aspect for no decoration)</li>
  * </ul>
+ * <p>
+ * Two factory methods are generated:
+ * <ul>
+ *   <li>{@code create(Aspect, SliceInvokerFacade)} - static aspect configuration</li>
+ *   <li>{@code createDynamic(DynamicAspectConfig, SliceInvokerFacade)} - runtime-configurable aspects</li>
+ * </ul>
  */
 public class FactoryClassGenerator {
     private final Filer filer;
@@ -38,6 +44,8 @@ public class FactoryClassGenerator {
                                                                         "SliceInvokerFacade");
     private static final ClassName ASPECT = ClassName.get("org.pragmatica.aether.slice",
                                                           "Aspect");
+    private static final ClassName DYNAMIC_ASPECT_CONFIG = ClassName.get("org.pragmatica.aether.slice",
+                                                                          "DynamicAspectConfig");
     private static final ClassName PROMISE = ClassName.get("org.pragmatica.lang",
                                                            "Promise");
 
@@ -67,58 +75,12 @@ public class FactoryClassGenerator {
             classBuilder.addMethod(MethodSpec.constructorBuilder()
                                              .addModifiers(Modifier.PRIVATE)
                                              .build());
-            // Create method
-            var createMethod = MethodSpec.methodBuilder("create")
-                                         .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                         .returns(promiseOfSlice)
-                                         .addParameter(aspectOfSlice, "aspect")
-                                         .addParameter(SLICE_INVOKER_FACADE, "invoker")
-                                         .addJavadoc("Create $L slice with all dependencies.\n\n",
-                                                     model.simpleName())
-                                         .addJavadoc("@param aspect Aspect to apply (use Aspect.identity() for none)\n")
-                                         .addJavadoc("@param invoker The slice invoker for remote calls\n")
-                                         .addJavadoc("@return Promise of configured $L instance\n",
-                                                     model.simpleName());
-            // Create proxy for each dependency
-            var factoryArgs = new StringBuilder();
-            for (var dep : model.dependencies()) {
-                var resolved = versionResolver.resolve(dep);
-                var proxyType = ClassName.get(model.apiPackage(), resolved.proxyClassName());
-                var varName = resolved.parameterName();
-                createMethod.addStatement("var $L = new $T(invoker, $S)",
-                                          varName,
-                                          proxyType,
-                                          resolved.fullArtifact());
-                if (!factoryArgs.isEmpty()) {
-                    factoryArgs.append(", ");
-                }
-                factoryArgs.append(varName);
-            }
-            // Call original factory, apply aspect, wrap in Promise
-            createMethod.addStatement("var instance = $T.$L($L)",
-                                      sliceType,
-                                      model.factoryMethodName(),
-                                      factoryArgs.toString());
-            createMethod.addStatement("return $T.successful(aspect.apply(instance))",
-                                      PROMISE);
-            classBuilder.addMethod(createMethod.build());
+            // Create method (static aspect)
+            classBuilder.addMethod(buildCreateMethod(model, sliceType, promiseOfSlice, aspectOfSlice));
+            // CreateDynamic method (runtime-configurable aspects)
+            classBuilder.addMethod(buildCreateDynamicMethod(model, sliceType, promiseOfSlice));
             // Dependencies inner class
-            var depsBuilder = TypeSpec.classBuilder("Dependencies")
-                                      .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                                      .addJavadoc("Dependency information for this slice.\n");
-            depsBuilder.addMethod(MethodSpec.constructorBuilder()
-                                            .addModifiers(Modifier.PRIVATE)
-                                            .build());
-            for (var dep : model.dependencies()) {
-                var resolved = versionResolver.resolve(dep);
-                var constName = toConstantName(resolved.parameterName());
-                depsBuilder.addField(FieldSpec.builder(String.class, constName)
-                                              .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                                              .initializer("$S",
-                                                           resolved.fullArtifact())
-                                              .build());
-            }
-            classBuilder.addType(depsBuilder.build());
+            classBuilder.addType(buildDependenciesClass(model));
             var javaFile = JavaFile.builder(model.packageName(),
                                             classBuilder.build())
                                    .indent("    ")
@@ -129,6 +91,110 @@ public class FactoryClassGenerator {
             return Causes.cause("Failed to generate factory class: " + e.getMessage())
                          .result();
         }
+    }
+
+    private MethodSpec buildCreateMethod(SliceModel model,
+                                         ClassName sliceType,
+                                         ParameterizedTypeName promiseOfSlice,
+                                         ParameterizedTypeName aspectOfSlice) {
+        var createMethod = MethodSpec.methodBuilder("create")
+                                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                                     .returns(promiseOfSlice)
+                                     .addParameter(aspectOfSlice, "aspect")
+                                     .addParameter(SLICE_INVOKER_FACADE, "invoker")
+                                     .addJavadoc("Create $L slice with static aspect.\n\n",
+                                                 model.simpleName())
+                                     .addJavadoc("@param aspect Aspect to apply (use Aspect.identity() for none)\n")
+                                     .addJavadoc("@param invoker The slice invoker for remote calls\n")
+                                     .addJavadoc("@return Promise of configured $L instance\n",
+                                                 model.simpleName());
+        // Create proxy for each dependency
+        var factoryArgs = new StringBuilder();
+        for (var dep : model.dependencies()) {
+            var resolved = versionResolver.resolve(dep);
+            var proxyType = ClassName.get(model.apiPackage(), resolved.proxyClassName());
+            var varName = resolved.parameterName();
+            createMethod.addStatement("var $L = new $T(invoker, $S)",
+                                      varName,
+                                      proxyType,
+                                      resolved.fullArtifact());
+            if (!factoryArgs.isEmpty()) {
+                factoryArgs.append(", ");
+            }
+            factoryArgs.append(varName);
+        }
+        // Call original factory, apply aspect, wrap in Promise
+        createMethod.addStatement("var instance = $T.$L($L)",
+                                  sliceType,
+                                  model.factoryMethodName(),
+                                  factoryArgs.toString());
+        createMethod.addStatement("return $T.successful(aspect.apply(instance))",
+                                  PROMISE);
+        return createMethod.build();
+    }
+
+    private MethodSpec buildCreateDynamicMethod(SliceModel model,
+                                                ClassName sliceType,
+                                                ParameterizedTypeName promiseOfSlice) {
+        var createDynamic = MethodSpec.methodBuilder("createDynamic")
+                                      .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                                      .returns(promiseOfSlice)
+                                      .addParameter(DYNAMIC_ASPECT_CONFIG, "config")
+                                      .addParameter(SLICE_INVOKER_FACADE, "invoker")
+                                      .addJavadoc("Create $L slice with dynamic runtime-configurable aspects.\n",
+                                                  model.simpleName())
+                                      .addJavadoc("Enables runtime toggling of logging/metrics without restart.\n\n")
+                                      .addJavadoc("@param config Dynamic aspect configuration (runtime-updatable)\n")
+                                      .addJavadoc("@param invoker The slice invoker for remote calls\n")
+                                      .addJavadoc("@return Promise of configured $L instance\n",
+                                                  model.simpleName());
+        // Create proxy for each dependency wrapped with dynamic aspect
+        var factoryArgs = new StringBuilder();
+        for (var dep : model.dependencies()) {
+            var resolved = versionResolver.resolve(dep);
+            var proxyType = ClassName.get(model.apiPackage(), resolved.proxyClassName());
+            var depType = ClassName.get(dep.interfacePackage(), dep.interfaceSimpleName());
+            var varName = resolved.parameterName();
+            // config.aspectFor(DepType.class).apply(new DepProxy(invoker, artifact))
+            createDynamic.addStatement("var $L = config.aspectFor($T.class).apply(new $T(invoker, $S))",
+                                       varName,
+                                       depType,
+                                       proxyType,
+                                       resolved.fullArtifact());
+            if (!factoryArgs.isEmpty()) {
+                factoryArgs.append(", ");
+            }
+            factoryArgs.append(varName);
+        }
+        // Create instance
+        createDynamic.addStatement("var instance = $T.$L($L)",
+                                   sliceType,
+                                   model.factoryMethodName(),
+                                   factoryArgs.toString());
+        // Apply slice-level dynamic aspect and return
+        createDynamic.addStatement("return $T.successful(config.aspectFor($T.class).apply(instance))",
+                                   PROMISE,
+                                   sliceType);
+        return createDynamic.build();
+    }
+
+    private TypeSpec buildDependenciesClass(SliceModel model) {
+        var depsBuilder = TypeSpec.classBuilder("Dependencies")
+                                  .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                                  .addJavadoc("Dependency information for this slice.\n");
+        depsBuilder.addMethod(MethodSpec.constructorBuilder()
+                                        .addModifiers(Modifier.PRIVATE)
+                                        .build());
+        for (var dep : model.dependencies()) {
+            var resolved = versionResolver.resolve(dep);
+            var constName = toConstantName(resolved.parameterName());
+            depsBuilder.addField(FieldSpec.builder(String.class, constName)
+                                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                                          .initializer("$S",
+                                                       resolved.fullArtifact())
+                                          .build());
+        }
+        return depsBuilder.build();
     }
 
     private String toConstantName(String name) {
