@@ -53,6 +53,8 @@ public class GenerateBlueprintMojo extends AbstractMojo {
     private final List<SliceEntry> orderedSlices = new ArrayList<>();
     private final Set<String> visited = new HashSet<>();
     private final Set<String> inStack = new HashSet<>();
+    // Maps interface qualified name to artifact for local slices
+    private final Map<String, String> interfaceToArtifact = new LinkedHashMap<>();
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -103,14 +105,25 @@ public class GenerateBlueprintMojo extends AbstractMojo {
             throws MojoExecutionException {
         var graph = new LinkedHashMap<String, SliceEntry>();
 
+        // First pass: register all local slices and build interface-to-artifact map
         for (var manifest : localManifests) {
             var artifact = project.getGroupId() + ":"
                           + manifest.implArtifactId() + ":"
                           + project.getVersion();
             var entry = new SliceEntry(artifact, manifest, false);
             graph.put(artifact, entry);
+
+            // Map the slice interface to its artifact for internal dependency resolution
+            var sliceInterface = manifest.slicePackage() + "." + manifest.sliceName();
+            interfaceToArtifact.put(sliceInterface, artifact);
+
+            // Also map the API interface
+            if (!manifest.apiClasses().isEmpty()) {
+                interfaceToArtifact.put(manifest.apiClasses().getFirst(), artifact);
+            }
         }
 
+        // Second pass: resolve external dependencies from JAR files
         for (var manifest : localManifests) {
             resolveExternalDependencies(manifest, graph);
         }
@@ -211,8 +224,19 @@ public class GenerateBlueprintMojo extends AbstractMojo {
         var entry = graph.get(artifact);
         if (entry != null && entry.manifest() != null) {
             for (var dep : entry.manifest().dependencies()) {
+                String depArtifact;
                 if (dep.external()) {
-                    var depArtifact = dep.artifact() + ":" + dep.version();
+                    // External dependency: use artifact coordinates from manifest
+                    depArtifact = dep.artifact() + ":" + dep.version();
+                } else {
+                    // Internal dependency: look up in interfaceToArtifact map
+                    depArtifact = interfaceToArtifact.get(dep.interfaceQualifiedName());
+                    if (depArtifact == null) {
+                        // Not a slice, skip (e.g., utility class)
+                        continue;
+                    }
+                }
+                if (graph.containsKey(depArtifact)) {
                     dfs(depArtifact, graph);
                 }
             }
