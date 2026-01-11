@@ -304,7 +304,7 @@ class SliceProcessorTest {
 
     @Test
     void should_handle_mixed_internal_and_external_dependencies() throws Exception {
-        // External dependency
+        // External dependency (slice methods have exactly one parameter)
         var paymentService = JavaFileObjects.forSourceString("payments.PaymentService",
                                                              """
             package payments;
@@ -312,7 +312,7 @@ class SliceProcessorTest {
             import org.pragmatica.lang.Promise;
 
             public interface PaymentService {
-                Promise<Boolean> processPayment(String paymentId, int amount);
+                Promise<Boolean> processPayment(String paymentRequest);
             }
             """);
 
@@ -370,106 +370,6 @@ class SliceProcessorTest {
 
         // External dependency gets proxy record
         assertThat(factoryContent).contains("record paymentService(SliceInvokerFacade invoker) implements PaymentService");
-    }
-
-    @Test
-    void should_generate_proxy_methods_with_zero_params() {
-        // External dependency with zero-param method
-        var externalService = JavaFileObjects.forSourceString("external.HealthService",
-                                                              """
-            package external;
-
-            import org.pragmatica.lang.Promise;
-
-            public interface HealthService {
-                Promise<String> healthCheck();
-            }
-            """);
-
-        // Slice with valid one-param method, depending on external zero-param service
-        var source = JavaFileObjects.forSourceString("test.MonitorService",
-                                                     """
-            package test;
-
-            import org.pragmatica.aether.slice.annotation.Slice;
-            import org.pragmatica.lang.Promise;
-            import external.HealthService;
-
-            @Slice
-            public interface MonitorService {
-                Promise<String> getStatus(String request);
-
-                static MonitorService monitorService(HealthService health) {
-                    return null;
-                }
-            }
-            """);
-
-        var sources = commonSources();
-        sources.add(externalService);
-        sources.add(source);
-
-        Compilation compilation = javac()
-                                       .withProcessors(new SliceProcessor())
-                                       .compile(sources);
-
-        assertCompilation(compilation).succeeded();
-
-        // Zero-param proxy method should use Unit.unit() as request
-        assertCompilation(compilation)
-                  .generatedSourceFile("test.MonitorServiceFactory")
-                  .contentsAsUtf8String()
-                  .contains("Unit.unit()");
-    }
-
-    @Test
-    void should_generate_proxy_methods_with_multiple_params() {
-        // External dependency with multi-param method
-        var externalService = JavaFileObjects.forSourceString("external.TransferService",
-                                                              """
-            package external;
-
-            import org.pragmatica.lang.Promise;
-
-            public interface TransferService {
-                Promise<Boolean> transfer(String from, String to, int amount);
-            }
-            """);
-
-        // Slice with valid one-param method, depending on external multi-param service
-        var source = JavaFileObjects.forSourceString("test.BankingService",
-                                                     """
-            package test;
-
-            import org.pragmatica.aether.slice.annotation.Slice;
-            import org.pragmatica.lang.Promise;
-            import external.TransferService;
-
-            @Slice
-            public interface BankingService {
-                Promise<String> execute(String request);
-
-                static BankingService bankingService(TransferService transfers) {
-                    return null;
-                }
-            }
-            """);
-
-        var sources = commonSources();
-        sources.add(externalService);
-        sources.add(source);
-
-        Compilation compilation = javac()
-                                       .withProcessors(new SliceProcessor())
-                                       .compile(sources);
-
-        assertCompilation(compilation).succeeded();
-
-        // Multi-param proxy method should wrap params in Object[]
-        assertCompilation(compilation)
-                  .generatedSourceFile("test.BankingServiceFactory")
-                  .contentsAsUtf8String()
-                  .contains("new Object[]{from, to, amount}");
     }
 
     @Test

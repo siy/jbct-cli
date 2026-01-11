@@ -18,7 +18,6 @@ import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -214,32 +213,20 @@ public class FactoryClassGenerator {
             return;
         }
 
-        // Build parameter list
-        var paramDecls = new ArrayList<String>();
-        var paramNames = new ArrayList<String>();
-        for (var param : params) {
-            var paramType = param.asType().toString();
-            var paramName = param.getSimpleName().toString();
-            paramDecls.add(paramType + " " + paramName);
-            paramNames.add(paramName);
+        // Slice methods always have exactly one parameter
+        if (params.size() != 1) {
+            return;
         }
+
+        var param = params.getFirst();
+        var paramType = param.asType().toString();
+        var paramName = param.getSimpleName().toString();
 
         out.println();
         out.println("            @Override");
-        out.println("            public " + returnType + " " + methodName + "(" +
-                   String.join(", ", paramDecls) + ") {");
-
-        // Generate invoke call based on parameter count
-        switch (params.size()) {
-            case 0 -> out.println("                return invoker.invoke(ARTIFACT, \"" + methodName +
-                                 "\", Unit.unit(), " + responseType + ".class);");
-            case 1 -> out.println("                return invoker.invoke(ARTIFACT, \"" + methodName +
-                                 "\", " + paramNames.getFirst() + ", " + responseType + ".class);");
-            default -> out.println("                return invoker.invoke(ARTIFACT, \"" + methodName +
-                                  "\", new Object[]{" + String.join(", ", paramNames) + "}, " +
-                                  responseType + ".class);");
-        }
-
+        out.println("            public " + returnType + " " + methodName + "(" + paramType + " " + paramName + ") {");
+        out.println("                return invoker.invoke(ARTIFACT, \"" + methodName + "\", " +
+                   paramName + ", " + responseType + ".class);");
         out.println("            }");
     }
 
