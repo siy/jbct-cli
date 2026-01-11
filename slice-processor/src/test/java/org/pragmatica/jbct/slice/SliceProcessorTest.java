@@ -634,5 +634,66 @@ class SliceProcessorTest {
         assertThat(manifestContent).contains("api.classes=test.api.OrderService");
         assertThat(manifestContent).contains("test.OrderService");
         assertThat(manifestContent).contains("test.OrderServiceFactory");
+        // Verify dependencies count (no dependencies in this test)
+        assertThat(manifestContent).contains("dependencies.count=0");
+    }
+
+    @Test
+    void should_generate_slice_manifest_with_dependencies() throws Exception {
+        // External dependency
+        var inventoryService = JavaFileObjects.forSourceString("inventory.InventoryService",
+                                                               """
+            package inventory;
+
+            import org.pragmatica.lang.Promise;
+
+            public interface InventoryService {
+                Promise<Integer> checkStock(String productId);
+            }
+            """);
+
+        var source = JavaFileObjects.forSourceString("test.OrderService",
+                                                     """
+            package test;
+
+            import org.pragmatica.aether.slice.annotation.Slice;
+            import org.pragmatica.lang.Promise;
+            import inventory.InventoryService;
+
+            @Slice
+            public interface OrderService {
+                Promise<String> placeOrder(String orderId);
+
+                static OrderService orderService(InventoryService inventory) {
+                    return null;
+                }
+            }
+            """);
+
+        var sources = commonSources();
+        sources.add(inventoryService);
+        sources.add(source);
+
+        Compilation compilation = javac()
+                                       .withProcessors(new SliceProcessor())
+                                       .compile(sources);
+
+        assertCompilation(compilation).succeeded();
+
+        var manifestFile = compilation.generatedFile(
+                javax.tools.StandardLocation.CLASS_OUTPUT,
+                "",
+                "META-INF/slice/OrderService.manifest");
+
+        assertThat(manifestFile.isPresent()).isTrue();
+
+        var manifestContent = manifestFile.orElseThrow()
+                                          .getCharContent(false)
+                                          .toString();
+
+        // Verify dependency properties for blueprint generation
+        assertThat(manifestContent).contains("dependencies.count=1");
+        assertThat(manifestContent).contains("dependency.0.interface=inventory.InventoryService");
+        assertThat(manifestContent).contains("dependency.0.external=true");
     }
 }

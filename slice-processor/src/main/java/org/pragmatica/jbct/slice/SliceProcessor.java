@@ -40,7 +40,7 @@ public class SliceProcessor extends AbstractProcessor {
         this.versionResolver = new DependencyVersionResolver(processingEnv);
         this.apiGenerator = new ApiInterfaceGenerator(filer, elements, types);
         this.factoryGenerator = new FactoryClassGenerator(filer, elements, types, versionResolver);
-        this.manifestGenerator = new ManifestGenerator(filer);
+        this.manifestGenerator = new ManifestGenerator(filer, versionResolver);
     }
 
     @Override

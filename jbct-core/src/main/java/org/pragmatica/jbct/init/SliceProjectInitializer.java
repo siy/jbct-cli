@@ -143,13 +143,15 @@ public final class SliceProjectInitializer {
     }
 
     private Result<List<Path>> createDeployScripts() {
-        // Fork-Join: Create deploy scripts in parallel
+        // Fork-Join: Create deploy and utility scripts in parallel
         return Result.allOf(createFile("deploy-forge.sh.template",
                                        projectDir.resolve("deploy-forge.sh")),
                             createFile("deploy-test.sh.template",
                                        projectDir.resolve("deploy-test.sh")),
                             createFile("deploy-prod.sh.template",
-                                       projectDir.resolve("deploy-prod.sh")))
+                                       projectDir.resolve("deploy-prod.sh")),
+                            createFile("generate-blueprint.sh.template",
+                                       projectDir.resolve("generate-blueprint.sh")))
                      .onSuccess(scripts -> scripts.forEach(SliceProjectInitializer::makeExecutable));
     }
 
@@ -215,6 +217,7 @@ public final class SliceProjectInitializer {
             case "deploy-forge.sh.template" -> DEPLOY_FORGE_TEMPLATE;
             case "deploy-test.sh.template" -> DEPLOY_TEST_TEMPLATE;
             case "deploy-prod.sh.template" -> DEPLOY_PROD_TEMPLATE;
+            case "generate-blueprint.sh.template" -> GENERATE_BLUEPRINT_TEMPLATE;
             default -> null;
         };
     }
@@ -566,6 +569,27 @@ public final class SliceProjectInitializer {
         echo "Deploying to PRODUCTION. Press Ctrl+C to cancel, or Enter to continue..."
         read -r
         mvn clean deploy -Pdeploy-prod -DskipTests
+        """;
+
+    private static final String GENERATE_BLUEPRINT_TEMPLATE = """
+        #!/bin/bash
+        # Generate blueprint.toml from slice manifests
+        set -e
+
+        echo "Generating blueprint..."
+        mvn package jbct:generate-blueprint -DskipTests
+
+        BLUEPRINT="target/blueprint.toml"
+
+        if [ -f "$BLUEPRINT" ]; then
+            echo ""
+            echo "Blueprint generated: $BLUEPRINT"
+            echo ""
+            cat "$BLUEPRINT"
+        else
+            echo "ERROR: Blueprint generation failed"
+            exit 1
+        fi
         """;
 
     public Path projectDir() {

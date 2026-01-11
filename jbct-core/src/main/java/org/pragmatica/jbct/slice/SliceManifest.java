@@ -24,7 +24,16 @@ public record SliceManifest(String sliceName,
                             List<String> responseClasses,
                             String baseArtifact,
                             String apiArtifactId,
-                            String implArtifactId) {
+                            String implArtifactId,
+                            List<SliceDependency> dependencies) {
+
+    /**
+     * Dependency information for blueprint generation.
+     */
+    public record SliceDependency(String interfaceQualifiedName,
+                                   String artifact,
+                                   String version,
+                                   boolean external) {}
 
     /**
      * Load a slice manifest from a .manifest file.
@@ -65,6 +74,7 @@ public record SliceManifest(String sliceName,
         var baseArtifact = props.getProperty("base.artifact", "");
         var apiArtifactId = props.getProperty("api.artifactId", "");
         var implArtifactId = props.getProperty("impl.artifactId", "");
+        var dependencies = parseDependencies(props);
 
         return Result.success(new SliceManifest(
                 sliceName,
@@ -76,8 +86,28 @@ public record SliceManifest(String sliceName,
                 responseClasses,
                 baseArtifact,
                 apiArtifactId,
-                implArtifactId
+                implArtifactId,
+                dependencies
         ));
+    }
+
+    private static List<SliceDependency> parseDependencies(Properties props) {
+        var count = Integer.parseInt(props.getProperty("dependencies.count", "0"));
+        var dependencies = new java.util.ArrayList<SliceDependency>();
+
+        for (int i = 0; i < count; i++) {
+            var prefix = "dependency." + i + ".";
+            var interfaceName = props.getProperty(prefix + "interface", "");
+            var artifact = props.getProperty(prefix + "artifact", "");
+            var version = props.getProperty(prefix + "version", "");
+            var external = Boolean.parseBoolean(props.getProperty(prefix + "external", "false"));
+
+            if (!interfaceName.isEmpty()) {
+                dependencies.add(new SliceDependency(interfaceName, artifact, version, external));
+            }
+        }
+
+        return dependencies;
     }
 
     private static List<String> parseList(String value) {

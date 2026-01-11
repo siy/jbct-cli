@@ -20,9 +20,11 @@ import java.util.stream.Collectors;
 
 public class ManifestGenerator {
     private final Filer filer;
+    private final DependencyVersionResolver versionResolver;
 
-    public ManifestGenerator(Filer filer) {
+    public ManifestGenerator(Filer filer, DependencyVersionResolver versionResolver) {
         this.filer = filer;
+        this.versionResolver = versionResolver;
     }
 
     public Result<Unit> generate(SliceModel model) {
@@ -101,6 +103,28 @@ public class ManifestGenerator {
             props.setProperty("base.artifact", getArtifactFromEnv());
             props.setProperty("api.artifactId", getArtifactIdFromEnv() + "-" + toKebabCase(sliceName) + "-api");
             props.setProperty("impl.artifactId", getArtifactIdFromEnv() + "-" + toKebabCase(sliceName));
+
+            // Dependencies for blueprint generation
+            var dependencies = model.dependencies();
+            props.setProperty("dependencies.count", String.valueOf(dependencies.size()));
+
+            int index = 0;
+            for (var dep : dependencies) {
+                var prefix = "dependency." + index + ".";
+                var isExternal = dep.isExternal(model.packageName());
+                props.setProperty(prefix + "interface", dep.interfaceQualifiedName());
+                props.setProperty(prefix + "external", String.valueOf(isExternal));
+
+                if (isExternal) {
+                    var resolved = versionResolver.resolve(dep);
+                    props.setProperty(prefix + "artifact", resolved.sliceArtifact().or(() -> ""));
+                    props.setProperty(prefix + "version", resolved.version().or(() -> "UNRESOLVED"));
+                } else {
+                    props.setProperty(prefix + "artifact", "");
+                    props.setProperty(prefix + "version", "");
+                }
+                index++;
+            }
 
             // Metadata
             props.setProperty("generated.timestamp", Instant.now().toString());
