@@ -271,7 +271,7 @@ public final class SliceProjectInitializer {
 
             <properties>
                 <slice.class>{{basePackage}}.{{sliceName}}</slice.class>
-                <aether.forge.url>http://localhost:8080</aether.forge.url>
+                <aether.forge.url>http://localhost:8888</aether.forge.url>
                 <aether.test.url>http://test.example.com:8080</aether.test.url>
                 <aether.prod.url>http://prod.example.com:8080</aether.prod.url>
             </properties>

@@ -1,37 +1,39 @@
 ---
 name: fix-all
-description: Systematically find and fix ALL issues in the codebase. Thorough, relentless, complete.
+description: Fix ALL issues found in the preceding review. Thorough, relentless, complete.
 ---
 
 # Fix All Issues
 
-Your mission: Find and fix **every single issue** in the codebase. No exceptions. No shortcuts.
+Your mission: Fix **every single issue** identified in the preceding review. No exceptions. No shortcuts.
+
+## Prerequisites
+
+This skill is used AFTER running a review (e.g., `/jbct-review`, code review, or similar). The issues are already known from the review output in conversation context.
 
 ## Execution Protocol
 
-1. **Discovery Phase**
-   - Run all available checks: linting, formatting, type checking, tests
-   - Collect every warning, error, and issue
-   - Create exhaustive list of problems to fix
+1. **Issue Collection**
+   - Extract all issues from the preceding review output
+   - Create a todo list with every issue to fix
+   - Prioritize: errors before warnings, blocking before cosmetic
 
 2. **Systematic Resolution**
-   - Fix issues one by one, starting with errors before warnings
-   - After each fix, verify it doesn't introduce new issues
-   - Track progress - mark each issue as resolved
+   - Fix issues one by one using appropriate agent (e.g., `jbct-coder`)
+   - After each fix, mark the issue as resolved
+   - Move to next issue immediately
 
-3. **Verification Phase**
-   - Re-run all checks after fixes
+3. **Verification**
+   - After all issues are fixed, run the same review again
    - If new issues appear, add them to the list and fix them
    - Repeat until zero issues remain
 
 4. **Completion Criteria**
-   - All linters pass with zero warnings
-   - All tests pass
-   - All formatting checks pass
-   - No remaining TODOs or FIXMEs (unless explicitly excluded)
+   - All issues from the original review are resolved
+   - Verification review passes with no new issues
 
 ## Mindset
 
-This is a completeness challenge. Partial fixes are not acceptable. Either ALL issues are resolved, or the task is incomplete.
+Partial fixes are not acceptable. Either ALL issues are resolved, or the task is incomplete.
 
-Be thorough. Be relentless. Don't stop until the codebase is clean.
+Be thorough. Be relentless. Don't stop until every issue is fixed.
