@@ -22,6 +22,12 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
+/**
+ * Generates proxy classes for slice dependencies.
+ * <p>
+ * Proxies delegate all method calls to SliceInvokerFacade for remote invocation.
+ * Supports methods with 0, 1, or multiple parameters.
+ */
 public class ProxyClassGenerator {
     private final Filer filer;
     private final Elements elements;
@@ -29,6 +35,8 @@ public class ProxyClassGenerator {
 
     private static final ClassName SLICE_INVOKER_FACADE = ClassName.get("org.pragmatica.aether.slice",
                                                                         "SliceInvokerFacade");
+    private static final ClassName UNIT = ClassName.get("org.pragmatica.lang",
+                                                        "Unit");
 
     public ProxyClassGenerator(Filer filer, Elements elements, Types types) {
         this.filer = filer;
@@ -68,12 +76,11 @@ public class ProxyClassGenerator {
                                    .contains(Modifier.STATIC) &&
                         !method.getModifiers()
                                .contains(Modifier.DEFAULT)) {
-                            var proxyMethod = generateProxyMethod(method);
-                            if (proxyMethod.isEmpty()) {
-                                return Causes.cause("Failed to generate proxy method: " + method.getSimpleName())
-                                             .result();
+                            var proxyMethodResult = generateProxyMethod(method);
+                            if (proxyMethodResult.isFailure()) {
+                                return proxyMethodResult.map(_ -> Unit.unit());
                             }
-                            classBuilder.addMethod(proxyMethod.unwrap());
+                            classBuilder.addMethod(proxyMethodResult.unwrap());
                         }
                     }
                 }
@@ -97,34 +104,57 @@ public class ProxyClassGenerator {
         }
     }
 
-    private Option<MethodSpec> generateProxyMethod(ExecutableElement method) {
+    private Result<MethodSpec> generateProxyMethod(ExecutableElement method) {
         var methodName = method.getSimpleName()
                                .toString();
         var returnType = method.getReturnType();
         var params = method.getParameters();
-        if (params.size() != 1) {
-            return Option.none();
-        }
-        var param = params.getFirst();
-        var paramType = param.asType();
-        var paramName = param.getSimpleName()
-                             .toString();
         // Extract response type from Promise<T>
         var responseType = extractPromiseTypeArg(returnType);
         if (responseType.isEmpty()) {
-            return Option.none();
+            return Causes.cause("Method " + methodName + " must return Promise<T>")
+                         .result();
         }
-        return Option.some(MethodSpec.methodBuilder(methodName)
-                                     .addAnnotation(Override.class)
-                                     .addModifiers(Modifier.PUBLIC)
-                                     .returns(TypeName.get(returnType))
-                                     .addParameter(TypeName.get(paramType),
-                                                   paramName)
-                                     .addStatement("return invoker.invokeAndWait(artifact, $S, $L, $T.class)",
-                                                   methodName,
-                                                   paramName,
-                                                   responseType.unwrap())
-                                     .build());
+        var builder = MethodSpec.methodBuilder(methodName)
+                                .addAnnotation(Override.class)
+                                .addModifiers(Modifier.PUBLIC)
+                                .returns(TypeName.get(returnType));
+        // Add all parameters
+        for (var param : params) {
+            builder.addParameter(TypeName.get(param.asType()),
+                                 param.getSimpleName()
+                                      .toString());
+        }
+        // Generate invocation based on parameter count
+        var responseTypeClass = responseType.unwrap();
+        switch (params.size()) {
+            case 0 -> builder.addStatement("return invoker.invokeAndWait(artifact, $S, $T.unit(), $T.class)",
+                                           methodName,
+                                           UNIT,
+                                           responseTypeClass);
+            case 1 -> {
+                var paramName = params.getFirst()
+                                      .getSimpleName()
+                                      .toString();
+                builder.addStatement("return invoker.invokeAndWait(artifact, $S, $L, $T.class)",
+                                     methodName,
+                                     paramName,
+                                     responseTypeClass);
+            }
+            default -> {
+                // Multiple params - create inline record to wrap them
+                var paramNames = params.stream()
+                                       .map(p -> p.getSimpleName()
+                                                  .toString())
+                                       .toList();
+                var recordFields = String.join(", ", paramNames);
+                builder.addStatement("return invoker.invokeAndWait(artifact, $S, new Object[]{$L}, $T.class)",
+                                     methodName,
+                                     recordFields,
+                                     responseTypeClass);
+            }
+        }
+        return Result.success(builder.build());
     }
 
     private Option<TypeMirror> extractPromiseTypeArg(TypeMirror type) {
