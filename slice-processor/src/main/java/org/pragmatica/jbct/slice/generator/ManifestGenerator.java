@@ -219,7 +219,7 @@ public class ManifestGenerator {
 
     /**
      * Convert PascalCase to kebab-case.
-     * Examples: OrderService -> order-service, HTTPClient -> http-client
+     * Examples: OrderService -> order-service, PlaceOrder -> place-order
      */
     private String toKebabCase(String pascalCase) {
         if (pascalCase == null || pascalCase.isEmpty()) {

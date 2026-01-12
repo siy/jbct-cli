@@ -297,6 +297,7 @@ public class PackageSlicesMojo extends AbstractMojo {
                     // Extract and add to archiver
                     try (var input = jar.getInputStream(entry)) {
                         var tempFile = Files.createTempFile("jbct-", ".tmp");
+                        tempFile.toFile().deleteOnExit();
                         Files.copy(input, tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                         archiver.addFile(tempFile.toFile(), entryName);
                     }
