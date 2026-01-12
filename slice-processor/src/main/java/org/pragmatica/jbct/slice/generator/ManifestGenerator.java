@@ -15,16 +15,19 @@ import java.io.OutputStreamWriter;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class ManifestGenerator {
     private final Filer filer;
     private final DependencyVersionResolver versionResolver;
+    private final Map<String, String> options;
 
-    public ManifestGenerator(Filer filer, DependencyVersionResolver versionResolver) {
+    public ManifestGenerator(Filer filer, DependencyVersionResolver versionResolver, Map<String, String> options) {
         this.filer = filer;
         this.versionResolver = versionResolver;
+        this.options = options;
     }
 
     public Result<Unit> generate(SliceModel model) {
@@ -57,8 +60,8 @@ public class ManifestGenerator {
     }
 
     private String getArtifactFromEnv() {
-        var groupId = System.getProperty("slice.groupId", "unknown");
-        var artifactId = System.getProperty("slice.artifactId", "unknown");
+        var groupId = options.getOrDefault("slice.groupId", "unknown");
+        var artifactId = options.getOrDefault("slice.artifactId", "unknown");
         return groupId + ":" + artifactId;
     }
 
@@ -211,7 +214,7 @@ public class ManifestGenerator {
     }
 
     private String getArtifactIdFromEnv() {
-        return System.getProperty("slice.artifactId", "unknown");
+        return options.getOrDefault("slice.artifactId", "unknown");
     }
 
     /**

@@ -12,6 +12,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -24,6 +25,7 @@ import com.google.auto.service.AutoService;
 
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("org.pragmatica.aether.slice.annotation.Slice")
+@SupportedOptions({"slice.groupId", "slice.artifactId"})
 @SupportedSourceVersion(SourceVersion.RELEASE_25)
 public class SliceProcessor extends AbstractProcessor {
     private ApiInterfaceGenerator apiGenerator;
@@ -37,10 +39,11 @@ public class SliceProcessor extends AbstractProcessor {
         var filer = processingEnv.getFiler();
         var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
+        var options = processingEnv.getOptions();
         this.versionResolver = new DependencyVersionResolver(processingEnv);
         this.apiGenerator = new ApiInterfaceGenerator(filer, elements, types);
         this.factoryGenerator = new FactoryClassGenerator(filer, elements, types, versionResolver);
-        this.manifestGenerator = new ManifestGenerator(filer, versionResolver);
+        this.manifestGenerator = new ManifestGenerator(filer, versionResolver, options);
     }
 
     @Override

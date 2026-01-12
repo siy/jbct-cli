@@ -25,6 +25,69 @@ flowchart TB
     end
 ```
 
+## ClassLoader Hierarchy
+
+Aether uses a hierarchical ClassLoader model for slice isolation:
+
+```
+System/Bootstrap → Node/Application → SharedLibraryClassLoader → SliceClassLoader
+                                              ↑                        ↑
+                                    [api] + [shared] + [infra]    [slice JAR + conflicts]
+```
+
+### Dependency Categories
+
+Declared in `META-INF/dependencies/{FactoryClass}`:
+
+| Section | ClassLoader | Instance Sharing | Use For |
+|---------|-------------|------------------|---------|
+| `[api]` | Shared | N/A (interfaces) | Slice API interfaces for proxies |
+| `[shared]` | Shared | JAR only | Third-party libraries |
+| `[infra]` | Shared | JAR + instances | Infrastructure (cache, database) |
+| `[slices]` | Per-slice | Full slice | Other slice dependencies |
+
+### Dependency File Example
+
+```
+[api]
+org.example:inventory-api:^1.0.0
+org.example:payment-api:^1.0.0
+
+[shared]
+org.pragmatica-lite:core:^0.9.0
+
+[infra]
+org.pragmatica-lite.aether:infra-cache:^0.7.0
+
+[slices]
+org.example:inventory:^1.0.0
+org.example:payment:^1.0.0
+```
+
+### Version Format
+
+Semver ranges:
+- `^1.0.0` - Compatible with 1.x.x
+- `~1.0.0` - Compatible with 1.0.x
+- `1.0.0` - Exact version
+
+### InfraStore Pattern
+
+Infrastructure dependencies use shared instances via InfraStore:
+
+```java
+// In infra module's factory method
+public static CacheService cacheService() {
+    return InfraStore.instance()
+        .getOrCreate(
+            "org.pragmatica-lite.aether:infra-cache",
+            Version.version("0.7.0").unwrap(),
+            CacheService.class,
+            () -> InMemoryCacheService.inMemoryCacheService()
+        );
+}
+```
+
 ## Slice Lifecycle
 
 ### 1. Loading

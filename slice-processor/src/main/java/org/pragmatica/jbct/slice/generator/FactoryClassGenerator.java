@@ -173,7 +173,7 @@ public class FactoryClassGenerator {
                                .toList();
         out.println("        var instance = " + sliceName + "." + model.factoryMethodName() +
                    "(" + String.join(", ", factoryArgs) + ");");
-        out.println("        return Promise.successful(aspect.apply(instance));");
+        out.println("        return Promise.success(aspect.apply(instance));");
         out.println("    }");
     }
 

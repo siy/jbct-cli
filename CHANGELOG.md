@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.9] - Unreleased
+
+### Added
+- Slice packaging: fat JAR creation with bundled external dependencies
+- Slice packaging: dependency file generation (`META-INF/dependencies/{FactoryClass}`)
+- Slice packaging: MANIFEST.MF entries (`Slice-Artifact`, `Slice-Class`)
+- Slice packaging: application shared code inclusion in impl JAR
+- Docs: Aether ClassLoader hierarchy and dependency model in runtime.md
+
+### Changed
+- Slice packaging: API JAR now includes nested request/response types
+- Slice packaging: request/response classes handled as API types when nested
+
+### Fixed
+- SliceManifest: nested class path conversion (`Outer.Inner` → `Outer$Inner.class`)
+
 ## [0.4.8] - 2026-01-10
 
 ### Added

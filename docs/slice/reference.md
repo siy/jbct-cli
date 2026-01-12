@@ -208,8 +208,8 @@ impl.interface=org.example.order.OrderService
 |----------|-------------|
 | `api.classes` | Classes for API JAR (comma-separated) |
 | `impl.classes` | Classes for Impl JAR (comma-separated) |
-| `request.classes` | Request types (included in Impl JAR) |
-| `response.classes` | Response types (included in Impl JAR) |
+| `request.classes` | Request types (included in API JAR for nested records) |
+| `response.classes` | Response types (included in API JAR for nested records) |
 
 ### Artifact Properties
 
@@ -350,8 +350,17 @@ mvn jbct:package-slices
 ```
 
 For each manifest, creates:
-- `{artifactId}-api-{version}.jar`
-- `{artifactId}-{version}.jar`
+
+**API JAR** (`{artifactId}-api-{version}.jar`):
+- API interface
+- Nested request/response types
+
+**Impl JAR** (`{artifactId}-{version}.jar`):
+- Implementation classes
+- Factory class with proxy records
+- Bundled external dependencies (fat JAR)
+- `META-INF/dependencies/{FactoryClass}` - runtime dependency file
+- MANIFEST.MF entries: `Slice-Artifact`, `Slice-Class`
 
 ### jbct:install-slices
 

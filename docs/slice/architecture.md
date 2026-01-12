@@ -252,7 +252,7 @@ impl.classes=org.example.order.OrderService,\
              org.example.order.OrderServiceFactory$orderServiceSlice,\
              org.example.order.OrderServiceFactory$inventoryService
 
-# Request/Response types (for Impl JAR)
+# Request/Response types (included in API JAR for nested records)
 request.classes=org.example.order.PlaceOrderRequest
 response.classes=org.example.order.OrderResult
 
@@ -315,21 +315,51 @@ flowchart TD
 **API JAR** (`commerce-order-service-api-1.0.0.jar`):
 ```
 org/example/order/api/OrderService.class
+org/example/order/OrderService$PlaceOrderRequest.class   # Nested request type
+org/example/order/OrderService$OrderResult.class         # Nested response type
 META-INF/MANIFEST.MF
 ```
 
-**Impl JAR** (`commerce-order-service-1.0.0.jar`):
+**Impl JAR** (`commerce-order-service-1.0.0.jar`) - Fat JAR:
 ```
 org/example/order/OrderService.class
 org/example/order/OrderServiceImpl.class
 org/example/order/OrderServiceFactory.class
 org/example/order/OrderServiceFactory$orderServiceSlice.class
 org/example/order/OrderServiceFactory$inventoryService.class
-org/example/order/PlaceOrderRequest.class
-org/example/order/OrderResult.class
 META-INF/slice/OrderService.manifest
+META-INF/dependencies/org.example.order.OrderServiceFactory  # Runtime deps
 META-INF/MANIFEST.MF
+  Slice-Artifact: org.example:commerce-order-service:1.0.0
+  Slice-Class: org.example.order.OrderServiceFactory
+# Plus bundled external dependencies (jackson, etc.)
 ```
+
+### Dependency File Format
+
+`META-INF/dependencies/{FactoryClass}` declares runtime dependencies:
+
+```
+[api]
+# Slice API interfaces for generated proxies
+org.example:inventory-api:^1.0.0
+org.example:payment-api:^1.0.0
+
+[shared]
+# Libraries - JAR only, no instance sharing
+org.pragmatica-lite:core:^0.9.0
+
+[infra]
+# Infrastructure - JAR + shared instances via InfraStore
+org.pragmatica-lite.aether:infra-cache:^0.7.0
+
+[slices]
+# Slice dependencies - resolved recursively
+org.example:inventory:^1.0.0
+org.example:payment:^1.0.0
+```
+
+Version format uses semver ranges (e.g., `^1.0.0` = compatible with 1.x.x).
 
 ## Blueprint Generation
 

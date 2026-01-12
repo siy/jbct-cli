@@ -125,28 +125,57 @@ public record SliceManifest(String sliceName,
 
     /**
      * Get all classes that should go into the API artifact.
+     * Includes API interface, request types, and response types.
      */
     public List<String> allApiClasses() {
-        return apiClasses;
-    }
-
-    /**
-     * Get all classes that should go into the impl artifact.
-     * Includes impl classes, request/response types.
-     */
-    public List<String> allImplClasses() {
-        var all = new java.util.ArrayList<>(implClasses);
+        var all = new java.util.ArrayList<>(apiClasses);
         all.addAll(requestClasses);
         all.addAll(responseClasses);
         return all;
     }
 
     /**
+     * Get all classes that should go into the impl artifact.
+     */
+    public List<String> allImplClasses() {
+        return implClasses;
+    }
+
+    /**
      * Convert class name to class file path (relative).
+     * Handles nested classes: OuterClass.InnerClass -> OuterClass$InnerClass
+     * Uses heuristic: package parts are lowercase, class names start uppercase.
      * Example: org.example.MyClass -> org/example/MyClass.class
+     * Example: org.example.MyClass.Inner -> org/example/MyClass$Inner.class
      */
     public static String classToPath(String className) {
-        return className.replace('.', '/') + ".class";
+        return classNameToFilePath(className) + ".class";
+    }
+
+    /**
+     * Convert fully qualified class name to file path (without .class extension).
+     * Package dots become /, nested class dots become $.
+     */
+    private static String classNameToFilePath(String className) {
+        var parts = className.split("\\.");
+        var sb = new StringBuilder();
+        var inClassName = false;
+
+        for (int i = 0; i < parts.length; i++) {
+            var part = parts[i];
+
+            if (i > 0) {
+                sb.append(inClassName ? '$' : '/');
+            }
+
+            sb.append(part);
+
+            if (!inClassName && !part.isEmpty() && Character.isUpperCase(part.charAt(0))) {
+                inClassName = true;
+            }
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -154,7 +183,7 @@ public record SliceManifest(String sliceName,
      * Example: org.example.MyClass$Inner -> org/example/MyClass$Inner.class
      */
     public static List<String> classToPathsWithInner(String className, Path classesDir) {
-        var basePath = className.replace('.', '/');
+        var basePath = classNameToFilePath(className);
         var baseFile = classesDir.resolve(basePath + ".class");
 
         if (!Files.exists(baseFile)) {

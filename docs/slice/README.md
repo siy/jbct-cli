@@ -107,5 +107,5 @@ From Maven packaging:
 
 | JAR | Contents |
 |-----|----------|
-| `{name}-api.jar` | API interface only |
-| `{name}.jar` | Implementation, factory, request/response types |
+| `{name}-api.jar` | API interface + nested request/response types |
+| `{name}.jar` | Implementation, factory, bundled dependencies (fat JAR) |

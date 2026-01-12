@@ -38,7 +38,7 @@ class SliceProcessorTest {
 
             public interface Promise<T> {
                 <R> Promise<R> map(java.util.function.Function<T, R> fn);
-                static <T> Promise<T> successful(T value) { return null; }
+                static <T> Promise<T> success(T value) { return null; }
             }
             """);
 

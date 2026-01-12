@@ -88,7 +88,7 @@ public static Promise<OrderService> create(Aspect<OrderService> aspect,
 
     var inventory = new inventoryService(invoker);
     var instance = OrderService.orderService(inventory);
-    return Promise.successful(aspect.apply(instance));
+    return Promise.success(aspect.apply(instance));
 }
 ```
 
@@ -230,7 +230,7 @@ public final class OrderProcessorFactory {
 
         // Create slice via developer's factory
         var instance = OrderProcessor.orderProcessor(validator, pricing, inventory);
-        return Promise.successful(aspect.apply(instance));
+        return Promise.success(aspect.apply(instance));
     }
 
     public static Promise<Slice> createSlice(Aspect<OrderProcessor> aspect,
