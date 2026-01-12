@@ -114,6 +114,7 @@ public class InitCommand implements Callable<Integer> {
                                                           System.out.println("Installed AI tools to: .claude/");
                                                           return true;
                                                       }
+                                                      System.out.println("No AI tools files to install.");
                                                       return false;
                                                   });
             }

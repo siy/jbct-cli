@@ -116,7 +116,7 @@ Present the aggregated report to the user:
 
 **Path:** [TARGET_PATH]
 **Files Reviewed:** [COUNT]
-**Focus Areas:** [LIST or "All 18"]
+**Focus Areas:** [LIST or "All 10"]
 
 ## Summary
 

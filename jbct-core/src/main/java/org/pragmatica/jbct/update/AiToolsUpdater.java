@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -148,7 +149,7 @@ public final class AiToolsUpdater {
 
     private Result<List<Path>> downloadSkillFiles() {
         // Combine all skill file arrays
-        var allSkillFiles = Stream.concat(Stream.of(JBCT_SKILL_FILES), Stream.of(JBCT_REVIEW_SKILL_FILES))
+        var allSkillFiles = Stream.concat(Arrays.stream(JBCT_SKILL_FILES), Arrays.stream(JBCT_REVIEW_SKILL_FILES))
                                   .toList();
         var results = allSkillFiles.stream()
                                    .map(file -> downloadFile(file, claudeDir.resolve(file)))

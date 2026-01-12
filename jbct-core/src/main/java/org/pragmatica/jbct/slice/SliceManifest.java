@@ -95,7 +95,13 @@ public record SliceManifest(String sliceName,
     }
 
     private static List<SliceDependency> parseDependencies(Properties props) {
-        var count = Integer.parseInt(props.getProperty("dependencies.count", "0"));
+        var countStr = props.getProperty("dependencies.count", "0");
+        int count;
+        try {
+            count = Integer.parseInt(countStr);
+        } catch (NumberFormatException e) {
+            return List.of();
+        }
         var dependencies = new java.util.ArrayList<SliceDependency>();
 
         for (int i = 0; i < count; i++) {
