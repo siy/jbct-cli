@@ -126,6 +126,9 @@ public class ManifestGenerator {
                 index++;
             }
 
+            // Slice config file path (for blueprint generator to read)
+            props.setProperty("config.file", "slices/" + sliceName + ".toml");
+
             // Metadata
             props.setProperty("generated.timestamp", Instant.now().toString());
             props.setProperty("processor.version", getProcessorVersion());

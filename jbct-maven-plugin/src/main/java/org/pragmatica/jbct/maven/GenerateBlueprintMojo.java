@@ -7,6 +7,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.pragmatica.jbct.slice.SliceConfig;
 import org.pragmatica.jbct.slice.SliceManifest;
 import org.pragmatica.jbct.slice.SliceManifest.SliceDependency;
 
@@ -110,7 +111,8 @@ public class GenerateBlueprintMojo extends AbstractMojo {
             var artifact = project.getGroupId() + ":"
                           + manifest.implArtifactId() + ":"
                           + project.getVersion();
-            var entry = new SliceEntry(artifact, manifest, false);
+            var config = loadSliceConfig(manifest);
+            var entry = new SliceEntry(artifact, manifest, config, false);
             graph.put(artifact, entry);
 
             // Map the slice interface to its artifact for internal dependency resolution
@@ -146,14 +148,41 @@ public class GenerateBlueprintMojo extends AbstractMojo {
 
             var depManifest = loadManifestFromDependency(dep.artifact(), dep.version());
             if (depManifest != null) {
-                var entry = new SliceEntry(depArtifact, depManifest, true);
+                // External dependencies use default config
+                var entry = new SliceEntry(depArtifact, depManifest, SliceConfig.defaults(), true);
                 graph.put(depArtifact, entry);
                 resolveExternalDependencies(depManifest, graph);
             } else {
-                graph.put(depArtifact, new SliceEntry(depArtifact, null, true));
+                graph.put(depArtifact, new SliceEntry(depArtifact, null, SliceConfig.defaults(), true));
                 getLog().debug("No manifest found for dependency: " + depArtifact);
             }
         }
+    }
+
+    private SliceConfig loadSliceConfig(SliceManifest manifest) {
+        var configFile = manifest.configFile();
+        if (configFile == null || configFile.isEmpty()) {
+            getLog().info("No config file specified for slice: " + manifest.sliceName() + " - using defaults");
+            return SliceConfig.defaults();
+        }
+
+        var configPath = classesDirectory.toPath().resolve(configFile);
+        if (!Files.exists(configPath)) {
+            getLog().info("Config file not found for slice " + manifest.sliceName()
+                          + " (" + configFile + ") - using defaults");
+            return SliceConfig.defaults();
+        }
+
+        return SliceConfig.load(configPath)
+                          .fold(cause -> {
+                                    getLog().warn("Failed to load config for slice " + manifest.sliceName()
+                                                  + ": " + cause.message() + " - using defaults");
+                                    return SliceConfig.defaults();
+                                },
+                                config -> {
+                                    getLog().debug("Loaded config for slice: " + manifest.sliceName());
+                                    return config;
+                                });
     }
 
     private SliceManifest loadManifestFromDependency(String groupArtifact, String version) {
@@ -262,7 +291,18 @@ public class GenerateBlueprintMojo extends AbstractMojo {
         for (var entry : orderedSlices) {
             sb.append("[[slices]]\n");
             sb.append("artifact = \"").append(entry.artifact()).append("\"\n");
-            sb.append("instances = 1\n");
+            sb.append("instances = ").append(entry.config().blueprint().instances()).append("\n");
+
+            // Add optional properties if configured
+            entry.config().blueprint().timeoutMs()
+                 .onPresent(timeout -> sb.append("timeout_ms = ").append(timeout).append("\n"));
+            entry.config().blueprint().memoryMb()
+                 .onPresent(memory -> sb.append("memory_mb = ").append(memory).append("\n"));
+            entry.config().blueprint().loadBalancing()
+                 .onPresent(lb -> sb.append("load_balancing = \"").append(lb).append("\"\n"));
+            entry.config().blueprint().affinityKey()
+                 .onPresent(key -> sb.append("affinity_key = \"").append(key).append("\"\n"));
+
             if (entry.isDependency()) {
                 sb.append("# transitive dependency\n");
             }
@@ -277,5 +317,5 @@ public class GenerateBlueprintMojo extends AbstractMojo {
         }
     }
 
-    private record SliceEntry(String artifact, SliceManifest manifest, boolean isDependency) {}
+    private record SliceEntry(String artifact, SliceManifest manifest, SliceConfig config, boolean isDependency) {}
 }

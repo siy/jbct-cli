@@ -25,7 +25,8 @@ public record SliceManifest(String sliceName,
                             String baseArtifact,
                             String apiArtifactId,
                             String implArtifactId,
-                            List<SliceDependency> dependencies) {
+                            List<SliceDependency> dependencies,
+                            String configFile) {
 
     /**
      * Dependency information for blueprint generation.
@@ -75,6 +76,7 @@ public record SliceManifest(String sliceName,
         var apiArtifactId = props.getProperty("api.artifactId", "");
         var implArtifactId = props.getProperty("impl.artifactId", "");
         var dependencies = parseDependencies(props);
+        var configFile = props.getProperty("config.file", "");
 
         return Result.success(new SliceManifest(
                 sliceName,
@@ -87,7 +89,8 @@ public record SliceManifest(String sliceName,
                 baseArtifact,
                 apiArtifactId,
                 implArtifactId,
-                dependencies
+                dependencies,
+                configFile
         ));
     }
 
