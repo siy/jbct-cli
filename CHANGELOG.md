@@ -8,10 +8,16 @@
 - Slice packaging: MANIFEST.MF entries (`Slice-Artifact`, `Slice-Class`)
 - Slice packaging: application shared code inclusion in impl JAR
 - Docs: Aether ClassLoader hierarchy and dependency model in runtime.md
+- Project init: dynamic version resolution from GitHub Releases (pragmatica-lite, aether, jbct)
+- Project init: version override CLI options (`--pragmatica-version`, `--aether-version`, `--jbct-version`)
+- AI tools: offline cache at `~/.jbct/cache/ai-tools/` for faster installs
 
 ### Changed
+- Slice init: pom template includes `slice-annotations` and `slice-api` dependencies with `${aether.version}` property
 - Slice packaging: API JAR now includes nested request/response types
 - Slice packaging: request/response classes handled as API types when nested
+- AI tools: fetch from coding-technology repo using GitHub Tree API (dynamic file discovery)
+- AI tools: removed bundled copies, now fetched from GitHub on demand
 
 ### Fixed
 - SliceManifest: nested class path conversion (`Outer.Inner` → `Outer$Inner.class`)
