@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.9] - Unreleased
+## [0.4.9] - 2026-01-13
 
 ### Added
 - Slice packaging: fat JAR creation with bundled external dependencies
