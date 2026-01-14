@@ -259,15 +259,18 @@ public final class OrderProcessorFactory {
 
 Slice API methods must:
 - Return `Promise<T>` where T is the response type
-- Have exactly one parameter (the request type)
+- Have at least one parameter
 - Use simple types or records as request/response
 
 ```java
-// CORRECT
+// CORRECT - single record parameter
 Promise<OrderResult> processOrder(ProcessOrderRequest request);
 
-// WRONG - multiple parameters
+// CORRECT - multiple parameters (synthetic record generated)
 Promise<OrderResult> processOrder(String orderId, int quantity);
+
+// CORRECT - single primitive
+Promise<Stock> getStock(String sku);
 
 // WRONG - no parameters
 Promise<HealthStatus> healthCheck();
@@ -275,6 +278,128 @@ Promise<HealthStatus> healthCheck();
 // WRONG - void return
 void processOrder(ProcessOrderRequest request);
 ```
+
+## Multi-Parameter Method Support
+
+### D8: Synthetic Request Records
+
+**Decision**: For slice methods with multiple parameters or single primitive parameters, the processor generates synthetic request records inside the factory interface.
+
+**Naming Convention**: `{MethodName}_{N}_Request` where N is a sequence number.
+
+**Sequence Number Rules**:
+1. Sort all method signatures as strings alphabetically
+2. Assign sequence numbers starting from 0
+3. Always include `_0_` suffix even for non-overloaded methods (consistency)
+
+**Rationale**:
+- Provides deterministic naming across caller and callee
+- Adding method overloads is a breaking change (minor version bump)
+- Same generated record can be used on both sides of the transport
+
+### Examples
+
+**Single Primitive Parameter**:
+```java
+// Slice interface
+Promise<Stock> getStock(String sku);
+
+// Generated synthetic record
+public record GetStock_0_Request(String sku) {}
+
+// Generated SliceMethod uses the synthetic record
+new SliceMethod<>(
+    MethodName.methodName("getStock").unwrap(),
+    request -> delegate.getStock(request.sku()),
+    new TypeToken<Stock>() {},
+    new TypeToken<GetStock_0_Request>() {}
+)
+```
+
+**Multiple Parameters**:
+```java
+// Slice interface
+Promise<TransferResult> transfer(String from, String to, BigDecimal amount);
+
+// Generated synthetic record
+public record Transfer_0_Request(String from, String to, BigDecimal amount) {}
+
+// Generated SliceMethod
+new SliceMethod<>(
+    MethodName.methodName("transfer").unwrap(),
+    request -> delegate.transfer(request.from(), request.to(), request.amount()),
+    new TypeToken<TransferResult>() {},
+    new TypeToken<Transfer_0_Request>() {}
+)
+```
+
+**Single Record Parameter (no synthetic)**:
+```java
+// Slice interface with existing record
+Promise<OrderResult> processOrder(ProcessOrderRequest request);
+
+// Uses existing record directly - no synthetic generated
+new SliceMethod<>(
+    MethodName.methodName("processOrder").unwrap(),
+    delegate::processOrder,
+    new TypeToken<OrderResult>() {},
+    new TypeToken<ProcessOrderRequest>() {}
+)
+```
+
+**Method Overloads**:
+```java
+// Slice interface with overloaded methods
+Promise<User> getUser(Long id);
+Promise<User> getUser(String email);
+
+// Signatures sorted: "getUser(Long)" < "getUser(String)"
+// Generated synthetic records
+public record GetUser_0_Request(Long id) {}      // for getUser(Long)
+public record GetUser_1_Request(String email) {} // for getUser(String)
+```
+
+### External Dependency Proxies
+
+For external dependencies with multi-parameter methods, the generator creates stub interfaces with synthetic records:
+
+```java
+// External dependency interface (in another slice)
+public interface PaymentService {
+    Promise<PaymentResult> processPayment(String orderId, BigDecimal amount);
+}
+
+// Generated proxy record inside factory
+record paymentService(SliceInvokerFacade invoker) implements PaymentService {
+    private static final String ARTIFACT = "org.example:payment:1.0.0";
+
+    // Synthetic record for the proxy
+    public record ProcessPayment_0_Request(String orderId, BigDecimal amount) {}
+
+    @Override
+    public Promise<PaymentResult> processPayment(String orderId, BigDecimal amount) {
+        return invoker.invoke(ARTIFACT, "processPayment",
+                              new ProcessPayment_0_Request(orderId, amount),
+                              PaymentResult.class);
+    }
+}
+```
+
+### Breaking Change Warning
+
+Adding method overloads changes sequence numbers and is a **breaking change**:
+
+```java
+// Version 1.0.0
+Promise<User> getUser(Long id);  // GetUser_0_Request
+
+// Version 1.1.0 - BREAKING CHANGE
+Promise<User> getUser(Long id);      // Still GetUser_0_Request
+Promise<User> getUser(String email); // NEW: GetUser_1_Request
+// Old clients sending GetUser_0_Request for getUser(String) will fail
+```
+
+**Migration**: Increment minor version when adding overloads; document in changelog.
 
 ## File Structure
 
@@ -359,3 +484,4 @@ public interface SliceInvokerFacade {
 | 2026-01-11 | Claude | Implemented: local proxy records, createSlice(), internal/external deps |
 | 2026-01-11 | Claude | Added comprehensive test coverage (11 tests) |
 | 2026-01-11 | Claude | Fixed: import internal deps from subpackages |
+| 2026-01-14 | Claude | Added D8: Multi-parameter method support with synthetic records |
