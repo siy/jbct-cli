@@ -262,9 +262,11 @@ public class RouteSourceGenerator {
         out.println("import org.pragmatica.http.routing.HttpError;");
         out.println("import org.pragmatica.http.routing.HttpStatus;");
         out.println("import org.pragmatica.http.routing.PathParameter;");
+        out.println("import org.pragmatica.http.routing.QueryParameter;");
         out.println("import org.pragmatica.http.routing.Route;");
         out.println("import org.pragmatica.http.routing.RouteSource;");
         out.println("import org.pragmatica.lang.Cause;");
+        out.println("import org.pragmatica.lang.Option;");
         out.println("import org.pragmatica.lang.type.TypeToken;");
         out.println("import org.pragmatica.json.JsonMapper;");
         out.println();
@@ -324,17 +326,25 @@ public class RouteSourceGenerator {
                                   .toString();
         var comma = hasMore ? "," : "";
 
-        if (routeDsl.hasPathParams() && !isBodyMethod(routeDsl.method())) {
-            // Path parameters only (GET, DELETE, etc.)
-            generatePathParamsRoute(out, fullPath, httpMethod, responseType, routeDsl, method, comma);
-        } else if (isBodyMethod(routeDsl.method()) && !routeDsl.hasPathParams()) {
-            // Body only (POST, PUT, PATCH without path params)
+        var hasPath = routeDsl.hasPathParams();
+        var hasQuery = routeDsl.hasQueryParams();
+        var hasBody = isBodyMethod(routeDsl.method());
+
+        if (hasPath && hasQuery && hasBody) {
+            generatePathQueryBodyRoute(out, fullPath, httpMethod, responseType, parameterType, routeDsl, method, comma);
+        } else if (hasPath && hasBody) {
+            generatePathBodyRoute(out, fullPath, httpMethod, responseType, parameterType, routeDsl, method, comma);
+        } else if (hasQuery && hasBody) {
+            generateQueryBodyRoute(out, fullPath, httpMethod, responseType, parameterType, routeDsl, method, comma);
+        } else if (hasPath && hasQuery) {
+            generatePathQueryRoute(out, fullPath, httpMethod, responseType, routeDsl, method, comma);
+        } else if (hasPath) {
+            generatePathRoute(out, fullPath, httpMethod, responseType, routeDsl, method, comma);
+        } else if (hasQuery) {
+            generateQueryRoute(out, fullPath, httpMethod, responseType, routeDsl, method, comma);
+        } else if (hasBody) {
             generateBodyRoute(out, fullPath, httpMethod, responseType, parameterType, method, comma);
-        } else if (isBodyMethod(routeDsl.method()) && routeDsl.hasPathParams()) {
-            // Both path params and body (complex case)
-            generatePathAndBodyRoute(out, fullPath, httpMethod, responseType, parameterType, routeDsl, method, comma);
         } else {
-            // No parameters
             generateNoParamsRoute(out, fullPath, httpMethod, responseType, method, comma);
         }
     }
@@ -350,33 +360,21 @@ public class RouteSourceGenerator {
         out.println("                 .toJson(() -> delegate." + method.name() + "(null))" + comma);
     }
 
-    private void generatePathParamsRoute(PrintWriter out,
-                                          String path,
-                                          String httpMethod,
-                                          String responseType,
-                                          RouteDsl routeDsl,
-                                          MethodModel method,
-                                          String comma) {
+    private void generatePathRoute(PrintWriter out,
+                                    String path,
+                                    String httpMethod,
+                                    String responseType,
+                                    RouteDsl routeDsl,
+                                    MethodModel method,
+                                    String comma) {
         var pathParams = routeDsl.pathParams();
         var parameterType = method.parameterType()
                                   .toString();
 
         out.print("            Route.<" + responseType + ", " + parameterType + ">" + httpMethod + "(\"" + path + "\")");
         out.println();
+        out.println("                 .withPath(" + pathParamList(pathParams) + ")");
 
-        // Generate withPath call
-        out.print("                 .withPath(");
-        for (int i = 0; i < pathParams.size(); i++) {
-            var param = pathParams.get(i);
-            var pathParamMethod = typeToPathParameter(param.type());
-            if (i > 0) {
-                out.print(", ");
-            }
-            out.print("PathParameter." + pathParamMethod + "()");
-        }
-        out.println(")");
-
-        // Generate handler
         if (pathParams.size() == 1) {
             var paramName = pathParams.getFirst()
                                       .name();
@@ -393,6 +391,39 @@ public class RouteSourceGenerator {
         }
     }
 
+    private void generateQueryRoute(PrintWriter out,
+                                     String path,
+                                     String httpMethod,
+                                     String responseType,
+                                     RouteDsl routeDsl,
+                                     MethodModel method,
+                                     String comma) {
+        var queryParams = routeDsl.queryParams();
+        var parameterType = method.parameterType()
+                                  .toString();
+
+        out.print("            Route.<" + responseType + ", " + parameterType + ">" + httpMethod + "(\"" + path + "\")");
+        out.println();
+        out.println("                 .withQuery(" + queryParamList(queryParams) + ")");
+
+        var paramNames = queryParams.stream()
+                                    .map(QueryParam::name)
+                                    .toList();
+        var handlerParams = String.join(", ", paramNames);
+        var constructorArgs = queryParams.stream()
+                                         .map(QueryParam::name)
+                                         .collect(java.util.stream.Collectors.joining(", "));
+
+        if (queryParams.size() == 1) {
+            out.println("                 .to(" + handlerParams + " -> delegate." + method.name() +
+                       "(new " + parameterType + "(" + constructorArgs + ")))");
+        } else {
+            out.println("                 .to((" + handlerParams + ") -> delegate." + method.name() +
+                       "(new " + parameterType + "(" + constructorArgs + ")))");
+        }
+        out.println("                 .asJson()" + comma);
+    }
+
     private void generateBodyRoute(PrintWriter out,
                                     String path,
                                     String httpMethod,
@@ -405,20 +436,130 @@ public class RouteSourceGenerator {
         out.println("                 .toJson(request -> delegate." + method.name() + "(request))" + comma);
     }
 
-    private void generatePathAndBodyRoute(PrintWriter out,
-                                           String path,
-                                           String httpMethod,
-                                           String responseType,
-                                           String parameterType,
-                                           RouteDsl routeDsl,
-                                           MethodModel method,
-                                           String comma) {
-        // Complex case: both path params and body
-        // For now, generate with body only (path params extracted separately)
-        out.println("            // TODO: Route with both path params and body requires custom handling");
-        out.println("            Route.<" + responseType + ", " + parameterType + ">" + httpMethod + "(\"" + path + "\")");
+    private void generatePathBodyRoute(PrintWriter out,
+                                        String path,
+                                        String httpMethod,
+                                        String responseType,
+                                        String parameterType,
+                                        RouteDsl routeDsl,
+                                        MethodModel method,
+                                        String comma) {
+        var pathParams = routeDsl.pathParams();
+
+        out.print("            Route.<" + responseType + ", " + parameterType + ">" + httpMethod + "(\"" + path + "\")");
+        out.println();
+        out.println("                 .withPath(" + pathParamList(pathParams) + ")");
         out.println("                 .withBody(new TypeToken<" + parameterType + ">() {})");
-        out.println("                 .toJson(request -> delegate." + method.name() + "(request))" + comma);
+
+        var pathParamNames = pathParams.stream()
+                                       .map(PathParam::name)
+                                       .toList();
+        var allParams = new java.util.ArrayList<>(pathParamNames);
+        allParams.add("body");
+        var handlerParams = String.join(", ", allParams);
+
+        out.println("                 .toJson((" + handlerParams + ") -> delegate." + method.name() + "(body))" + comma);
+    }
+
+    private void generateQueryBodyRoute(PrintWriter out,
+                                         String path,
+                                         String httpMethod,
+                                         String responseType,
+                                         String parameterType,
+                                         RouteDsl routeDsl,
+                                         MethodModel method,
+                                         String comma) {
+        var queryParams = routeDsl.queryParams();
+
+        out.print("            Route.<" + responseType + ", " + parameterType + ">" + httpMethod + "(\"" + path + "\")");
+        out.println();
+        out.println("                 .withQuery(" + queryParamList(queryParams) + ")");
+        out.println("                 .withBody(new TypeToken<" + parameterType + ">() {})");
+
+        var queryParamNames = queryParams.stream()
+                                         .map(QueryParam::name)
+                                         .toList();
+        var allParams = new java.util.ArrayList<>(queryParamNames);
+        allParams.add("body");
+        var handlerParams = String.join(", ", allParams);
+
+        out.println("                 .toJson((" + handlerParams + ") -> delegate." + method.name() + "(body))" + comma);
+    }
+
+    private void generatePathQueryRoute(PrintWriter out,
+                                         String path,
+                                         String httpMethod,
+                                         String responseType,
+                                         RouteDsl routeDsl,
+                                         MethodModel method,
+                                         String comma) {
+        var pathParams = routeDsl.pathParams();
+        var queryParams = routeDsl.queryParams();
+        var parameterType = method.parameterType()
+                                  .toString();
+
+        out.print("            Route.<" + responseType + ", " + parameterType + ">" + httpMethod + "(\"" + path + "\")");
+        out.println();
+        out.println("                 .withPath(" + pathParamList(pathParams) + ")");
+        out.println("                 .withQuery(" + queryParamList(queryParams) + ")");
+
+        var pathParamNames = pathParams.stream()
+                                       .map(PathParam::name)
+                                       .toList();
+        var queryParamNames = queryParams.stream()
+                                         .map(QueryParam::name)
+                                         .toList();
+        var allParams = new java.util.ArrayList<>(pathParamNames);
+        allParams.addAll(queryParamNames);
+        var handlerParams = String.join(", ", allParams);
+        var constructorArgs = String.join(", ", allParams);
+
+        out.println("                 .to((" + handlerParams + ") -> delegate." + method.name() +
+                   "(new " + parameterType + "(" + constructorArgs + ")))");
+        out.println("                 .asJson()" + comma);
+    }
+
+    private void generatePathQueryBodyRoute(PrintWriter out,
+                                             String path,
+                                             String httpMethod,
+                                             String responseType,
+                                             String parameterType,
+                                             RouteDsl routeDsl,
+                                             MethodModel method,
+                                             String comma) {
+        var pathParams = routeDsl.pathParams();
+        var queryParams = routeDsl.queryParams();
+
+        out.print("            Route.<" + responseType + ", " + parameterType + ">" + httpMethod + "(\"" + path + "\")");
+        out.println();
+        out.println("                 .withPath(" + pathParamList(pathParams) + ")");
+        out.println("                 .withQuery(" + queryParamList(queryParams) + ")");
+        out.println("                 .withBody(new TypeToken<" + parameterType + ">() {})");
+
+        var pathParamNames = pathParams.stream()
+                                       .map(PathParam::name)
+                                       .toList();
+        var queryParamNames = queryParams.stream()
+                                         .map(QueryParam::name)
+                                         .toList();
+        var allParams = new java.util.ArrayList<>(pathParamNames);
+        allParams.addAll(queryParamNames);
+        allParams.add("body");
+        var handlerParams = String.join(", ", allParams);
+
+        out.println("                 .toJson((" + handlerParams + ") -> delegate." + method.name() + "(body))" + comma);
+    }
+
+    private String pathParamList(List<PathParam> pathParams) {
+        return pathParams.stream()
+                         .map(p -> "PathParameter." + typeToPathParameter(p.type()) + "()")
+                         .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    private String queryParamList(List<QueryParam> queryParams) {
+        return queryParams.stream()
+                         .map(q -> "QueryParameter." + typeToQueryParameter(q.type()) + "(\"" + q.name() + "\")")
+                         .collect(java.util.stream.Collectors.joining(", "));
     }
 
     private void generateErrorMapperMethod(PrintWriter out, List<ErrorTypeMapping> errorMappings) {
@@ -447,6 +588,11 @@ public class RouteSourceGenerator {
     }
 
     private String typeToPathParameter(String type) {
+        return TYPE_TO_PATH_PARAMETER.getOrDefault(type, "aString");
+    }
+
+    private String typeToQueryParameter(String type) {
+        // Query parameters use same factory method names as path parameters
         return TYPE_TO_PATH_PARAMETER.getOrDefault(type, "aString");
     }
 }

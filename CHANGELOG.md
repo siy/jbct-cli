@@ -1,12 +1,13 @@
 # Changelog
 
-## [0.4.9] - 2026-01-14
+## [0.4.9] - 2026-01-15
 
 ### Added
 - HTTP routing: generate `RouteSource` and `SliceRouterFactory` from TOML config
 - HTTP routing: DSL parser for route definitions (`"GET /users/{id:Long}"`)
 - HTTP routing: compile-time error type discovery with pattern matching
 - HTTP routing: service loader file generation for factory discovery
+- HTTP routing: full parameter support (path, query, body in any combination up to 5 params)
 - Slice packaging: fat JAR creation with bundled external dependencies
 - Slice packaging: dependency file generation (`META-INF/dependencies/{FactoryClass}`)
 - Slice packaging: MANIFEST.MF entries (`Slice-Artifact`, `Slice-Class`)

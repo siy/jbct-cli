@@ -204,9 +204,11 @@ import org.pragmatica.aether.http.adapter.SliceRouterFactory;
 import org.pragmatica.http.routing.HttpError;
 import org.pragmatica.http.routing.HttpStatus;
 import org.pragmatica.http.routing.PathParameter;
+import org.pragmatica.http.routing.QueryParameter;
 import org.pragmatica.http.routing.Route;
 import org.pragmatica.http.routing.RouteSource;
 import org.pragmatica.lang.Cause;
+import org.pragmatica.lang.Option;
 import org.pragmatica.lang.type.TypeToken;
 import org.pragmatica.json.JsonMapper;
 
@@ -247,7 +249,7 @@ public final class UserServiceRoutes implements RouteSource, SliceRouterFactory<
     @Override
     public Stream<Route<?>> routes() {
         return Stream.of(
-            Route.<User, Long>get("/api/v1/users/{id}")
+            Route.<User, GetUserRequest>get("/api/v1/users/{id}")
                  .withPath(PathParameter.aLong())
                  .toJson(id -> delegate.getUser(new GetUserRequest(id))),
 
@@ -255,10 +257,10 @@ public final class UserServiceRoutes implements RouteSource, SliceRouterFactory<
                  .withBody(new TypeToken<CreateUserRequest>() {})
                  .toJson(request -> delegate.createUser(request)),
 
-            // Query params: extracted from request context (see Limitations section)
-            Route.<List<User>, Void>get("/api/v1/users/")
-                 .withoutParameters()
-                 .toJson(() -> delegate.searchUsers(null))
+            Route.<List<User>, SearchUsersRequest>get("/api/v1/users/")
+                 .withQuery(QueryParameter.aString("name"), QueryParameter.aInteger("limit"))
+                 .to((name, limit) -> delegate.searchUsers(new SearchUsersRequest(name, limit)))
+                 .asJson()
         );
     }
 
@@ -286,6 +288,8 @@ com.example.users.UserServiceRoutes
 
 ## Request Mapping Strategies
 
+The generator supports up to 5 parameters total in any combination of path, query, and body.
+
 ### Path Parameters Only
 
 ```toml
@@ -293,7 +297,7 @@ getUser = "GET /{id:Long}"
 ```
 
 ```java
-Route.<User, Long>get("/api/v1/users/{id}")
+Route.<User, GetUserRequest>get("/api/v1/users/{id}")
      .withPath(PathParameter.aLong())
      .toJson(id -> delegate.getUser(new GetUserRequest(id)))
 ```
@@ -312,6 +316,21 @@ Route.<OrderItem, GetOrderItemRequest>get("/api/v1/orders/{orderId}/items/{itemI
      .asJson()
 ```
 
+### Query Parameters Only
+
+```toml
+searchUsers = "GET /?name&limit:Integer"
+```
+
+```java
+Route.<List<User>, SearchUsersRequest>get("/api/v1/users/")
+     .withQuery(QueryParameter.aString("name"), QueryParameter.aInteger("limit"))
+     .to((name, limit) -> delegate.searchUsers(new SearchUsersRequest(name, limit)))
+     .asJson()
+```
+
+Query parameters are wrapped in `Option<T>` since they are optional by nature.
+
 ### Body Only (POST/PUT/PATCH)
 
 ```toml
@@ -322,6 +341,61 @@ createUser = "POST /"
 Route.<User, CreateUserRequest>post("/api/v1/users/")
      .withBody(new TypeToken<CreateUserRequest>() {})
      .toJson(request -> delegate.createUser(request))
+```
+
+### Path + Body Combined
+
+```toml
+updateUser = "PUT /{id:Long}"
+```
+
+```java
+Route.<User, UpdateUserRequest>put("/api/v1/users/{id}")
+     .withPath(PathParameter.aLong())
+     .withBody(new TypeToken<UpdateUserRequest>() {})
+     .toJson((id, body) -> delegate.updateUser(body))
+```
+
+### Path + Query Combined
+
+```toml
+getUserOrders = "GET /{userId:Long}/orders?status&limit:Integer"
+```
+
+```java
+Route.<List<Order>, GetUserOrdersRequest>get("/api/v1/users/{userId}/orders")
+     .withPath(PathParameter.aLong())
+     .withQuery(QueryParameter.aString("status"), QueryParameter.aInteger("limit"))
+     .to((userId, status, limit) -> delegate.getUserOrders(
+         new GetUserOrdersRequest(userId, status, limit)))
+     .asJson()
+```
+
+### Query + Body Combined
+
+```toml
+searchWithFilter = "POST /?includeDeleted:Boolean"
+```
+
+```java
+Route.<SearchResult, SearchRequest>post("/api/v1/search")
+     .withQuery(QueryParameter.aBoolean("includeDeleted"))
+     .withBody(new TypeToken<SearchRequest>() {})
+     .toJson((includeDeleted, body) -> delegate.search(body))
+```
+
+### Path + Query + Body Combined
+
+```toml
+updateOrderItem = "PUT /{orderId:Long}/items/{itemId:Long}?notify:Boolean"
+```
+
+```java
+Route.<OrderItem, UpdateItemRequest>put("/api/v1/orders/{orderId}/items/{itemId}")
+     .withPath(PathParameter.aLong(), PathParameter.aLong())
+     .withQuery(QueryParameter.aBoolean("notify"))
+     .withBody(new TypeToken<UpdateItemRequest>() {})
+     .toJson((orderId, itemId, notify, body) -> delegate.updateItem(body))
 ```
 
 ### No Parameters
@@ -401,22 +475,6 @@ var factory = loader.stream()
 var router = factory.create(userServiceImpl);
 ```
 
-## Current Limitations
-
-### Query Parameters (Not Yet Implemented)
-
-Query parameters are parsed by the DSL but **not yet wired** in generated routes. Current behavior:
-- DSL accepts query params: `"GET /?name&limit:Integer"`
-- Generated route ignores them, uses `withoutParameters()`
-
-**Workaround**: Handle query params manually in slice method by accessing `RequestContext`.
-
-**Planned**: Generate query param extraction with `Option` wrapping for optional params.
-
-### Path + Body Combined
-
-Routes with both path params and body (e.g., `PUT /{id}` with JSON body) generate a TODO comment. The body is used but path params need manual extraction.
-
 ## File Structure
 
 ```
@@ -471,3 +529,4 @@ slice-processor/
 | 2026-01-14 | Claude | Implemented: DSL parser, config loader, error discovery |
 | 2026-01-14 | Claude | Added SliceRouterFactory integration |
 | 2026-01-14 | Claude | Added service loader file generation |
+| 2026-01-15 | Claude | Full parameter support: query params, path+body, path+query, all combinations |
