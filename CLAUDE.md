@@ -1,5 +1,16 @@
 # JBCT CLI Project
 
+## Governing Documents
+
+RFCs location: `../coding-technology/proposals/rfc/`
+Remote: https://github.com/siy/coding-technology/tree/master/proposals/rfc
+
+Relevant RFCs:
+- RFC-0000: Ecosystem Foundation
+- RFC-0001: Core Slice Contract
+- RFC-0002: Dependency Protocol
+- RFC-0003: HTTP Layer
+
 ## AI Agent Policy
 
 **MANDATORY**: Use ONLY the `jbct-coder` agent for ALL coding and fixing tasks in this project. This ensures code follows JBCT patterns and conventions.
