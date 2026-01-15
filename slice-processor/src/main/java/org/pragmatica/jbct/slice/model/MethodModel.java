@@ -6,6 +6,7 @@ import org.pragmatica.lang.utils.Causes;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import java.util.regex.Pattern;
 
 public record MethodModel(String name,
                           TypeMirror returnType,
@@ -13,9 +14,18 @@ public record MethodModel(String name,
                           TypeMirror parameterType,
                           String parameterName,
                           boolean deprecated) {
+    private static final Pattern METHOD_NAME_PATTERN = Pattern.compile("^[a-z][a-zA-Z0-9]+$");
+
     public static Result<MethodModel> methodModel(ExecutableElement method) {
         var name = method.getSimpleName()
                          .toString();
+
+        if (!METHOD_NAME_PATTERN.matcher(name).matches()) {
+            return Causes.cause("Invalid slice method name '" + name +
+                               "': must start with lowercase letter and contain only alphanumeric characters")
+                         .result();
+        }
+
         var returnType = method.getReturnType();
         var responseType = extractPromiseTypeArg(returnType);
         var params = method.getParameters();

@@ -3,6 +3,7 @@
 ## [0.5.0] - 2026-01-15
 
 ### Added
+- Slice processor: method name validation per RFC-0001 (must match `^[a-z][a-zA-Z0-9]+$`)
 
 ### Changed
 
