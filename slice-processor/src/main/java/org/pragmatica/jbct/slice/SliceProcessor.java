@@ -136,7 +136,9 @@ public class SliceProcessor extends AbstractProcessor {
             var packageDir = configPath.getParent();
             // Use loadMerged to support routes-base.toml inheritance
             return RouteConfigLoader.loadMerged(packageDir)
-                                    .map(Option::some);
+                                    .map(config -> config.hasRoutes()
+                                                   ? Option.some(config)
+                                                   : Option.none());
         } catch (IOException | IllegalArgumentException | UnsupportedOperationException | FileSystemNotFoundException _) {
             // routes.toml not found or not accessible (e.g., in test environment) - routes are optional
             return Result.success(Option.none());

@@ -77,11 +77,13 @@ public final class RouteConfigLoader {
      * Looks for:
      * <ul>
      *   <li>{@code routes-base.toml} - base configuration (optional)</li>
-     *   <li>{@code routes.toml} - slice-specific configuration (required)</li>
+     *   <li>{@code routes.toml} - slice-specific configuration (optional)</li>
      * </ul>
+     * <p>
+     * If neither file exists, returns empty configuration.
      *
      * @param slicePackagePath path to the slice package directory
-     * @return Result containing merged RouteConfig or error
+     * @return Result containing merged RouteConfig (empty if no config files found)
      */
     public static Result<RouteConfig> loadMerged(Path slicePackagePath) {
         var basePath = slicePackagePath.resolve(BASE_CONFIG_FILE);
@@ -89,7 +91,10 @@ public final class RouteConfigLoader {
         var baseConfig = Files.exists(basePath)
                          ? load(basePath).or(RouteConfig.EMPTY)
                          : RouteConfig.EMPTY;
-        return load(slicePath).map(baseConfig::merge);
+        var sliceConfig = Files.exists(slicePath)
+                          ? load(slicePath).or(RouteConfig.EMPTY)
+                          : RouteConfig.EMPTY;
+        return Result.success(baseConfig.merge(sliceConfig));
     }
 
     private static Result<Map<String, RouteDsl>> parseRoutes(Map<String, String> routesSection) {
