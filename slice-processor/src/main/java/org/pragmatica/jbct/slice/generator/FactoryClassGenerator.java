@@ -153,34 +153,99 @@ public class FactoryClassGenerator {
             out.println();
         }
 
-        // Create method handles for external dependencies (eager, fail-fast)
-        for (var dep : externalDeps) {
-            generateHandleCreation(out, dep);
-            out.println();
-        }
-
         // Instantiate internal dependencies
         for (var dep : internalDeps) {
             out.println("        var " + dep.parameterName() + " = " +
                        dep.interfaceSimpleName() + "." + dep.factoryMethodName() + "();");
         }
 
-        // Instantiate external dependencies with pre-created handles
-        for (var dep : externalDeps) {
-            generateProxyInstantiation(out, dep);
+        // Build flatMap chain for handle creation or direct return if no external deps
+        if (externalDeps.isEmpty()) {
+            var factoryArgs = model.dependencies()
+                                   .stream()
+                                   .map(DependencyModel::parameterName)
+                                   .toList();
+            out.println("        var instance = " + sliceName + "." + model.factoryMethodName() +
+                       "(" + String.join(", ", factoryArgs) + ");");
+            out.println("        return Promise.success(aspect.apply(instance));");
+        } else {
+            generateFlatMapChain(out, model, externalDeps, internalDeps);
         }
 
-        out.println();
+        out.println("    }");
+    }
+
+    private void generateFlatMapChain(PrintWriter out,
+                                       SliceModel model,
+                                       List<DependencyModel> externalDeps,
+                                       List<DependencyModel> internalDeps) {
+        var sliceName = model.simpleName();
+
+        // Collect all handles across all dependencies
+        var allHandles = new ArrayList<HandleInfo>();
+        for (var dep : externalDeps) {
+            var methods = collectProxyMethods(dep);
+            for (var method : methods) {
+                allHandles.add(new HandleInfo(dep, method));
+            }
+        }
+
+        // Start the chain
+        out.println("        return " + generateMethodHandleCall(allHandles.getFirst()));
+
+        // Generate nested flatMaps
+        var indent = "            ";
+        for (int i = 1; i < allHandles.size(); i++) {
+            var handle = allHandles.get(i);
+            var prevHandle = allHandles.get(i - 1);
+            out.println(indent + ".flatMap(" + prevHandle.varName() + " -> " + generateMethodHandleCall(handle));
+            indent += "    ";
+        }
+
+        // Final map with proxy instantiation and factory call
+        var lastHandle = allHandles.getLast();
+        out.println(indent + ".map(" + lastHandle.varName() + " -> {");
+
+        // Instantiate proxies
+        for (var dep : externalDeps) {
+            var methods = collectProxyMethods(dep);
+            var handleArgs = methods.stream()
+                                    .map(m -> new HandleInfo(dep, m).varName())
+                                    .toList();
+            out.println(indent + "    var " + dep.parameterName() + " = new " + dep.localRecordName() +
+                       "(" + String.join(", ", handleArgs) + ");");
+        }
 
         // Call developer's factory
         var factoryArgs = model.dependencies()
                                .stream()
                                .map(DependencyModel::parameterName)
                                .toList();
-        out.println("        var instance = " + sliceName + "." + model.factoryMethodName() +
-                   "(" + String.join(", ", factoryArgs) + ");");
-        out.println("        return Promise.success(aspect.apply(instance));");
-        out.println("    }");
+        out.println(indent + "    return aspect.apply(" + sliceName + "." + model.factoryMethodName() +
+                   "(" + String.join(", ", factoryArgs) + "));");
+        out.println(indent + "})");
+
+        // Close all flatMaps
+        for (int i = 1; i < allHandles.size(); i++) {
+            indent = indent.substring(4);
+            out.println(indent + ")");
+        }
+
+        // Convert Result to Promise
+        out.println("            .fold(Promise::failure, Promise::success);");
+    }
+
+    private record HandleInfo(DependencyModel dep, ProxyMethodInfo method) {
+        String varName() {
+            return dep.parameterName() + "_" + method.name;
+        }
+    }
+
+    private String generateMethodHandleCall(HandleInfo handle) {
+        var artifact = handle.dep.fullArtifact().or(() -> "UNRESOLVED");
+        return "invoker.methodHandle(\"" + artifact + "\", \"" + handle.method.name + "\",\n" +
+               "                                                     new TypeToken<" + handle.method.paramType + ">() {},\n" +
+               "                                                     new TypeToken<" + handle.method.responseType + ">() {})";
     }
 
     private record ProxyMethodInfo(String name, String responseType, String paramType) {}
@@ -232,29 +297,6 @@ public class FactoryClassGenerator {
         out.println("            public Promise<" + method.responseType + "> " + method.name + "(" + method.paramType + " request) {");
         out.println("                return " + method.name + "Handle.invoke(request);");
         out.println("            }");
-    }
-
-    private void generateHandleCreation(PrintWriter out, DependencyModel dep) {
-        var artifact = dep.fullArtifact().or(() -> "UNRESOLVED");
-        var methods = collectProxyMethods(dep);
-
-        for (var method : methods) {
-            var handleVar = dep.parameterName() + "_" + method.name;
-            out.println("        var " + handleVar + " = invoker.methodHandle(\"" + artifact + "\", \"" + method.name + "\",");
-            out.println("                                                     new TypeToken<" + method.paramType + ">() {},");
-            out.println("                                                     new TypeToken<" + method.responseType + ">() {});");
-            out.println("        if (" + handleVar + ".isFailure()) {");
-            out.println("            return Promise.failure(" + handleVar + ".cause());");
-            out.println("        }");
-        }
-    }
-
-    private void generateProxyInstantiation(PrintWriter out, DependencyModel dep) {
-        var methods = collectProxyMethods(dep);
-        var handleArgs = methods.stream()
-                                .map(m -> dep.parameterName() + "_" + m.name + ".value()")
-                                .toList();
-        out.println("        var " + dep.parameterName() + " = new " + dep.localRecordName() + "(" + String.join(", ", handleArgs) + ");");
     }
 
     private void generateCreateSliceMethod(PrintWriter out, SliceModel model) {
