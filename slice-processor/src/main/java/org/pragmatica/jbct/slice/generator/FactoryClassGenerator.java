@@ -232,7 +232,7 @@ public class FactoryClassGenerator {
         }
 
         // Convert Result to Promise
-        out.println("            .fold(Promise::failure, Promise::success);");
+        out.println("            .async();");
     }
 
     private record HandleInfo(DependencyModel dep, ProxyMethodInfo method) {
