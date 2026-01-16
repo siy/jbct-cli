@@ -153,16 +153,21 @@ public class FactoryClassGenerator {
             out.println();
         }
 
+        // Create method handles for external dependencies (eager, fail-fast)
+        for (var dep : externalDeps) {
+            generateHandleCreation(out, dep);
+            out.println();
+        }
+
         // Instantiate internal dependencies
         for (var dep : internalDeps) {
             out.println("        var " + dep.parameterName() + " = " +
                        dep.interfaceSimpleName() + "." + dep.factoryMethodName() + "();");
         }
 
-        // Instantiate external dependencies (using local proxy records)
+        // Instantiate external dependencies with pre-created handles
         for (var dep : externalDeps) {
-            out.println("        var " + dep.parameterName() + " = new " +
-                       dep.localRecordName() + "(invoker);");
+            generateProxyInstantiation(out, dep);
         }
 
         out.println();
@@ -178,13 +183,10 @@ public class FactoryClassGenerator {
         out.println("    }");
     }
 
-    private void generateLocalProxyRecord(PrintWriter out, DependencyModel dep) {
-        var className = dep.localRecordName();
-        var interfaceName = dep.interfaceSimpleName();
-        var artifact = dep.fullArtifact().or(() -> "UNRESOLVED");
+    private record ProxyMethodInfo(String name, String responseType, String paramType) {}
 
-        // Collect methods for handle field generation
-        var methods = new ArrayList<ExecutableElement>();
+    private List<ProxyMethodInfo> collectProxyMethods(DependencyModel dep) {
+        var methods = new ArrayList<ProxyMethodInfo>();
         var interfaceElement = elements.getTypeElement(dep.interfaceQualifiedName());
         if (interfaceElement != null) {
             for (var enclosed : interfaceElement.getEnclosedElements()) {
@@ -192,31 +194,29 @@ public class FactoryClassGenerator {
                     var method = (ExecutableElement) enclosed;
                     if (!method.getModifiers().contains(Modifier.STATIC) &&
                         !method.getModifiers().contains(Modifier.DEFAULT) &&
-                        method.getParameters().size() == 1 &&
-                        extractPromiseTypeArg(method.getReturnType()) != null) {
-                        methods.add(method);
+                        method.getParameters().size() == 1) {
+                        var responseType = extractPromiseTypeArg(method.getReturnType());
+                        if (responseType != null) {
+                            var paramType = method.getParameters().getFirst().asType().toString();
+                            methods.add(new ProxyMethodInfo(method.getSimpleName().toString(), responseType, paramType));
+                        }
                     }
                 }
             }
         }
+        return methods;
+    }
 
-        // Generate class (not record) to support lazy handle fields
-        out.println("        final class " + className + " implements " + interfaceName + " {");
-        out.println("            private static final String ARTIFACT = \"" + artifact + "\";");
-        out.println("            private final SliceInvokerFacade invoker;");
+    private void generateLocalProxyRecord(PrintWriter out, DependencyModel dep) {
+        var recordName = dep.localRecordName();
+        var interfaceName = dep.interfaceSimpleName();
+        var methods = collectProxyMethods(dep);
 
-        // Generate handle fields for each method
-        for (var method : methods) {
-            var methodName = method.getSimpleName().toString();
-            var responseType = extractPromiseTypeArg(method.getReturnType());
-            var paramType = method.getParameters().getFirst().asType().toString();
-            out.println("            private MethodHandle<" + responseType + ", " + paramType + "> " + methodName + "Handle;");
-        }
-
-        out.println();
-        out.println("            " + className + "(SliceInvokerFacade invoker) {");
-        out.println("                this.invoker = invoker;");
-        out.println("            }");
+        // Generate record with MethodHandle components
+        var components = methods.stream()
+                                .map(m -> "MethodHandle<" + m.responseType + ", " + m.paramType + "> " + m.name + "Handle")
+                                .toList();
+        out.println("        record " + recordName + "(" + String.join(", ", components) + ") implements " + interfaceName + " {");
 
         // Generate method implementations
         for (var method : methods) {
@@ -226,29 +226,35 @@ public class FactoryClassGenerator {
         out.println("        }");
     }
 
-    private void generateProxyMethod(PrintWriter out, ExecutableElement method) {
-        var methodName = method.getSimpleName().toString();
-        var returnType = method.getReturnType();
-        var responseType = extractPromiseTypeArg(returnType);
-        var param = method.getParameters().getFirst();
-        var paramType = param.asType().toString();
-        var paramName = param.getSimpleName().toString();
-        var handleField = methodName + "Handle";
-
+    private void generateProxyMethod(PrintWriter out, ProxyMethodInfo method) {
         out.println();
         out.println("            @Override");
-        out.println("            public " + returnType + " " + methodName + "(" + paramType + " " + paramName + ") {");
-        out.println("                if (" + handleField + " == null) {");
-        out.println("                    var result = invoker.methodHandle(ARTIFACT, \"" + methodName + "\",");
-        out.println("                                                      new TypeToken<" + paramType + ">() {},");
-        out.println("                                                      new TypeToken<" + responseType + ">() {});");
-        out.println("                    if (result.isFailure()) {");
-        out.println("                        return Promise.failure(result.cause());");
-        out.println("                    }");
-        out.println("                    " + handleField + " = result.value();");
-        out.println("                }");
-        out.println("                return " + handleField + ".invoke(" + paramName + ");");
+        out.println("            public Promise<" + method.responseType + "> " + method.name + "(" + method.paramType + " request) {");
+        out.println("                return " + method.name + "Handle.invoke(request);");
         out.println("            }");
+    }
+
+    private void generateHandleCreation(PrintWriter out, DependencyModel dep) {
+        var artifact = dep.fullArtifact().or(() -> "UNRESOLVED");
+        var methods = collectProxyMethods(dep);
+
+        for (var method : methods) {
+            var handleVar = dep.parameterName() + "_" + method.name;
+            out.println("        var " + handleVar + " = invoker.methodHandle(\"" + artifact + "\", \"" + method.name + "\",");
+            out.println("                                                     new TypeToken<" + method.paramType + ">() {},");
+            out.println("                                                     new TypeToken<" + method.responseType + ">() {});");
+            out.println("        if (" + handleVar + ".isFailure()) {");
+            out.println("            return Promise.failure(" + handleVar + ".cause());");
+            out.println("        }");
+        }
+    }
+
+    private void generateProxyInstantiation(PrintWriter out, DependencyModel dep) {
+        var methods = collectProxyMethods(dep);
+        var handleArgs = methods.stream()
+                                .map(m -> dep.parameterName() + "_" + m.name + ".value()")
+                                .toList();
+        out.println("        var " + dep.parameterName() + " = new " + dep.localRecordName() + "(" + String.join(", ", handleArgs) + ");");
     }
 
     private void generateCreateSliceMethod(PrintWriter out, SliceModel model) {
