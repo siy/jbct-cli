@@ -114,9 +114,12 @@ public sealed interface GitHubContentFetcher permits GitHubContentFetcher.unused
      * @param destination Local destination path
      * @return Unit on success
      */
-    static Result<Unit> downloadFile(HttpOperations http, String repo, String branch, String remotePath, Path destination) {
-        return fetchFileContent(http, repo, branch, remotePath)
-                              .flatMap(content -> writeFile(destination, content));
+    static Result<Unit> downloadFile(HttpOperations http,
+                                     String repo,
+                                     String branch,
+                                     String remotePath,
+                                     Path destination) {
+        return fetchFileContent(http, repo, branch, remotePath).flatMap(content -> writeFile(destination, content));
     }
 
     private static Result<String> extractSha(String body) {
@@ -129,8 +132,8 @@ public sealed interface GitHubContentFetcher permits GitHubContentFetcher.unused
     }
 
     private static List<String> extractPaths(String body, String pathPrefix) {
-        var pattern = Pattern.compile(
-            "\\{[^}]*\"path\"\\s*:\\s*\"(" + Pattern.quote(pathPrefix) + "[^\"]+)\"[^}]*\"type\"\\s*:\\s*\"blob\"[^}]*\\}");
+        var pattern = Pattern.compile("\\{[^}]*\"path\"\\s*:\\s*\"(" + Pattern.quote(pathPrefix)
+                                      + "[^\"]+)\"[^}]*\"type\"\\s*:\\s*\"blob\"[^}]*\\}");
         return pattern.matcher(body)
                       .results()
                       .map(match -> match.group(1))

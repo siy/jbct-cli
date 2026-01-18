@@ -37,20 +37,16 @@ public class VerifySliceMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
-            getLog()
-                  .info("Skipping slice verification");
+            getLog().info("Skipping slice verification");
             return;
         }
-        getLog()
-              .info("Validating slice configuration...");
+        getLog().info("Validating slice configuration...");
         var result = validateSlice();
         for (var warning : result.warnings()) {
-            getLog()
-                  .warn(warning);
+            getLog().warn(warning);
         }
         for (var error : result.errors()) {
-            getLog()
-                  .error(error);
+            getLog().error(error);
         }
         if (!result.errors()
                    .isEmpty()) {
@@ -62,8 +58,7 @@ public class VerifySliceMojo extends AbstractMojo {
             throw new MojoFailureException("Slice validation failed with " + result.warnings()
                                                                                   .size() + " warning(s)");
         }
-        getLog()
-              .info("Slice validation passed");
+        getLog().info("Slice validation passed");
     }
 
     private ValidationResult validateSlice() {

@@ -5,7 +5,6 @@ import org.pragmatica.jbct.lint.LintContext;
 import org.pragmatica.jbct.lint.cst.CstLintRule;
 import org.pragmatica.jbct.parser.Java25Parser.CstNode;
 import org.pragmatica.jbct.parser.Java25Parser.RuleId;
-
 import org.pragmatica.lang.Option;
 
 import java.util.HashMap;
@@ -92,15 +91,14 @@ public class CstParsingUtilitiesRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-        return findAll(root, RuleId.MethodDecl.class)
-                      .stream()
+        return findAll(root, RuleId.MethodDecl.class).stream()
                       .flatMap(method -> findJdkParsing(method, source, ctx));
     }
 

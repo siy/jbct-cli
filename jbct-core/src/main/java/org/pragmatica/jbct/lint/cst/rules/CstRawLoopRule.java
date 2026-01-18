@@ -25,23 +25,21 @@ public class CstRawLoopRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find all loop statements
-        return findAll(root, RuleId.Stmt.class)
-                      .stream()
+        return findAll(root, RuleId.Stmt.class).stream()
                       .filter(stmt -> isLoopStatement(stmt, source))
                       .map(stmt -> createDiagnostic(stmt, source, ctx));
     }
 
     private boolean isLoopStatement(CstNode stmt, String source) {
-        var stmtText = text(stmt, source)
-                           .trim();
+        var stmtText = text(stmt, source).trim();
         // Check for traditional for loop (exclude enhanced for-each which contains ":")
         if (stmtText.startsWith("for ") || stmtText.startsWith("for(")) {
             // Enhanced for-each has colon before the closing paren
@@ -59,8 +57,7 @@ public class CstRawLoopRule implements CstLintRule {
     }
 
     private Diagnostic createDiagnostic(CstNode stmt, String source, LintContext ctx) {
-        var stmtText = text(stmt, source)
-                           .trim();
+        var stmtText = text(stmt, source).trim();
         var loopType = stmtText.startsWith("for")
                        ? "for"
                        : stmtText.startsWith("while")

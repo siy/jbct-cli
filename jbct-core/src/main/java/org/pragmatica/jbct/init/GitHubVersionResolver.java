@@ -7,8 +7,6 @@ import org.pragmatica.lang.Option;
 import org.pragmatica.lang.Result;
 import org.pragmatica.lang.Unit;
 import org.pragmatica.lang.utils.Causes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,15 +18,22 @@ import java.time.Instant;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Resolves latest versions from GitHub Releases.
  * Caches results for 24 hours to avoid excessive API calls.
  */
 public final class GitHubVersionResolver {
     private static final Logger LOG = LoggerFactory.getLogger(GitHubVersionResolver.class);
-    private static final Path CACHE_FILE = Path.of(System.getProperty("user.home"), ".jbct", "cache", "versions.properties");
-    private static final long CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+    private static final Path CACHE_FILE = Path.of(System.getProperty("user.home"),
+                                                   ".jbct",
+                                                   "cache",
+                                                   "versions.properties");
+    private static final long CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
+    // 24 hours
     private static final String GITHUB_API_BASE = "https://api.github.com/repos";
     private static final Pattern TAG_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"v?([^\"]+)\"");
 
@@ -80,7 +85,7 @@ public final class GitHubVersionResolver {
         var cachedVersion = cache.getProperty(cacheKey);
         var timestampStr = cache.getProperty(timestampKey);
         if (cachedVersion != null && timestampStr != null) {
-            try {
+            try{
                 var timestamp = Long.parseLong(timestampStr);
                 if (System.currentTimeMillis() - timestamp < CACHE_TTL_MS) {
                     return cachedVersion;
@@ -90,14 +95,14 @@ public final class GitHubVersionResolver {
             }
         }
         // Fetch from GitHub
-        return fetchLatestVersion(owner, repo)
-                                             .onSuccess(version -> updateCache(cacheKey, timestampKey, version))
-                                             .fold(_ -> defaultVersion, version -> version);
+        return fetchLatestVersion(owner, repo).onSuccess(version -> updateCache(cacheKey, timestampKey, version))
+                                 .fold(_ -> defaultVersion, version -> version);
     }
 
     private void updateCache(String cacheKey, String timestampKey, String version) {
         cache.setProperty(cacheKey, version);
-        cache.setProperty(timestampKey, String.valueOf(System.currentTimeMillis()));
+        cache.setProperty(timestampKey,
+                          String.valueOf(System.currentTimeMillis()));
         saveCache();
     }
 
@@ -151,7 +156,9 @@ public final class GitHubVersionResolver {
     public Result<Unit> clearCache() {
         cache.clear();
         return Result.lift(Causes::fromThrowable,
-                           () -> { Files.deleteIfExists(CACHE_FILE); });
+                           () -> {
+                               Files.deleteIfExists(CACHE_FILE);
+                           });
     }
 
     /**

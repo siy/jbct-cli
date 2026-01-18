@@ -37,16 +37,14 @@ public class CstFormatter {
     }
 
     public Result<SourceFile> format(SourceFile source) {
-        return parse(source)
-                    .map(cst -> formatCst(cst,
-                                          source.content()))
+        return parse(source).map(cst -> formatCst(cst,
+                                                  source.content()))
                     .map(source::withContent);
     }
 
     public Result<Boolean> isFormatted(SourceFile source) {
-        return format(source)
-                     .map(formatted -> formatted.content()
-                                                .equals(source.content()));
+        return format(source).map(formatted -> formatted.content()
+                                                        .equals(source.content()));
     }
 
     private Result<CstNode> parse(SourceFile source) {

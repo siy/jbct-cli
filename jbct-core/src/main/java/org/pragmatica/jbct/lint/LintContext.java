@@ -125,8 +125,7 @@ public record LintContext(List<Pattern> businessPackagePatterns,
      * Factory method from JbctConfig.
      */
     public static LintContext fromConfig(org.pragmatica.jbct.config.JbctConfig jbctConfig) {
-        return lintContext(jbctConfig.businessPackages())
-                          .withSlicePackages(jbctConfig.slicePackages())
+        return lintContext(jbctConfig.businessPackages()).withSlicePackages(jbctConfig.slicePackages())
                           .withConfig(jbctConfig.lint());
     }
 }

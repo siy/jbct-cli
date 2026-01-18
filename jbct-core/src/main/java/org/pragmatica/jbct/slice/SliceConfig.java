@@ -11,21 +11,19 @@ import java.nio.file.Path;
  * Located in src/main/resources/slices/
  */
 public record SliceConfig(BlueprintConfig blueprint) {
-
     /**
      * Blueprint-related configuration.
      */
     public record BlueprintConfig(int instances,
-                                   Option<Integer> timeoutMs,
-                                   Option<Integer> memoryMb,
-                                   Option<String> loadBalancing,
-                                   Option<String> affinityKey) {
-
+                                  Option<Integer> timeoutMs,
+                                  Option<Integer> memoryMb,
+                                  Option<String> loadBalancing,
+                                  Option<String> affinityKey) {
         public static BlueprintConfig blueprintConfig(int instances,
-                                                       Option<Integer> timeoutMs,
-                                                       Option<Integer> memoryMb,
-                                                       Option<String> loadBalancing,
-                                                       Option<String> affinityKey) {
+                                                      Option<Integer> timeoutMs,
+                                                      Option<Integer> memoryMb,
+                                                      Option<String> loadBalancing,
+                                                      Option<String> affinityKey) {
             return new BlueprintConfig(instances, timeoutMs, memoryMb, loadBalancing, affinityKey);
         }
 
@@ -56,13 +54,7 @@ public record SliceConfig(BlueprintConfig blueprint) {
         var memoryMb = toml.getInt("blueprint", "memory_mb");
         var loadBalancing = toml.getString("blueprint", "load_balancing");
         var affinityKey = toml.getString("blueprint", "affinity_key");
-
-        var blueprint = BlueprintConfig.blueprintConfig(instances,
-                                                        timeoutMs,
-                                                        memoryMb,
-                                                        loadBalancing,
-                                                        affinityKey);
-
+        var blueprint = BlueprintConfig.blueprintConfig(instances, timeoutMs, memoryMb, loadBalancing, affinityKey);
         return new SliceConfig(blueprint);
     }
 }

@@ -23,30 +23,27 @@ public class CstVoidTypeRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find methods returning Void (boxed)
-        return findAll(root, RuleId.MethodDecl.class)
-                      .stream()
+        return findAll(root, RuleId.MethodDecl.class).stream()
                       .filter(method -> returnsBoxedVoid(method, source))
                       .map(method -> createDiagnostic(method, source, ctx));
     }
 
     private boolean returnsBoxedVoid(CstNode method, String source) {
-        return childByRule(method, RuleId.Type.class)
-                       .map(type -> text(type, source).trim())
-                       .filter(typeText -> typeText.equals("Void") || typeText.contains("<Void>"))
-                       .isPresent();
+        return childByRule(method, RuleId.Type.class).map(type -> text(type, source).trim())
+                          .filter(typeText -> typeText.equals("Void") || typeText.contains("<Void>"))
+                          .isPresent();
     }
 
     private Diagnostic createDiagnostic(CstNode method, String source, LintContext ctx) {
-        var methodName = childByRule(method, RuleId.Identifier.class)
-                                    .map(id -> text(id, source))
+        var methodName = childByRule(method, RuleId.Identifier.class).map(id -> text(id, source))
                                     .or("(unknown)");
         return Diagnostic.diagnostic(RULE_ID,
                                      ctx.severityFor(RULE_ID),

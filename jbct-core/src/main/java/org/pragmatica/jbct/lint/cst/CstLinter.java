@@ -51,16 +51,14 @@ public class CstLinter {
      * Lint a source file.
      */
     public Result<List<Diagnostic>> lint(SourceFile source) {
-        return parse(source)
-                    .map(cst -> analyzeWithRules(cst, source));
+        return parse(source).map(cst -> analyzeWithRules(cst, source));
     }
 
     /**
      * Check if source passes lint rules.
      */
     public Result<Boolean> check(SourceFile source) {
-        return lint(source)
-                   .map(this::passesLintRules);
+        return lint(source).map(this::passesLintRules);
     }
 
     private boolean passesLintRules(List<Diagnostic> diagnostics) {

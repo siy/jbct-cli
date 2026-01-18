@@ -23,16 +23,15 @@ public class CstConditionalLoggingRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find if statements wrapping log calls
-        return findAll(root, RuleId.Stmt.class)
-                      .stream()
+        return findAll(root, RuleId.Stmt.class).stream()
                       .filter(stmt -> isConditionalLogging(stmt, source))
                       .map(stmt -> createDiagnostic(stmt, ctx));
     }

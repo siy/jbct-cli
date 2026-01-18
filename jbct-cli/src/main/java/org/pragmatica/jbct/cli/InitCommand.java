@@ -123,7 +123,8 @@ public class InitCommand implements Callable<Integer> {
                 aiToolsInstalled = installer.install()
                                             .onFailure(cause -> System.err.println("Warning: Failed to install AI tools: " + cause.message()))
                                             .onSuccess(this::printAiToolsResult)
-                                            .fold(_ -> false, files -> !files.isEmpty());
+                                            .fold(_ -> false,
+                                                  files -> !files.isEmpty());
             }
         }
         // Print summary
@@ -148,8 +149,11 @@ public class InitCommand implements Callable<Integer> {
 
     private boolean initRegularProject() {
         var initializer = hasVersionOverrides()
-                          ? ProjectInitializer.projectInitializer(projectDir, groupId, artifactId,
-                                                                  effectiveJbctVersion(), effectivePragmaticaVersion())
+                          ? ProjectInitializer.projectInitializer(projectDir,
+                                                                  groupId,
+                                                                  artifactId,
+                                                                  effectiveJbctVersion(),
+                                                                  effectivePragmaticaVersion())
                           : ProjectInitializer.projectInitializer(projectDir, groupId, artifactId);
         return initializer.initialize()
                           .onFailure(cause -> System.err.println("Error: " + cause.message()))
@@ -191,7 +195,8 @@ public class InitCommand implements Callable<Integer> {
     private boolean initSliceProject() {
         return SliceProjectInitializer.sliceProjectInitializer(projectDir, groupId, artifactId)
                                       .flatMap(initializer -> initializer.initialize()
-                                                                         .onSuccess(createdFiles -> printSliceCreatedFiles(createdFiles, initializer.sliceName())))
+                                                                         .onSuccess(createdFiles -> printSliceCreatedFiles(createdFiles,
+                                                                                                                           initializer.sliceName())))
                                       .onFailure(cause -> System.err.println("Error: " + cause.message()))
                                       .fold(_ -> false, _ -> true);
     }

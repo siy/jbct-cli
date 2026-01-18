@@ -63,13 +63,14 @@ public record ErrorPatternConfig(int defaultStatus,
      */
     public ErrorPatternConfig merge(Option<ErrorPatternConfig> other) {
         return other.map(o -> {
-            var mergedDefault = o.defaultStatus != 500
-                                ? o.defaultStatus
-                                : this.defaultStatus;
-            var mergedPatterns = mergePatterns(this.statusPatterns, o.statusPatterns);
-            var mergedExplicit = mergeMappings(this.explicitMappings, o.explicitMappings);
-            return errorPatternConfig(mergedDefault, mergedPatterns, mergedExplicit);
-        }).or(this);
+                             var mergedDefault = o.defaultStatus != 500
+                                                 ? o.defaultStatus
+                                                 : this.defaultStatus;
+                             var mergedPatterns = mergePatterns(this.statusPatterns, o.statusPatterns);
+                             var mergedExplicit = mergeMappings(this.explicitMappings, o.explicitMappings);
+                             return errorPatternConfig(mergedDefault, mergedPatterns, mergedExplicit);
+                         })
+                    .or(this);
     }
 
     private static Map<Integer, List<String>> mergePatterns(Map<Integer, List<String>> base,

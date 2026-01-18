@@ -47,7 +47,8 @@ public class ApiInterfaceGenerator {
             javaFile.writeTo(filer);
             return Result.success(Unit.unit());
         } catch (Exception e) {
-            return Causes.cause("Failed to generate API interface: " + e.getClass().getSimpleName() + ": " + e.getMessage())
+            return Causes.cause("Failed to generate API interface: " + e.getClass()
+                                                                        .getSimpleName() + ": " + e.getMessage())
                          .result();
         }
     }

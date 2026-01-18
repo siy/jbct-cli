@@ -1,16 +1,22 @@
 # Changelog
 
-## [0.5.0] - 2026-01-16
+## [0.5.0] - 2026-01-18
 
 ### Added
 - Security: `SecurityError` sealed interface with `PathTraversal`, `InvalidUrl`, `UntrustedDomain` error types
 - Security: `PathValidation` utility rejects path traversal attempts (`..`, absolute paths, escaping base)
 - Security: `UrlValidation` utility enforces HTTPS and GitHub domain whitelist
 - Shared: `GitHubContentFetcher` extracts common GitHub API patterns (commit SHA, file discovery, downloads)
+- Slice processor: `@Aspect` and `@Key` annotation processing for cache-wrapped slice methods
+- Slice processor: `AspectModel` and `KeyExtractorInfo` model classes for aspect metadata
 - Slice processor: method name validation per RFC-0001 (must match `^[a-z][a-zA-Z0-9]+$`)
 
 ### Changed
 - Slice processor: proxy generation uses `TypeToken<R>` instead of `Class<R>` per aether SliceInvokerFacade
+- Slice processor: `KeyExtractorInfo` uses Result-returning factories with validation
+- Slice processor: `MethodModel` extracts lambdas to named methods, uses stream-based processing
+- Linter: JBCT-STY-03 now flags `java.lang.*` FQCNs (use `@SuppressWarnings("JBCT-STY-03")` if unavoidable)
+- Logging: `RouteConfigLoader` uses `System.Logger` (JEP 264) instead of `java.util.logging`
 - Null policy: replaced nullable params with `Option<T>` in merge methods (`JbctConfig`, `RouteConfig`, `ErrorPatternConfig`)
 - Null policy: `fullPath()`, `findMatchingPattern()`, `extractPromiseTypeArg()` now return `Option<T>`
 - Composition: extracted complex lambdas to named methods across codebase
@@ -22,6 +28,8 @@
 
 ### Fixed
 - Slice processor: factory method name follows RFC-0001 (`{sliceName}` not `create`)
+- Slice processor: `RouteSourceGenerator` escapes paths and query param names in generated code
+- Slice processor: `DependencyModel.localRecordName()` handles empty strings and acronyms
 - Security: URL validation in `JarInstaller` before downloading
 - Security: path validation in `AiToolsUpdater` and `AiToolsInstaller` before file operations
 - Null policy: `ErrorTypeDiscovery.causeType` field uses `Option<TypeMirror>`

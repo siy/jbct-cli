@@ -34,97 +34,82 @@ public record MethodModel(String name,
     public static Result<MethodModel> methodModel(ExecutableElement method, ProcessingEnvironment env) {
         var name = method.getSimpleName()
                          .toString();
-
-        if (!METHOD_NAME_PATTERN.matcher(name).matches()) {
-            return Causes.cause("Invalid slice method name '" + name +
-                               "': must start with lowercase letter and contain only alphanumeric characters")
+        if (!METHOD_NAME_PATTERN.matcher(name)
+                                .matches()) {
+            return Causes.cause("Invalid slice method name '" + name
+                                + "': must start with lowercase letter and contain only alphanumeric characters")
                          .result();
         }
-
         var returnType = method.getReturnType();
-
         return validatePromiseReturnType(returnType, name)
-                   .flatMap(_ -> validateAndBuildModel(method, env, name, returnType));
+        .flatMap(_ -> validateAndBuildModel(method, env, name, returnType));
     }
 
     private static Result<MethodModel> validateAndBuildModel(ExecutableElement method,
-                                                              ProcessingEnvironment env,
-                                                              String name,
-                                                              TypeMirror returnType) {
+                                                             ProcessingEnvironment env,
+                                                             String name,
+                                                             TypeMirror returnType) {
         var responseType = extractPromiseTypeArg(returnType);
         var params = method.getParameters();
-
         if (params.size() != 1) {
             return Causes.cause("Slice methods must have exactly one parameter: " + name)
                          .result();
         }
-
         var param = params.getFirst();
         var deprecated = method.getAnnotation(Deprecated.class) != null;
-
         return extractAspects(method, param, env)
-                   .map(aspects -> new MethodModel(name,
-                                                   returnType,
-                                                   responseType,
-                                                   param.asType(),
-                                                   param.getSimpleName()
-                                                        .toString(),
-                                                   deprecated,
-                                                   aspects));
+        .map(aspects -> new MethodModel(name,
+                                        returnType,
+                                        responseType,
+                                        param.asType(),
+                                        param.getSimpleName()
+                                             .toString(),
+                                        deprecated,
+                                        aspects));
     }
 
     private static Result<Unit> validatePromiseReturnType(TypeMirror returnType, String methodName) {
-        if (!(returnType instanceof DeclaredType dt)) {
-            return Causes.cause("Slice method '" + methodName +
-                               "' must return Promise<T>, found: " + returnType)
+        if (! (returnType instanceof DeclaredType dt)) {
+            return Causes.cause("Slice method '" + methodName + "' must return Promise<T>, found: " + returnType)
                          .result();
         }
-
         var typeElement = dt.asElement();
-        if (!(typeElement instanceof TypeElement te)) {
-            return Causes.cause("Slice method '" + methodName +
-                               "' must return Promise<T>, found: " + returnType)
+        if (! (typeElement instanceof TypeElement te)) {
+            return Causes.cause("Slice method '" + methodName + "' must return Promise<T>, found: " + returnType)
                          .result();
         }
-
         var qualifiedName = te.getQualifiedName()
                               .toString();
         if (!qualifiedName.equals(PROMISE_TYPE)) {
-            return Causes.cause("Slice method '" + methodName +
-                               "' must return Promise<T>, found: " + qualifiedName)
+            return Causes.cause("Slice method '" + methodName + "' must return Promise<T>, found: " + qualifiedName)
                          .result();
         }
-
         if (dt.getTypeArguments()
               .isEmpty()) {
-            return Causes.cause("Slice method '" + methodName +
-                               "' must return Promise<T> with type argument, found raw Promise")
+            return Causes.cause("Slice method '" + methodName
+                                + "' must return Promise<T> with type argument, found raw Promise")
                          .result();
         }
-
         return Result.success(Unit.unit());
     }
 
     private static Result<AspectModel> extractAspects(ExecutableElement method,
-                                                       VariableElement param,
-                                                       ProcessingEnvironment env) {
+                                                      VariableElement param,
+                                                      ProcessingEnvironment env) {
         return findAnnotationMirror(method, ASPECT_ANNOTATION)
-                   .fold(() -> Result.success(AspectModel.none()),
-                         mirror -> buildAspectModel(mirror, param, env));
+        .fold(() -> Result.success(AspectModel.none()),
+              mirror -> buildAspectModel(mirror, param, env));
     }
 
     private static Result<AspectModel> buildAspectModel(AnnotationMirror mirror,
-                                                         VariableElement param,
-                                                         ProcessingEnvironment env) {
+                                                        VariableElement param,
+                                                        ProcessingEnvironment env) {
         var kinds = extractAspectKinds(mirror);
         var hasCache = kinds.contains("CACHE");
-
         if (!hasCache) {
             return Result.success(new AspectModel(kinds, Option.none()));
         }
-
-        return extractKeyInfo(param.asType(), env)
-                   .map(keyInfo -> new AspectModel(kinds, keyInfo));
+        return extractKeyInfo(param.asType(), env).map(keyInfo -> new AspectModel(kinds, keyInfo));
     }
 
     private static Option<AnnotationMirror> findAnnotationMirror(Element element, String annotationName) {
@@ -140,9 +125,9 @@ public record MethodModel(String name,
         var annotationType = mirror.getAnnotationType()
                                    .asElement();
         return annotationType instanceof TypeElement te &&
-               te.getQualifiedName()
-                 .toString()
-                 .equals(annotationName);
+        te.getQualifiedName()
+          .toString()
+          .equals(annotationName);
     }
 
     private static List<String> extractAspectKinds(AnnotationMirror aspectMirror) {
@@ -160,7 +145,7 @@ public record MethodModel(String name,
     @SuppressWarnings("unchecked")
     private static List<String> extractKindsFromValue(AnnotationValue annotationValue) {
         var value = annotationValue.getValue();
-        if (!(value instanceof List<?> list)) {
+        if (! (value instanceof List<?> list)) {
             return List.of();
         }
         return list.stream()
@@ -169,37 +154,33 @@ public record MethodModel(String name,
                    .map(AnnotationValue::getValue)
                    .filter(VariableElement.class::isInstance)
                    .map(VariableElement.class::cast)
-                   .map(ve -> ve.getSimpleName().toString())
+                   .map(ve -> ve.getSimpleName()
+                                .toString())
                    .toList();
     }
 
     private static Result<Option<KeyExtractorInfo>> extractKeyInfo(TypeMirror paramType,
-                                                                    ProcessingEnvironment env) {
-        if (!(paramType instanceof DeclaredType dt)) {
+                                                                   ProcessingEnvironment env) {
+        if (! (paramType instanceof DeclaredType dt)) {
             return KeyExtractorInfo.identity(paramType.toString())
                                    .map(Option::some);
         }
-
         var element = dt.asElement();
         if (element.getKind() != ElementKind.RECORD) {
             return KeyExtractorInfo.identity(paramType.toString())
                                    .map(Option::some);
         }
-
         var typeElement = (TypeElement) element;
         var keyFields = findKeyAnnotatedFields(typeElement);
-
         if (keyFields.isEmpty()) {
             return KeyExtractorInfo.identity(paramType.toString())
                                    .map(Option::some);
         }
-
         if (keyFields.size() > 1) {
-            return Causes.cause("Multiple @Key annotations found on " + typeElement.getSimpleName() +
-                               ". Only one @Key field is allowed per record.")
+            return Causes.cause("Multiple @Key annotations found on " + typeElement.getSimpleName()
+                                + ". Only one @Key field is allowed per record.")
                          .result();
         }
-
         return buildKeyExtractorFromField(keyFields.getFirst(), typeElement);
     }
 
@@ -213,14 +194,13 @@ public record MethodModel(String name,
     }
 
     private static Result<Option<KeyExtractorInfo>> buildKeyExtractorFromField(RecordComponentElement keyField,
-                                                                                TypeElement typeElement) {
+                                                                               TypeElement typeElement) {
         var keyType = keyField.asType()
                               .toString();
         var fieldName = keyField.getSimpleName()
                                 .toString();
         var paramTypeName = typeElement.getQualifiedName()
                                        .toString();
-
         return KeyExtractorInfo.single(keyType, fieldName, paramTypeName)
                                .map(Option::some);
     }

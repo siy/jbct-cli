@@ -67,13 +67,12 @@ public final class GitHubReleaseChecker {
      */
     public Result<Option<ReleaseInfo>> checkForUpdate(String currentVersion) {
         return checkLatestRelease()
-                                 .map(release -> {
-                                          if (isNewerVersion(currentVersion,
-                                                             release.version())) {
-                                              return Option.option(release);
-                                          }
-                                          return Option.none();
-                                      });
+        .map(release -> {
+                 if (isNewerVersion(currentVersion, release.version())) {
+                     return Option.option(release);
+                 }
+                 return Option.none();
+             });
     }
 
     private Result<ReleaseInfo> handleResponse(HttpResult<String> response) {
@@ -152,7 +151,6 @@ public final class GitHubReleaseChecker {
      */
     public record ReleaseInfo(String version,
                               Option<String> downloadUrl) {
-
         public static ReleaseInfo releaseInfo(String version, Option<String> downloadUrl) {
             return new ReleaseInfo(version, downloadUrl);
         }

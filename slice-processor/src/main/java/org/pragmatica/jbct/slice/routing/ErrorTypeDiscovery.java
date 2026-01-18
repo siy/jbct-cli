@@ -98,7 +98,8 @@ public final class ErrorTypeDiscovery {
     }
 
     private boolean implementsCause(TypeElement element, javax.lang.model.util.Types types) {
-        return causeType.map(ct -> types.isAssignable(element.asType(), ct))
+        return causeType.map(ct -> types.isAssignable(element.asType(),
+                                                      ct))
                         .or(false);
     }
 

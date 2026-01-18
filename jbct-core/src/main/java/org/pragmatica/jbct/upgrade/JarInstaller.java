@@ -6,8 +6,6 @@ import org.pragmatica.jbct.shared.UrlValidation;
 import org.pragmatica.lang.Option;
 import org.pragmatica.lang.Result;
 import org.pragmatica.lang.utils.Causes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Downloads and installs JBCT JAR files.
@@ -89,8 +90,7 @@ public final class JarInstaller {
      * @return Success with installed path, or failure with error
      */
     public Result<Path> install(String downloadUrl, Path targetPath) {
-        return download(downloadUrl)
-                       .flatMap(tempFile -> installFromTemp(tempFile, targetPath));
+        return download(downloadUrl).flatMap(tempFile -> installFromTemp(tempFile, targetPath));
     }
 
     /**
@@ -102,7 +102,7 @@ public final class JarInstaller {
     }
 
     private Result<Path> downloadFromUri(URI uri) {
-        try {
+        try{
             var tempFile = Files.createTempFile("jbct-download-", ".jar");
             var request = HttpRequest.newBuilder()
                                      .uri(uri)
@@ -118,10 +118,12 @@ public final class JarInstaller {
                                         return Result.success(response.body());
                                     } else {
                                         // Best-effort cleanup of temp file on failure
-                                        try {
+            try{
                                             Files.deleteIfExists(tempFile);
                                         } catch (IOException cleanupError) {
-                                            LOG.debug("Failed to cleanup temp file {}: {}", tempFile, cleanupError.getMessage());
+                                            LOG.debug("Failed to cleanup temp file {}: {}",
+                                                      tempFile,
+                                                      cleanupError.getMessage());
                                         }
                                         return response.toResult();
                                     }
@@ -156,12 +158,14 @@ public final class JarInstaller {
             }
             // Remove backup on success - best effort cleanup
             backup.onPresent(backupPath -> {
-                try {
-                    Files.deleteIfExists(backupPath);
-                } catch (IOException cleanupError) {
-                    LOG.debug("Failed to cleanup backup file {}: {}", backupPath, cleanupError.getMessage());
-                }
-            });
+                                 try{
+                                     Files.deleteIfExists(backupPath);
+                                 } catch (IOException cleanupError) {
+                                     LOG.debug("Failed to cleanup backup file {}: {}",
+                                               backupPath,
+                                               cleanupError.getMessage());
+                                 }
+                             });
             return Result.success(targetPath);
         } catch (Exception e) {
             return Causes.cause("Installation failed: " + e.getMessage())
@@ -189,8 +193,7 @@ public final class JarInstaller {
      */
     public static Result<Path> createInstallDir() {
         try{
-            var installDir = defaultInstallPath()
-                                               .getParent()
+            var installDir = defaultInstallPath().getParent()
                                                .getParent();
             // ~/.jbct
             var binDir = installDir.resolve("bin");
@@ -212,10 +215,9 @@ public final class JarInstaller {
         var binDir = installDir.resolve("bin");
         return copyResource("/dist/bin/jbct",
                             binDir.resolve("jbct"),
-                            true)
-                           .flatMap(_ -> copyResource("/dist/bin/jbct.bat",
-                                                      binDir.resolve("jbct.bat"),
-                                                      false))
+                            true).flatMap(_ -> copyResource("/dist/bin/jbct.bat",
+                                                            binDir.resolve("jbct.bat"),
+                                                            false))
                            .map(_ -> installDir);
     }
 

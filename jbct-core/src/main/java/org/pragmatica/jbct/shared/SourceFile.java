@@ -16,9 +16,7 @@ public record SourceFile(Path path, String content) {
      * Factory method to create a SourceFile from a path by reading its content.
      */
     public static Result<SourceFile> sourceFile(Path path) {
-        return lift(Causes::fromThrowable,
-                    () -> Files.readString(path))
-                   .map(content -> new SourceFile(path, content));
+        return lift(Causes::fromThrowable, () -> Files.readString(path)).map(content -> new SourceFile(path, content));
     }
 
     /**

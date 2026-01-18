@@ -1547,7 +1547,6 @@ public final class Java25Parser {
     }
 
     public record SourceSpan(SourceLocation start, SourceLocation end) {
-
         public static SourceSpan sourceSpan(SourceLocation start, SourceLocation end) {
             return new SourceSpan(start, end);
         }
@@ -2069,8 +2068,7 @@ public final class Java25Parser {
      * The AST is a simplified tree without trivia (whitespace/comments).
      */
     public Result<AstNode> parseAst(String input) {
-        return parse(input)
-                    .map(this::toAst);
+        return parse(input).map(this::toAst);
     }
 
     private AstNode toAst(CstNode cst) {
@@ -2256,8 +2254,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -2285,8 +2282,7 @@ public final class Java25Parser {
                 if (zomElem5.isSuccess() && zomElem5.node.isPresent()) {
                     children.add(zomElem5.node.unwrap());
                 }
-                if (zomElem5.isFailure() || location()
-                                                    .offset() == beforeLoc5.offset()) {
+                if (zomElem5.isFailure() || location().offset() == beforeLoc5.offset()) {
                     restoreLocation(beforeLoc5);
                     break;
                 }
@@ -2346,8 +2342,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -2743,8 +2738,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -2859,8 +2853,7 @@ public final class Java25Parser {
                 if (zomElem9.isSuccess() && zomElem9.node.isPresent()) {
                     children.add(zomElem9.node.unwrap());
                 }
-                if (zomElem9.isFailure() || location()
-                                                    .offset() == beforeLoc9.offset()) {
+                if (zomElem9.isFailure() || location().offset() == beforeLoc9.offset()) {
                     restoreLocation(beforeLoc9);
                     break;
                 }
@@ -3107,8 +3100,7 @@ public final class Java25Parser {
                     children.addAll(savedChildren5);
                     zomElem3 = CstParseResult.failure("one of alternatives");
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -3321,8 +3313,7 @@ public final class Java25Parser {
                     if (zomElem9.isSuccess()) {
                         zomElem9 = CstParseResult.success(null, substring(seqStart11.offset(), pos), location());
                     }
-                    if (zomElem9.isFailure() || location()
-                                                        .offset() == beforeLoc9.offset()) {
+                    if (zomElem9.isFailure() || location().offset() == beforeLoc9.offset()) {
                         restoreLocation(beforeLoc9);
                         break;
                     }
@@ -3536,8 +3527,7 @@ public final class Java25Parser {
                     if (zomElem9.isSuccess()) {
                         zomElem9 = CstParseResult.success(null, substring(seqStart11.offset(), pos), location());
                     }
-                    if (zomElem9.isFailure() || location()
-                                                        .offset() == beforeLoc9.offset()) {
+                    if (zomElem9.isFailure() || location().offset() == beforeLoc9.offset()) {
                         restoreLocation(beforeLoc9);
                         break;
                     }
@@ -3841,8 +3831,7 @@ public final class Java25Parser {
                 if (zomElem6.isSuccess()) {
                     zomElem6 = CstParseResult.success(null, substring(seqStart8.offset(), pos), location());
                 }
-                if (zomElem6.isFailure() || location()
-                                                    .offset() == beforeLoc6.offset()) {
+                if (zomElem6.isFailure() || location().offset() == beforeLoc6.offset()) {
                     restoreLocation(beforeLoc6);
                     break;
                 }
@@ -3918,8 +3907,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -3947,8 +3935,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -4867,8 +4854,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -4949,8 +4935,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -4978,8 +4963,7 @@ public final class Java25Parser {
                 if (zomElem4.isSuccess() && zomElem4.node.isPresent()) {
                     children.add(zomElem4.node.unwrap());
                 }
-                if (zomElem4.isFailure() || location()
-                                                    .offset() == beforeLoc4.offset()) {
+                if (zomElem4.isFailure() || location().offset() == beforeLoc4.offset()) {
                     restoreLocation(beforeLoc4);
                     break;
                 }
@@ -6078,8 +6062,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -6205,8 +6188,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess()) {
                     zomElem3 = CstParseResult.success(null, substring(seqStart5.offset(), pos), location());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -6372,8 +6354,7 @@ public final class Java25Parser {
                     if (zomElem7.isSuccess()) {
                         zomElem7 = CstParseResult.success(null, substring(seqStart9.offset(), pos), location());
                     }
-                    if (zomElem7.isFailure() || location()
-                                                        .offset() == beforeLoc7.offset()) {
+                    if (zomElem7.isFailure() || location().offset() == beforeLoc7.offset()) {
                         restoreLocation(beforeLoc7);
                         break;
                     }
@@ -6467,8 +6448,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -6549,8 +6529,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -6578,8 +6557,7 @@ public final class Java25Parser {
                 if (zomElem4.isSuccess() && zomElem4.node.isPresent()) {
                     children.add(zomElem4.node.unwrap());
                 }
-                if (zomElem4.isFailure() || location()
-                                                    .offset() == beforeLoc4.offset()) {
+                if (zomElem4.isFailure() || location().offset() == beforeLoc4.offset()) {
                     restoreLocation(beforeLoc4);
                     break;
                 }
@@ -6930,8 +6908,7 @@ public final class Java25Parser {
                     if (zomElem8.isSuccess() && zomElem8.node.isPresent()) {
                         children.add(zomElem8.node.unwrap());
                     }
-                    if (zomElem8.isFailure() || location()
-                                                        .offset() == beforeLoc8.offset()) {
+                    if (zomElem8.isFailure() || location().offset() == beforeLoc8.offset()) {
                         restoreLocation(beforeLoc8);
                         break;
                     }
@@ -7077,8 +7054,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -7161,8 +7137,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -7397,8 +7372,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -7458,8 +7432,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -7570,8 +7543,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -7713,8 +7685,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -7742,8 +7713,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -7974,8 +7944,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -8245,8 +8214,7 @@ public final class Java25Parser {
                     if (zomElem7.isSuccess()) {
                         zomElem7 = CstParseResult.success(null, substring(seqStart9.offset(), pos), location());
                     }
-                    if (zomElem7.isFailure() || location()
-                                                        .offset() == beforeLoc7.offset()) {
+                    if (zomElem7.isFailure() || location().offset() == beforeLoc7.offset()) {
                         restoreLocation(beforeLoc7);
                         break;
                     }
@@ -8705,8 +8673,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -8766,8 +8733,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -8795,8 +8761,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -9223,8 +9188,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -9382,8 +9346,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -9411,8 +9374,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -9490,8 +9452,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -10355,8 +10316,7 @@ public final class Java25Parser {
                                     if (zomElem43.isSuccess() && zomElem43.node.isPresent()) {
                                         children.add(zomElem43.node.unwrap());
                                     }
-                                    if (zomElem43.isFailure() || location()
-                                                                         .offset() == beforeLoc43.offset()) {
+                                    if (zomElem43.isFailure() || location().offset() == beforeLoc43.offset()) {
                                         restoreLocation(beforeLoc43);
                                         break;
                                     }
@@ -12891,8 +12851,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -13054,8 +13013,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess()) {
                     zomElem3 = CstParseResult.success(null, substring(seqStart5.offset(), pos), location());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -13159,8 +13117,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -13366,8 +13323,7 @@ public final class Java25Parser {
                 if (zomElem4.isSuccess() && zomElem4.node.isPresent()) {
                     children.add(zomElem4.node.unwrap());
                 }
-                if (zomElem4.isFailure() || location()
-                                                    .offset() == beforeLoc4.offset()) {
+                if (zomElem4.isFailure() || location().offset() == beforeLoc4.offset()) {
                     restoreLocation(beforeLoc4);
                     break;
                 }
@@ -13446,8 +13402,7 @@ public final class Java25Parser {
                 if (zomElem7.isSuccess()) {
                     zomElem7 = CstParseResult.success(null, substring(seqStart9.offset(), pos), location());
                 }
-                if (zomElem7.isFailure() || location()
-                                                    .offset() == beforeLoc7.offset()) {
+                if (zomElem7.isFailure() || location().offset() == beforeLoc7.offset()) {
                     restoreLocation(beforeLoc7);
                     break;
                 }
@@ -13656,8 +13611,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -13971,8 +13925,7 @@ public final class Java25Parser {
                     if (zomElem17.isSuccess() && zomElem17.node.isPresent()) {
                         children.add(zomElem17.node.unwrap());
                     }
-                    if (zomElem17.isFailure() || location()
-                                                         .offset() == beforeLoc17.offset()) {
+                    if (zomElem17.isFailure() || location().offset() == beforeLoc17.offset()) {
                         restoreLocation(beforeLoc17);
                         break;
                     }
@@ -14224,8 +14177,7 @@ public final class Java25Parser {
                         if (zomElem15.isSuccess()) {
                             zomElem15 = CstParseResult.success(null, substring(seqStart17.offset(), pos), location());
                         }
-                        if (zomElem15.isFailure() || location()
-                                                             .offset() == beforeLoc15.offset()) {
+                        if (zomElem15.isFailure() || location().offset() == beforeLoc15.offset()) {
                             restoreLocation(beforeLoc15);
                             break;
                         }
@@ -14894,8 +14846,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -15517,8 +15468,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -15629,8 +15579,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -15783,8 +15732,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -15916,8 +15864,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -16070,8 +16017,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -16212,8 +16158,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -16764,8 +16709,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -17003,8 +16947,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -17272,8 +17215,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -17533,8 +17475,7 @@ public final class Java25Parser {
                     if (zomElem14.isSuccess()) {
                         zomElem14 = CstParseResult.success(null, substring(seqStart16.offset(), pos), location());
                     }
-                    if (zomElem14.isFailure() || location()
-                                                         .offset() == beforeLoc14.offset()) {
+                    if (zomElem14.isFailure() || location().offset() == beforeLoc14.offset()) {
                         restoreLocation(beforeLoc14);
                         break;
                     }
@@ -17675,8 +17616,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess() && zomElem2.node.isPresent()) {
                     children.add(zomElem2.node.unwrap());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -19482,8 +19422,7 @@ public final class Java25Parser {
                         if (zomElem7.isSuccess()) {
                             zomElem7 = CstParseResult.success(null, substring(seqStart9.offset(), pos), location());
                         }
-                        if (zomElem7.isFailure() || location()
-                                                            .offset() == beforeLoc7.offset()) {
+                        if (zomElem7.isFailure() || location().offset() == beforeLoc7.offset()) {
                             restoreLocation(beforeLoc7);
                             break;
                         }
@@ -19573,8 +19512,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -19602,8 +19540,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -19958,8 +19895,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -20070,8 +20006,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -20131,8 +20066,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -20546,8 +20480,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -20607,8 +20540,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -20711,8 +20643,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -20784,8 +20715,7 @@ public final class Java25Parser {
                         if (zomElem9.isSuccess() && zomElem9.node.isPresent()) {
                             children.add(zomElem9.node.unwrap());
                         }
-                        if (zomElem9.isFailure() || location()
-                                                            .offset() == beforeLoc9.offset()) {
+                        if (zomElem9.isFailure() || location().offset() == beforeLoc9.offset()) {
                             restoreLocation(beforeLoc9);
                             break;
                         }
@@ -20836,8 +20766,7 @@ public final class Java25Parser {
                 if (oomElem0.isSuccess()) {
                     oomElem0 = CstParseResult.success(null, substring(seqStart8.offset(), pos), location());
                 }
-                if (oomElem0.isFailure() || location()
-                                                    .offset() == beforeLoc0.offset()) {
+                if (oomElem0.isFailure() || location().offset() == beforeLoc0.offset()) {
                     restoreLocation(beforeLoc0);
                     break;
                 }
@@ -20884,8 +20813,7 @@ public final class Java25Parser {
                 if (zomElem1.isSuccess() && zomElem1.node.isPresent()) {
                     children.add(zomElem1.node.unwrap());
                 }
-                if (zomElem1.isFailure() || location()
-                                                    .offset() == beforeLoc1.offset()) {
+                if (zomElem1.isFailure() || location().offset() == beforeLoc1.offset()) {
                     restoreLocation(beforeLoc1);
                     break;
                 }
@@ -20996,8 +20924,7 @@ public final class Java25Parser {
                 if (zomElem3.isSuccess() && zomElem3.node.isPresent()) {
                     children.add(zomElem3.node.unwrap());
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -21143,8 +21070,7 @@ public final class Java25Parser {
                         if (zomElem16.isSuccess() && zomElem16.node.isPresent()) {
                             children.add(zomElem16.node.unwrap());
                         }
-                        if (zomElem16.isFailure() || location()
-                                                             .offset() == beforeLoc16.offset()) {
+                        if (zomElem16.isFailure() || location().offset() == beforeLoc16.offset()) {
                             restoreLocation(beforeLoc16);
                             break;
                         }
@@ -21269,8 +21195,7 @@ public final class Java25Parser {
                 if (oomElem0.isSuccess()) {
                     oomElem0 = CstParseResult.success(null, substring(seqStart15.offset(), pos), location());
                 }
-                if (oomElem0.isFailure() || location()
-                                                    .offset() == beforeLoc0.offset()) {
+                if (oomElem0.isFailure() || location().offset() == beforeLoc0.offset()) {
                     restoreLocation(beforeLoc0);
                     break;
                 }
@@ -21433,8 +21358,7 @@ public final class Java25Parser {
                     if (zomElem7.isSuccess()) {
                         zomElem7 = CstParseResult.success(null, substring(seqStart9.offset(), pos), location());
                     }
-                    if (zomElem7.isFailure() || location()
-                                                        .offset() == beforeLoc7.offset()) {
+                    if (zomElem7.isFailure() || location().offset() == beforeLoc7.offset()) {
                         restoreLocation(beforeLoc7);
                         break;
                     }
@@ -21564,8 +21488,7 @@ public final class Java25Parser {
                         if (zomElem7.isSuccess() && zomElem7.node.isPresent()) {
                             children.add(zomElem7.node.unwrap());
                         }
-                        if (zomElem7.isFailure() || location()
-                                                            .offset() == beforeLoc7.offset()) {
+                        if (zomElem7.isFailure() || location().offset() == beforeLoc7.offset()) {
                             restoreLocation(beforeLoc7);
                             break;
                         }
@@ -21824,8 +21747,7 @@ public final class Java25Parser {
                 if (zomElem2.isSuccess()) {
                     zomElem2 = CstParseResult.success(null, substring(seqStart4.offset(), pos), location());
                 }
-                if (zomElem2.isFailure() || location()
-                                                    .offset() == beforeLoc2.offset()) {
+                if (zomElem2.isFailure() || location().offset() == beforeLoc2.offset()) {
                     restoreLocation(beforeLoc2);
                     break;
                 }
@@ -21923,8 +21845,7 @@ public final class Java25Parser {
                     var beforeLoc6 = location();
                     if (!inTokenBoundary) skipWhitespace();
                     var zomElem6 = matchCharClassCst("a-zA-Z0-9_$", false, false);
-                    if (zomElem6.isFailure() || location()
-                                                        .offset() == beforeLoc6.offset()) {
+                    if (zomElem6.isFailure() || location().offset() == beforeLoc6.offset()) {
                         restoreLocation(beforeLoc6);
                         break;
                     }
@@ -22495,8 +22416,7 @@ public final class Java25Parser {
                 if (zomElem5.isSuccess()) {
                     zomElem5 = CstParseResult.success(null, substring(seqStart7.offset(), pos), location());
                 }
-                if (zomElem5.isFailure() || location()
-                                                    .offset() == beforeLoc5.offset()) {
+                if (zomElem5.isFailure() || location().offset() == beforeLoc5.offset()) {
                     restoreLocation(beforeLoc5);
                     break;
                 }
@@ -22676,8 +22596,7 @@ public final class Java25Parser {
                         if (zomElem8.isSuccess()) {
                             zomElem8 = CstParseResult.success(null, substring(seqStart10.offset(), pos), location());
                         }
-                        if (zomElem8.isFailure() || location()
-                                                            .offset() == beforeLoc8.offset()) {
+                        if (zomElem8.isFailure() || location().offset() == beforeLoc8.offset()) {
                             restoreLocation(beforeLoc8);
                             break;
                         }
@@ -23055,8 +22974,7 @@ public final class Java25Parser {
                 if (zomElem3 == null) {
                     zomElem3 = CstParseResult.failure("one of alternatives");
                 }
-                if (zomElem3.isFailure() || location()
-                                                    .offset() == beforeLoc3.offset()) {
+                if (zomElem3.isFailure() || location().offset() == beforeLoc3.offset()) {
                     restoreLocation(beforeLoc3);
                     break;
                 }
@@ -23192,8 +23110,7 @@ public final class Java25Parser {
                 if (zomElem4.isSuccess()) {
                     zomElem4 = CstParseResult.success(null, substring(seqStart6.offset(), pos), location());
                 }
-                if (zomElem4.isFailure() || location()
-                                                    .offset() == beforeLoc4.offset()) {
+                if (zomElem4.isFailure() || location().offset() == beforeLoc4.offset()) {
                     restoreLocation(beforeLoc4);
                     break;
                 }
@@ -23321,8 +23238,7 @@ public final class Java25Parser {
                     if (zomElem14 == null) {
                         zomElem14 = CstParseResult.failure("one of alternatives");
                     }
-                    if (zomElem14.isFailure() || location()
-                                                         .offset() == beforeLoc14.offset()) {
+                    if (zomElem14.isFailure() || location().offset() == beforeLoc14.offset()) {
                         restoreLocation(beforeLoc14);
                         break;
                     }
@@ -23452,8 +23368,7 @@ public final class Java25Parser {
                     var beforeLoc5 = location();
                     if (!inTokenBoundary) skipWhitespace();
                     var oomElem5 = matchCharClassCst("0-9a-fA-F_", false, false);
-                    if (oomElem5.isFailure() || location()
-                                                        .offset() == beforeLoc5.offset()) {
+                    if (oomElem5.isFailure() || location().offset() == beforeLoc5.offset()) {
                         restoreLocation(beforeLoc5);
                         break;
                     }
@@ -23554,8 +23469,7 @@ public final class Java25Parser {
                         var beforeLoc14 = location();
                         if (!inTokenBoundary) skipWhitespace();
                         var oomElem14 = matchCharClassCst("01_", false, false);
-                        if (oomElem14.isFailure() || location()
-                                                             .offset() == beforeLoc14.offset()) {
+                        if (oomElem14.isFailure() || location().offset() == beforeLoc14.offset()) {
                             restoreLocation(beforeLoc14);
                             break;
                         }
@@ -23640,8 +23554,7 @@ public final class Java25Parser {
                         var beforeLoc22 = location();
                         if (!inTokenBoundary) skipWhitespace();
                         var zomElem22 = matchCharClassCst("0-9_", false, false);
-                        if (zomElem22.isFailure() || location()
-                                                             .offset() == beforeLoc22.offset()) {
+                        if (zomElem22.isFailure() || location().offset() == beforeLoc22.offset()) {
                             restoreLocation(beforeLoc22);
                             break;
                         }
@@ -23682,8 +23595,7 @@ public final class Java25Parser {
                             var beforeLoc28 = location();
                             if (!inTokenBoundary) skipWhitespace();
                             var zomElem28 = matchCharClassCst("0-9_", false, false);
-                            if (zomElem28.isFailure() || location()
-                                                                 .offset() == beforeLoc28.offset()) {
+                            if (zomElem28.isFailure() || location().offset() == beforeLoc28.offset()) {
                                 restoreLocation(beforeLoc28);
                                 break;
                             }
@@ -23766,8 +23678,7 @@ public final class Java25Parser {
                                 var beforeLoc36 = location();
                                 if (!inTokenBoundary) skipWhitespace();
                                 var oomElem36 = matchCharClassCst("0-9_", false, false);
-                                if (oomElem36.isFailure() || location()
-                                                                     .offset() == beforeLoc36.offset()) {
+                                if (oomElem36.isFailure() || location().offset() == beforeLoc36.offset()) {
                                     restoreLocation(beforeLoc36);
                                     break;
                                 }
@@ -23874,8 +23785,7 @@ public final class Java25Parser {
                                 var beforeLoc44 = location();
                                 if (!inTokenBoundary) skipWhitespace();
                                 var oomElem44 = matchCharClassCst("0-9_", false, false);
-                                if (oomElem44.isFailure() || location()
-                                                                     .offset() == beforeLoc44.offset()) {
+                                if (oomElem44.isFailure() || location().offset() == beforeLoc44.offset()) {
                                     restoreLocation(beforeLoc44);
                                     break;
                                 }
@@ -23939,8 +23849,7 @@ public final class Java25Parser {
                                     var beforeLoc53 = location();
                                     if (!inTokenBoundary) skipWhitespace();
                                     var oomElem53 = matchCharClassCst("0-9_", false, false);
-                                    if (oomElem53.isFailure() || location()
-                                                                         .offset() == beforeLoc53.offset()) {
+                                    if (oomElem53.isFailure() || location().offset() == beforeLoc53.offset()) {
                                         restoreLocation(beforeLoc53);
                                         break;
                                     }
@@ -24875,8 +24784,7 @@ public final class Java25Parser {
                     while (true) {
                         var beforeLoc5 = location();
                         var zomElem5 = matchCharClassCst("\\n", true, false);
-                        if (zomElem5.isFailure() || location()
-                                                            .offset() == beforeLoc5.offset()) {
+                        if (zomElem5.isFailure() || location().offset() == beforeLoc5.offset()) {
                             restoreLocation(beforeLoc5);
                             break;
                         }
@@ -24956,8 +24864,7 @@ public final class Java25Parser {
                             if (zomElem9.isSuccess()) {
                                 zomElem9 = CstParseResult.success(null, substring(seqStart11.offset(), pos), location());
                             }
-                            if (zomElem9.isFailure() || location()
-                                                                .offset() == beforeLoc9.offset()) {
+                            if (zomElem9.isFailure() || location().offset() == beforeLoc9.offset()) {
                                 restoreLocation(beforeLoc9);
                                 break;
                             }

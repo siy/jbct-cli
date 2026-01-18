@@ -49,8 +49,7 @@ public final class AiToolsInstaller {
      * @return List of installed files
      */
     public Result<List<Path>> install() {
-        return ensureCachePopulated()
-                                   .flatMap(_ -> copyFromCache());
+        return ensureCachePopulated().flatMap(_ -> copyFromCache());
     }
 
     private Result<Unit> ensureCachePopulated() {

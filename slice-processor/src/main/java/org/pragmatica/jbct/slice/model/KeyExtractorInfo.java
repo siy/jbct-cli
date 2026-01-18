@@ -39,7 +39,8 @@ public record KeyExtractorInfo(String keyType, String extractorExpression) {
             return Causes.cause("Key type cannot be null or empty")
                          .result();
         }
-        if (fieldName == null || !JAVA_IDENTIFIER.matcher(fieldName).matches()) {
+        if (fieldName == null || !JAVA_IDENTIFIER.matcher(fieldName)
+                                                 .matches()) {
             return Causes.cause("Invalid field name for @Key: " + fieldName)
                          .result();
         }

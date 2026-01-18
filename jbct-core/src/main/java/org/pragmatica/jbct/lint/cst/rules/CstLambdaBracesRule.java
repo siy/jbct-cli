@@ -23,15 +23,14 @@ public class CstLambdaBracesRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-        return findAll(root, RuleId.Lambda.class)
-                      .stream()
+        return findAll(root, RuleId.Lambda.class).stream()
                       .filter(lambda -> hasBlockBody(lambda, source))
                       .map(lambda -> createDiagnostic(lambda, ctx));
     }

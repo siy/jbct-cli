@@ -23,28 +23,24 @@ public class CstNoBusinessExceptionsRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find classes extending Exception
-        var exceptionClasses = findAll(root, RuleId.ClassDecl.class)
-                                      .stream()
+        var exceptionClasses = findAll(root, RuleId.ClassDecl.class).stream()
                                       .filter(cls -> extendsException(cls, source))
                                       .map(cls -> createExceptionClassDiagnostic(cls, source, ctx));
         // Find throw statements
-        var throwStatements = findAll(root, RuleId.Stmt.class)
-                                     .stream()
-                                     .filter(stmt -> text(stmt, source)
-                                                         .trim()
+        var throwStatements = findAll(root, RuleId.Stmt.class).stream()
+                                     .filter(stmt -> text(stmt, source).trim()
                                                          .startsWith("throw "))
                                      .map(stmt -> createThrowDiagnostic(stmt, ctx));
         // Find methods with throws clause
-        var throwsClauses = findAll(root, RuleId.MethodDecl.class)
-                                   .stream()
+        var throwsClauses = findAll(root, RuleId.MethodDecl.class).stream()
                                    .filter(method -> hasThrowsClause(method, source))
                                    .map(method -> createThrowsClauseDiagnostic(method, source, ctx));
         return Stream.concat(Stream.concat(exceptionClasses, throwStatements), throwsClauses);
@@ -62,8 +58,7 @@ public class CstNoBusinessExceptionsRule implements CstLintRule {
     }
 
     private Diagnostic createExceptionClassDiagnostic(CstNode cls, String source, LintContext ctx) {
-        var className = childByRule(cls, RuleId.Identifier.class)
-                                   .map(id -> text(id, source))
+        var className = childByRule(cls, RuleId.Identifier.class).map(id -> text(id, source))
                                    .or("(unknown)");
         return Diagnostic.diagnostic(RULE_ID,
                                      ctx.severityFor(RULE_ID),
@@ -85,8 +80,7 @@ public class CstNoBusinessExceptionsRule implements CstLintRule {
     }
 
     private Diagnostic createThrowsClauseDiagnostic(CstNode method, String source, LintContext ctx) {
-        var methodName = childByRule(method, RuleId.Identifier.class)
-                                    .map(id -> text(id, source))
+        var methodName = childByRule(method, RuleId.Identifier.class).map(id -> text(id, source))
                                     .or("(unknown)");
         return Diagnostic.diagnostic(RULE_ID,
                                      ctx.severityFor(RULE_ID),

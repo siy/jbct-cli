@@ -34,8 +34,8 @@ public class CstImportOrderingRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
@@ -54,8 +54,7 @@ public class CstImportOrderingRule implements CstLintRule {
         CstNode lastImportInGroup = null;
         boolean inStaticSection = false;
         for (var importNode : imports) {
-            var importText = text(importNode, source)
-                                 .trim();
+            var importText = text(importNode, source).trim();
             var isStatic = importText.startsWith("import static ");
             var importPath = extractImportPath(importText);
             if (isStatic && !inStaticSection) {

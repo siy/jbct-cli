@@ -34,11 +34,9 @@ import java.util.Set;
 import com.google.auto.service.AutoService;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes({
-    "org.pragmatica.aether.slice.annotation.Slice",
-    "org.pragmatica.aether.infra.aspect.Aspect",
-    "org.pragmatica.aether.infra.aspect.Key"
-})
+@SupportedAnnotationTypes({"org.pragmatica.aether.slice.annotation.Slice",
+ "org.pragmatica.aether.infra.aspect.Aspect",
+ "org.pragmatica.aether.infra.aspect.Key"})
 @SupportedOptions({"slice.groupId", "slice.artifactId"})
 @SupportedSourceVersion(SourceVersion.RELEASE_25)
 public class SliceProcessor extends AbstractProcessor {
@@ -65,7 +63,7 @@ public class SliceProcessor extends AbstractProcessor {
     }
 
     @Override
-    public boolean process(Set< ? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         // Only process @Slice annotations; @Aspect and @Key are handled during method extraction
         for (var annotation : annotations) {
             if (!annotation.getQualifiedName()
@@ -127,22 +125,24 @@ public class SliceProcessor extends AbstractProcessor {
     private Result<Unit> generateSliceManifest(TypeElement interfaceElement, SliceModel sliceModel) {
         return manifestGenerator.generateSliceManifest(sliceModel)
                                 .onSuccess(_ -> note(interfaceElement,
-                                                     "Generated slice manifest: META-INF/slice/" + sliceModel.simpleName() + ".manifest"));
+                                                     "Generated slice manifest: META-INF/slice/" + sliceModel.simpleName()
+                                                     + ".manifest"));
     }
 
     private Result<Unit> generateRoutes(TypeElement interfaceElement, SliceModel sliceModel) {
         var packageName = sliceModel.packageName();
         return loadRouteConfig(packageName)
-                   .flatMap(configOpt -> configOpt
-                       .fold(() -> Result.success(Unit.unit()),
-                             config -> generateRoutesFromConfig(interfaceElement, sliceModel, config)));
+        .flatMap(configOpt -> configOpt.fold(() -> Result.success(Unit.unit()),
+                                             config -> generateRoutesFromConfig(interfaceElement, sliceModel, config)));
     }
 
     private Result<Option<RouteConfig>> loadRouteConfig(String packageName) {
-        try {
+        try{
             var packagePath = packageName.replace('.', '/');
             var resource = processingEnv.getFiler()
-                                        .getResource(StandardLocation.CLASS_OUTPUT, "", packagePath + "/" + RouteConfigLoader.CONFIG_FILE);
+                                        .getResource(StandardLocation.CLASS_OUTPUT,
+                                                     "",
+                                                     packagePath + "/" + RouteConfigLoader.CONFIG_FILE);
             var configPath = Path.of(resource.toUri());
             var packageDir = configPath.getParent();
             // Use loadMerged to support routes-base.toml inheritance
@@ -156,9 +156,12 @@ public class SliceProcessor extends AbstractProcessor {
         }
     }
 
-    private Result<Unit> generateRoutesFromConfig(TypeElement interfaceElement, SliceModel sliceModel, RouteConfig config) {
+    private Result<Unit> generateRoutesFromConfig(TypeElement interfaceElement,
+                                                  SliceModel sliceModel,
+                                                  RouteConfig config) {
         var packageName = sliceModel.packageName();
-        return errorDiscovery.discover(packageName, config.errors())
+        return errorDiscovery.discover(packageName,
+                                       config.errors())
                              .flatMap(errorMappings -> routeGenerator.generate(sliceModel, config, errorMappings))
                              .onSuccess(_ -> note(interfaceElement,
                                                   "Generated routes: " + sliceModel.simpleName() + "Routes"));

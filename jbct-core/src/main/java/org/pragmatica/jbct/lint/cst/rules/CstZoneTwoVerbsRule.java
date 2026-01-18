@@ -78,16 +78,15 @@ public class CstZoneTwoVerbsRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find functional interfaces that look like step interfaces
-        return findAll(root, RuleId.InterfaceDecl.class)
-                      .stream()
+        return findAll(root, RuleId.InterfaceDecl.class).stream()
                       .filter(iface -> isStepInterface(iface, source))
                       .flatMap(iface -> checkInterfaceName(iface, source, ctx));
     }
@@ -95,8 +94,7 @@ public class CstZoneTwoVerbsRule implements CstLintRule {
     private boolean isStepInterface(CstNode iface, String source) {
         var ifaceText = text(iface, source);
         // Check if it's a functional interface (single method)
-        var methodCount = findAll(iface, RuleId.MethodDecl.class)
-                                 .size();
+        var methodCount = findAll(iface, RuleId.MethodDecl.class).size();
         if (methodCount != 1) {
             return false;
         }
@@ -107,8 +105,7 @@ public class CstZoneTwoVerbsRule implements CstLintRule {
     }
 
     private Stream<Diagnostic> checkInterfaceName(CstNode iface, String source, LintContext ctx) {
-        var interfaceName = childByRule(iface, RuleId.Identifier.class)
-                                       .map(id -> text(id, source))
+        var interfaceName = childByRule(iface, RuleId.Identifier.class).map(id -> text(id, source))
                                        .or("");
         if (interfaceName.isEmpty()) {
             return Stream.empty();

@@ -41,9 +41,10 @@ public class UpdateCommand implements Callable<Integer> {
         return updater.checkForUpdate()
                       .onFailure(cause -> System.err.println("Error: " + cause.message()))
                       .onSuccess(updateAvailable -> {
-                          updateAvailable.onPresent(commit -> System.out.println("Update available: " + commit.substring(0, 7)));
-                          updateAvailable.onEmpty(() -> System.out.println("AI tools are up to date."));
-                      })
+                                     updateAvailable.onPresent(commit -> System.out.println("Update available: " + commit.substring(0,
+                                                                                                                                    7)));
+                                     updateAvailable.onEmpty(() -> System.out.println("AI tools are up to date."));
+                                 })
                       .fold(_ -> 1, _ -> 0);
     }
 

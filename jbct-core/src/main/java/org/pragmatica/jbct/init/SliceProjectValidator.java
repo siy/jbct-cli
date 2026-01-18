@@ -32,9 +32,7 @@ public final class SliceProjectValidator {
      * @return Validation result
      */
     public ValidationResult validate() {
-        return combinePartialResults(checkPomFile(),
-                                     checkSliceApiProperties(),
-                                     checkManifestEntries());
+        return combinePartialResults(checkPomFile(), checkSliceApiProperties(), checkManifestEntries());
     }
 
     private ValidationResult combinePartialResults(PartialResult... partials) {
@@ -53,8 +51,8 @@ public final class SliceProjectValidator {
             return PartialResult.error("pom.xml not found in project directory");
         }
         return readFile(pomFile)
-                       .fold(cause -> PartialResult.error("Failed to read pom.xml: " + cause.message()),
-                             content -> checkPomContent(content));
+        .fold(cause -> PartialResult.error("Failed to read pom.xml: " + cause.message()),
+              content -> checkPomContent(content));
     }
 
     private PartialResult checkPomContent(String content) {
@@ -78,8 +76,8 @@ public final class SliceProjectValidator {
             return PartialResult.error("slice-api.properties not found - ensure annotation processor is configured");
         }
         return loadProperties(propsFile)
-                             .fold(cause -> PartialResult.error("Failed to read slice-api.properties: " + cause.message()),
-                                   this::checkRequiredProperties);
+        .fold(cause -> PartialResult.error("Failed to read slice-api.properties: " + cause.message()),
+              this::checkRequiredProperties);
     }
 
     private PartialResult checkRequiredProperties(Properties props) {
@@ -107,8 +105,8 @@ public final class SliceProjectValidator {
             return PartialResult.warning("MANIFEST.MF not found - will be created during packaging");
         }
         return loadManifest(manifestFile)
-                           .fold(cause -> PartialResult.error("Failed to read MANIFEST.MF: " + cause.message()),
-                                 this::checkManifestAttributes);
+        .fold(cause -> PartialResult.error("Failed to read MANIFEST.MF: " + cause.message()),
+              this::checkManifestAttributes);
     }
 
     private PartialResult checkManifestAttributes(Manifest manifest) {

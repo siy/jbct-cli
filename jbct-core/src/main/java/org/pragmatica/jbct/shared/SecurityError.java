@@ -9,7 +9,6 @@ import java.nio.file.Path;
  * Security-related errors for path and URL validation.
  */
 public sealed interface SecurityError extends Cause {
-
     record PathTraversal(String path, String reason) implements SecurityError {
         public static PathTraversal pathTraversal(String path, String reason) {
             return new PathTraversal(path, reason);

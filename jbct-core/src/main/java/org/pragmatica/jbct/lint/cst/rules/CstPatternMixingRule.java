@@ -35,8 +35,7 @@ public class CstPatternMixingRule implements CstLintRule {
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
         // Find all Lambda expressions (not method references - those are just transformations)
-        return findAll(root, RuleId.Lambda.class)
-                      .stream()
+        return findAll(root, RuleId.Lambda.class).stream()
                       .filter(lambda -> isInsideFlatMap(lambda, root, source))
                       .filter(lambda -> containsForkJoinWithLogic(lambda, source))
                       .map(lambda -> createDiagnostic(lambda, source, ctx));
@@ -47,8 +46,7 @@ public class CstPatternMixingRule implements CstLintRule {
         // We look at the text before the lambda to see if it contains .flatMap(
         var lambdaText = text(lambda, source);
         // Find the expression containing this lambda
-        return findAncestor(root, lambda, RuleId.Expr.class)
-                           .map(expr -> text(expr, source))
+        return findAncestor(root, lambda, RuleId.Expr.class).map(expr -> text(expr, source))
                            .filter(exprText -> {
                                        var lambdaStart = exprText.indexOf(lambdaText);
                                        if (lambdaStart > 0) {
@@ -61,8 +59,7 @@ public class CstPatternMixingRule implements CstLintRule {
     }
 
     private boolean containsForkJoinWithLogic(CstNode lambda, String source) {
-        var lambdaText = text(lambda, source)
-                             .trim();
+        var lambdaText = text(lambda, source).trim();
         // Skip if lambda body is just a single fork-join call (transformation step, not nested pattern)
         // e.g., "results -> Result.allOf(results)" is fine
         if (isSingleForkJoinCall(lambdaText)) {

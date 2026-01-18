@@ -4,8 +4,6 @@ import org.pragmatica.lang.Option;
 import org.pragmatica.lang.Result;
 import org.pragmatica.lang.Unit;
 import org.pragmatica.lang.utils.Causes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +12,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Initializes a new Aether slice project structure.
@@ -36,8 +37,13 @@ public final class SliceProjectInitializer {
     private final String pragmaticaVersion;
     private final String aetherVersion;
 
-    private SliceProjectInitializer(Path projectDir, String groupId, String artifactId, String basePackage,
-                                    String jbctVersion, String pragmaticaVersion, String aetherVersion) {
+    private SliceProjectInitializer(Path projectDir,
+                                    String groupId,
+                                    String artifactId,
+                                    String basePackage,
+                                    String jbctVersion,
+                                    String pragmaticaVersion,
+                                    String aetherVersion) {
         this.projectDir = projectDir;
         this.groupId = groupId;
         this.artifactId = artifactId;
@@ -74,8 +80,12 @@ public final class SliceProjectInitializer {
                          .result();
         }
         var basePackage = groupId + "." + artifactId.replace("-", "");
-        return Result.success(new SliceProjectInitializer(projectDir, groupId, artifactId, basePackage,
-                                                          resolver.jbctVersion(), resolver.pragmaticaLiteVersion(),
+        return Result.success(new SliceProjectInitializer(projectDir,
+                                                          groupId,
+                                                          artifactId,
+                                                          basePackage,
+                                                          resolver.jbctVersion(),
+                                                          resolver.pragmaticaLiteVersion(),
                                                           resolver.aetherVersion()));
     }
 
@@ -86,8 +96,12 @@ public final class SliceProjectInitializer {
                                                                   String groupId,
                                                                   String artifactId,
                                                                   String basePackage) {
-        return new SliceProjectInitializer(projectDir, groupId, artifactId, basePackage,
-                                           DEFAULT_JBCT_VERSION, DEFAULT_PRAGMATICA_VERSION,
+        return new SliceProjectInitializer(projectDir,
+                                           groupId,
+                                           artifactId,
+                                           basePackage,
+                                           DEFAULT_JBCT_VERSION,
+                                           DEFAULT_PRAGMATICA_VERSION,
                                            DEFAULT_AETHER_VERSION);
     }
 
@@ -97,8 +111,7 @@ public final class SliceProjectInitializer {
      * @return List of created files
      */
     public Result<List<Path>> initialize() {
-        return createDirectories()
-                                .flatMap(_ -> createAllFiles());
+        return createDirectories().flatMap(_ -> createAllFiles());
     }
 
     private Result<Unit> createDirectories() {
@@ -128,19 +141,18 @@ public final class SliceProjectInitializer {
                             createDeployScripts(),
                             createSliceConfigFiles())
                      .flatMap(fileLists -> createDependencyManifest()
-                                                                   .map(manifest -> {
-                                                                            var allFiles = fileLists.stream()
-                                                                                                    .flatMap(List::stream)
-                                                                                                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
-                                                                            allFiles.add(manifest);
-                                                                            return allFiles;
-                                                                        }));
+        .map(manifest -> {
+                 var allFiles = fileLists.stream()
+                                         .flatMap(List::stream)
+                                         .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+                 allFiles.add(manifest);
+                 return allFiles;
+             }));
     }
 
     private Result<List<Path>> createSliceConfigFiles() {
         var slicesDir = projectDir.resolve("src/main/resources/slices");
-        return createFile("slice.toml.template", slicesDir.resolve(sliceName + ".toml"))
-                                                                                        .map(path -> List.of(path));
+        return createFile("slice.toml.template", slicesDir.resolve(sliceName + ".toml")).map(path -> List.of(path));
     }
 
     private Result<List<Path>> createProjectFiles() {
@@ -211,8 +223,7 @@ public final class SliceProjectInitializer {
         if (Files.exists(targetPath)) {
             return Result.success(targetPath);
         }
-        try (var in = getClass()
-                              .getResourceAsStream(TEMPLATES_PATH + templateName)) {
+        try (var in = getClass().getResourceAsStream(TEMPLATES_PATH + templateName)) {
             if (in == null) {
                 // Fall back to inline templates if resource not found
                 return createFromInlineTemplate(templateName, targetPath);
@@ -228,13 +239,12 @@ public final class SliceProjectInitializer {
     }
 
     private Result<Path> createFromInlineTemplate(String templateName, Path targetPath) {
-        return getInlineTemplate(templateName)
-                       .toResult(Causes.cause("Template not found: " + templateName))
-                       .flatMap(template -> writeTemplate(template, targetPath));
+        return getInlineTemplate(templateName).toResult(Causes.cause("Template not found: " + templateName))
+                                .flatMap(template -> writeTemplate(template, targetPath));
     }
 
     private Result<Path> writeTemplate(String template, Path targetPath) {
-        try {
+        try{
             var content = substituteVariables(template);
             Files.writeString(targetPath, content);
             return Result.success(targetPath);
@@ -290,7 +300,7 @@ public final class SliceProjectInitializer {
 
     private static void makeExecutable(Path path) {
         // Best-effort to make file executable - may not be supported on all platforms
-        try {
+        try{
             var perms = Files.getPosixFilePermissions(path);
             perms.add(java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE);
             perms.add(java.nio.file.attribute.PosixFilePermission.GROUP_EXECUTE);

@@ -34,7 +34,6 @@ public class DependencyVersionResolver {
         if (interfaceFqn == null || interfaceFqn.isEmpty()) {
             return dependency.withResolved("unknown:unknown", "UNRESOLVED");
         }
-
         // Lookup by interface FQN
         var artifactCoords = sliceDeps.getProperty(interfaceFqn);
         if (artifactCoords == null) {
@@ -42,11 +41,9 @@ public class DependencyVersionResolver {
             var apiInterfaceFqn = interfaceFqn.replace(".api.", ".");
             artifactCoords = sliceDeps.getProperty(apiInterfaceFqn);
         }
-
         if (artifactCoords != null) {
             return parseCoordinates(dependency, artifactCoords);
         }
-
         // Fallback: derive from package (may be inaccurate)
         return fallbackResolve(dependency);
     }
@@ -69,19 +66,16 @@ public class DependencyVersionResolver {
         if (interfacePackage == null || interfacePackage.isEmpty()) {
             return dependency.withResolved("unknown:unknown", "UNRESOLVED");
         }
-
         // Derive artifact from package: org.example.inventory.api -> org.example:inventory
         var pkg = interfacePackage;
         // Remove .api suffix if present
         if (pkg.endsWith(".api")) {
             pkg = pkg.substring(0, pkg.length() - 4);
         }
-
         var parts = pkg.split("\\.");
         if (parts.length < 2) {
             return dependency.withResolved(pkg + ":unknown", "UNRESOLVED");
         }
-
         var groupId = String.join(".", java.util.Arrays.copyOf(parts, parts.length - 1));
         var artifactId = parts[parts.length - 1];
         return dependency.withResolved(groupId + ":" + artifactId, "UNRESOLVED");
@@ -89,8 +83,7 @@ public class DependencyVersionResolver {
 
     private Properties loadSliceDeps() {
         var props = new Properties();
-
-        try {
+        try{
             FileObject resource = env.getFiler()
                                      .getResource(StandardLocation.CLASS_OUTPUT, "", "slice-deps.properties");
             try (var reader = resource.openReader(true)) {
@@ -108,7 +101,6 @@ public class DependencyVersionResolver {
                .printMessage(Diagnostic.Kind.NOTE,
                              "slice-deps.properties not found, dependency versions will be unresolved");
         }
-
         return props;
     }
 }

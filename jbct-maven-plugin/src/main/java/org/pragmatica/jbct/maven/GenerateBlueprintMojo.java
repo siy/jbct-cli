@@ -1,12 +1,5 @@
 package org.pragmatica.jbct.maven;
 
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.pragmatica.jbct.slice.SliceConfig;
 import org.pragmatica.jbct.slice.SliceManifest;
 import org.pragmatica.jbct.slice.SliceManifest.SliceDependency;
@@ -24,15 +17,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
+
 /**
  * Generates Blueprint.toml from slice manifests and their transitive dependencies.
  * The blueprint lists all slices in topological order (dependencies before dependents).
  */
 @Mojo(name = "generate-blueprint",
-      defaultPhase = LifecyclePhase.PACKAGE,
-      requiresDependencyResolution = ResolutionScope.COMPILE)
+ defaultPhase = LifecyclePhase.PACKAGE,
+ requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateBlueprintMojo extends AbstractMojo {
-
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
 
@@ -43,7 +43,7 @@ public class GenerateBlueprintMojo extends AbstractMojo {
     private File outputDirectory;
 
     @Parameter(property = "jbct.blueprint.output",
-               defaultValue = "${project.build.directory}/blueprint.toml")
+    defaultValue = "${project.build.directory}/blueprint.toml")
     private File blueprintFile;
 
     @Parameter(property = "jbct.blueprint.id")
@@ -55,6 +55,7 @@ public class GenerateBlueprintMojo extends AbstractMojo {
     private final List<SliceEntry> orderedSlices = new ArrayList<>();
     private final Set<String> visited = new HashSet<>();
     private final Set<String> inStack = new HashSet<>();
+
     // Maps interface qualified name to artifact for local slices
     private final Map<String, String> interfaceToArtifact = new LinkedHashMap<>();
 
@@ -64,19 +65,14 @@ public class GenerateBlueprintMojo extends AbstractMojo {
             getLog().info("Skipping blueprint generation");
             return;
         }
-
         var localManifests = loadLocalManifests();
         if (localManifests.isEmpty()) {
             getLog().info("No slice manifests found - skipping blueprint generation");
             return;
         }
-
         var graph = buildDependencyGraph(localManifests);
-
         topologicalSort(graph);
-
         generateBlueprint();
-
         getLog().info("Generated blueprint: " + blueprintFile);
     }
 
@@ -85,12 +81,10 @@ public class GenerateBlueprintMojo extends AbstractMojo {
         if (!manifestDir.exists()) {
             return List.of();
         }
-
         var manifestFiles = manifestDir.listFiles((d, n) -> n.endsWith(".manifest"));
         if (manifestFiles == null) {
             return List.of();
         }
-
         var manifests = new ArrayList<SliceManifest>();
         for (var file : manifestFiles) {
             var result = SliceManifest.load(file.toPath());
@@ -104,64 +98,65 @@ public class GenerateBlueprintMojo extends AbstractMojo {
     }
 
     private Map<String, SliceEntry> buildDependencyGraph(List<SliceManifest> localManifests)
-            throws MojoExecutionException {
+    throws MojoExecutionException {
         var graph = new LinkedHashMap<String, SliceEntry>();
-
         // First pass: register all local slices and build interface-to-artifact map
         for (var manifest : localManifests) {
-            var artifact = project.getGroupId() + ":"
-                          + manifest.implArtifactId() + ":"
-                          + project.getVersion();
+            var artifact = project.getGroupId() + ":" + manifest.implArtifactId() + ":" + project.getVersion();
             var config = loadSliceConfig(manifest);
             var entry = new SliceEntry(artifact, manifest, config, false);
             graph.put(artifact, entry);
-
             // Map the slice interface to its artifact for internal dependency resolution
             var sliceInterface = manifest.slicePackage() + "." + manifest.sliceName();
             interfaceToArtifact.put(sliceInterface, artifact);
-
             // Also map the API interface
-            if (!manifest.apiClasses().isEmpty()) {
-                interfaceToArtifact.put(manifest.apiClasses().getFirst(), artifact);
+            if (!manifest.apiClasses()
+                         .isEmpty()) {
+                interfaceToArtifact.put(manifest.apiClasses()
+                                                .getFirst(),
+                                        artifact);
             }
         }
-
         // Second pass: resolve external dependencies from JAR files
         for (var manifest : localManifests) {
             resolveExternalDependencies(manifest, graph);
         }
-
         return graph;
     }
 
     private void resolveExternalDependencies(SliceManifest manifest,
-                                              Map<String, SliceEntry> graph)
-            throws MojoExecutionException {
+                                             Map<String, SliceEntry> graph)
+    throws MojoExecutionException {
         for (var dep : manifest.dependencies()) {
             if (!dep.external()) {
                 continue;
             }
-
             var depArtifact = dep.artifact() + ":" + dep.version();
             if (graph.containsKey(depArtifact)) {
                 continue;
             }
-
-            loadManifestFromDependency(dep.artifact(), dep.version())
-                    .onPresent(depManifest -> {
-                        // External dependencies use default config
-                        var entry = new SliceEntry(depArtifact, depManifest, SliceConfig.defaults(), true);
-                        graph.put(depArtifact, entry);
-                        try {
-                            resolveExternalDependencies(depManifest, graph);
-                        } catch (MojoExecutionException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .onEmpty(() -> {
-                        graph.put(depArtifact, new SliceEntry(depArtifact, null, SliceConfig.defaults(), true));
-                        getLog().debug("No manifest found for dependency: " + depArtifact);
-                    });
+            loadManifestFromDependency(dep.artifact(),
+                                       dep.version()).onPresent(depManifest -> {
+                                                                    // External dependencies use default config
+            var entry = new SliceEntry(depArtifact,
+                                       depManifest,
+                                       SliceConfig.defaults(),
+                                       true);
+                                                                    graph.put(depArtifact, entry);
+                                                                    try{
+                                                                        resolveExternalDependencies(depManifest, graph);
+                                                                    } catch (MojoExecutionException e) {
+                                                                        throw new RuntimeException(e);
+                                                                    }
+                                                                })
+                                      .onEmpty(() -> {
+                                                   graph.put(depArtifact,
+                                                             new SliceEntry(depArtifact,
+                                                                            null,
+                                                                            SliceConfig.defaults(),
+                                                                            true));
+                                                   getLog().debug("No manifest found for dependency: " + depArtifact);
+                                               });
         }
     }
 
@@ -171,14 +166,13 @@ public class GenerateBlueprintMojo extends AbstractMojo {
             getLog().info("No config file specified for slice: " + manifest.sliceName() + " - using defaults");
             return SliceConfig.defaults();
         }
-
-        var configPath = classesDirectory.toPath().resolve(configFile);
+        var configPath = classesDirectory.toPath()
+                                         .resolve(configFile);
         if (!Files.exists(configPath)) {
-            getLog().info("Config file not found for slice " + manifest.sliceName()
-                          + " (" + configFile + ") - using defaults");
+            getLog().info("Config file not found for slice " + manifest.sliceName() + " (" + configFile
+                          + ") - using defaults");
             return SliceConfig.defaults();
         }
-
         return SliceConfig.load(configPath)
                           .onFailure(cause -> getLog().warn("Failed to load config for slice " + manifest.sliceName()
                                                             + ": " + cause.message() + " - using defaults"))
@@ -191,15 +185,15 @@ public class GenerateBlueprintMojo extends AbstractMojo {
         if (parts.length != 2) {
             return Option.none();
         }
-
         var groupId = parts[0];
         var artifactId = parts[1];
-
         for (var artifact : project.getArtifacts()) {
-            if (artifact.getGroupId().equals(groupId) &&
-                artifact.getArtifactId().equals(artifactId) &&
-                artifact.getVersion().equals(version)) {
-
+            if (artifact.getGroupId()
+                        .equals(groupId) &&
+            artifact.getArtifactId()
+                    .equals(artifactId) &&
+            artifact.getVersion()
+                    .equals(version)) {
                 return loadManifestFromJar(artifact.getFile());
             }
         }
@@ -210,13 +204,14 @@ public class GenerateBlueprintMojo extends AbstractMojo {
         if (jarFile == null || !jarFile.exists()) {
             return Option.none();
         }
-
         try (var jar = new JarFile(jarFile)) {
             var entries = jar.entries();
             while (entries.hasMoreElements()) {
                 var entry = entries.nextElement();
-                if (entry.getName().startsWith("META-INF/slice/") &&
-                    entry.getName().endsWith(".manifest")) {
+                if (entry.getName()
+                         .startsWith("META-INF/slice/") &&
+                entry.getName()
+                     .endsWith(".manifest")) {
                     try (var input = jar.getInputStream(entry)) {
                         var result = SliceManifest.load(input);
                         if (result.isSuccess()) {
@@ -241,19 +236,18 @@ public class GenerateBlueprintMojo extends AbstractMojo {
     }
 
     private void dfs(String artifact, Map<String, SliceEntry> graph)
-            throws MojoExecutionException {
+    throws MojoExecutionException {
         if (inStack.contains(artifact)) {
             throw new MojoExecutionException("Circular dependency detected: " + artifact);
         }
         if (visited.contains(artifact)) {
             return;
         }
-
         inStack.add(artifact);
-
         var entry = graph.get(artifact);
         if (entry != null && entry.manifest() != null) {
-            for (var dep : entry.manifest().dependencies()) {
+            for (var dep : entry.manifest()
+                                .dependencies()) {
                 String depArtifact;
                 if (dep.external()) {
                     // External dependency: use artifact coordinates from manifest
@@ -271,7 +265,6 @@ public class GenerateBlueprintMojo extends AbstractMojo {
                 }
             }
         }
-
         inStack.remove(artifact);
         visited.add(artifact);
         if (entry != null) {
@@ -280,38 +273,58 @@ public class GenerateBlueprintMojo extends AbstractMojo {
     }
 
     private void generateBlueprint() throws MojoExecutionException {
-        var id = blueprintId != null ? blueprintId :
-                 project.getGroupId() + ":" + project.getArtifactId()
-                 + ":" + project.getVersion();
-
+        var id = blueprintId != null
+                 ? blueprintId
+                 : project.getGroupId() + ":" + project.getArtifactId() + ":" + project.getVersion();
         var sb = new StringBuilder();
         sb.append("# Generated by jbct:generate-blueprint\n");
         sb.append("# Regenerate with: mvn jbct:generate-blueprint\n\n");
-        sb.append("id = \"").append(id).append("\"\n\n");
-
+        sb.append("id = \"")
+          .append(id)
+          .append("\"\n\n");
         for (var entry : orderedSlices) {
             sb.append("[[slices]]\n");
-            sb.append("artifact = \"").append(entry.artifact()).append("\"\n");
-            sb.append("instances = ").append(entry.config().blueprint().instances()).append("\n");
-
+            sb.append("artifact = \"")
+              .append(entry.artifact())
+              .append("\"\n");
+            sb.append("instances = ")
+              .append(entry.config()
+                           .blueprint()
+                           .instances())
+              .append("\n");
             // Add optional properties if configured
-            entry.config().blueprint().timeoutMs()
-                 .onPresent(timeout -> sb.append("timeout_ms = ").append(timeout).append("\n"));
-            entry.config().blueprint().memoryMb()
-                 .onPresent(memory -> sb.append("memory_mb = ").append(memory).append("\n"));
-            entry.config().blueprint().loadBalancing()
-                 .onPresent(lb -> sb.append("load_balancing = \"").append(lb).append("\"\n"));
-            entry.config().blueprint().affinityKey()
-                 .onPresent(key -> sb.append("affinity_key = \"").append(key).append("\"\n"));
-
+            entry.config()
+                 .blueprint()
+                 .timeoutMs()
+                 .onPresent(timeout -> sb.append("timeout_ms = ")
+                                         .append(timeout)
+                                         .append("\n"));
+            entry.config()
+                 .blueprint()
+                 .memoryMb()
+                 .onPresent(memory -> sb.append("memory_mb = ")
+                                        .append(memory)
+                                        .append("\n"));
+            entry.config()
+                 .blueprint()
+                 .loadBalancing()
+                 .onPresent(lb -> sb.append("load_balancing = \"")
+                                    .append(lb)
+                                    .append("\"\n"));
+            entry.config()
+                 .blueprint()
+                 .affinityKey()
+                 .onPresent(key -> sb.append("affinity_key = \"")
+                                     .append(key)
+                                     .append("\"\n"));
             if (entry.isDependency()) {
                 sb.append("# transitive dependency\n");
             }
             sb.append("\n");
         }
-
-        try {
-            Files.createDirectories(blueprintFile.toPath().getParent());
+        try{
+            Files.createDirectories(blueprintFile.toPath()
+                                                 .getParent());
             Files.writeString(blueprintFile.toPath(), sb.toString());
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to write blueprint", e);

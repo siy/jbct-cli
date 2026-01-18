@@ -79,25 +79,25 @@ public class CstZoneThreeVerbsRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find private methods that look like leaf functions
-        return findAll(root, RuleId.MethodDecl.class)
-                      .stream()
+        return findAll(root, RuleId.MethodDecl.class).stream()
                       .filter(method -> isLeafFunction(method, root, source))
                       .flatMap(method -> checkMethodName(method, source, ctx));
     }
 
     private boolean isLeafFunction(CstNode method, CstNode root, String source) {
         // Find the class member containing this method
-        return findAncestor(root, method, RuleId.ClassMember.class)
-                       .filter(classMember -> isPrivateLeafMethod(classMember, method, source))
-                       .isPresent();
+        return findAncestor(root, method, RuleId.ClassMember.class).filter(classMember -> isPrivateLeafMethod(classMember,
+                                                                                                              method,
+                                                                                                              source))
+                           .isPresent();
     }
 
     private boolean isPrivateLeafMethod(CstNode classMember, CstNode method, String source) {
@@ -109,15 +109,14 @@ public class CstZoneThreeVerbsRule implements CstLintRule {
         // Check if it's a simple method (no monadic chains = leaf)
         var methodText = text(method, source);
         var hasMonadicChain = methodText.contains(".map(") ||
-                              methodText.contains(".flatMap(") ||
-                              methodText.contains(".fold(");
+        methodText.contains(".flatMap(") ||
+        methodText.contains(".fold(");
         // Leaf functions typically don't have monadic chains (they're at the bottom)
-        return !hasMonadicChain;
+        return ! hasMonadicChain;
     }
 
     private Stream<Diagnostic> checkMethodName(CstNode method, String source, LintContext ctx) {
-        var methodName = childByRule(method, RuleId.Identifier.class)
-                                    .map(id -> text(id, source))
+        var methodName = childByRule(method, RuleId.Identifier.class).map(id -> text(id, source))
                                     .or("");
         if (methodName.isEmpty()) {
             return Stream.empty();

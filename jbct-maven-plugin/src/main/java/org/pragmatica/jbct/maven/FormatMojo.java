@@ -29,12 +29,10 @@ public class FormatMojo extends AbstractJbctMojo {
         var formatter = JbctFormatter.jbctFormatter(config.formatter());
         var filesToProcess = collectJavaFiles();
         if (filesToProcess.isEmpty()) {
-            getLog()
-                  .info("No Java files found.");
+            getLog().info("No Java files found.");
             return;
         }
-        getLog()
-              .info("Formatting " + filesToProcess.size() + " Java file(s)");
+        getLog().info("Formatting " + filesToProcess.size() + " Java file(s)");
         var formatted = new AtomicInteger(0);
         var unchanged = new AtomicInteger(0);
         var errors = new AtomicInteger(0);
@@ -42,7 +40,7 @@ public class FormatMojo extends AbstractJbctMojo {
             processFile(file, formatter, formatted, unchanged, errors);
         }
         getLog()
-              .info("Formatted: " + formatted.get() + ", Unchanged: " + unchanged.get() + ", Errors: " + errors.get());
+        .info("Formatted: " + formatted.get() + ", Unchanged: " + unchanged.get() + ", Errors: " + errors.get());
         if (errors.get() > 0) {
             throw new MojoFailureException("Formatting failed for " + errors.get() + " file(s)");
         }
@@ -65,14 +63,13 @@ public class FormatMojo extends AbstractJbctMojo {
                                                                                                                       .map(written -> {
                                                                                                                                formatted.incrementAndGet();
                                                                                                                                getLog()
-                                                                                                                                     .debug("Formatted: " + file);
+        .debug("Formatted: " + file);
                                                                                                                                return written;
                                                                                                                            }));
                                                        }))
                   .onFailure(cause -> {
                                  errors.incrementAndGet();
-                                 getLog()
-                                       .error("Error formatting " + file + ": " + cause.message());
+                                 getLog().error("Error formatting " + file + ": " + cause.message());
                              });
     }
 }

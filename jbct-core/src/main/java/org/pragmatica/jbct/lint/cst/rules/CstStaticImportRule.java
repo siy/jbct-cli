@@ -46,8 +46,8 @@ public class CstStaticImportRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
@@ -56,30 +56,29 @@ public class CstStaticImportRule implements CstLintRule {
         // Collect static imports already in the file
         var staticImports = collectStaticImports(root, source);
         // Find qualified factory calls
-        return findAll(root, RuleId.MethodDecl.class)
-                      .stream()
+        return findAll(root, RuleId.MethodDecl.class).stream()
                       .flatMap(method -> findQualifiedCalls(method, source, staticImports, ctx));
     }
 
     private Set<String> collectStaticImports(CstNode root, String source) {
         var imports = new HashSet<String>();
         findAll(root, RuleId.ImportDecl.class)
-               .forEach(imp -> {
-                            var importText = text(imp, source);
-                            if (importText.contains("static")) {
-                                // Extract the imported members
+        .forEach(imp -> {
+                     var importText = text(imp, source);
+                     if (importText.contains("static")) {
+                         // Extract the imported members
         for (var pattern : FACTORY_PATTERNS) {
-                                    for (var method : pattern.methods()) {
-                                        // Check for specific method import or wildcard
+                             for (var method : pattern.methods()) {
+                                 // Check for specific method import or wildcard
         if (importText.contains("." + method + ";") ||
         importText.contains("." + pattern.typeName() + ".*;") ||
         importText.contains("." + pattern.typeName() + "." + method)) {
-                                            imports.add(pattern.typeName() + "." + method);
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                                     imports.add(pattern.typeName() + "." + method);
+                                 }
+                             }
+                         }
+                     }
+                 });
         return imports;
     }
 

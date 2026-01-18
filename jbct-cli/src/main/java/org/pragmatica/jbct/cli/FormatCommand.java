@@ -96,25 +96,25 @@ public class FormatCommand implements Callable<Integer> {
         SourceFile.sourceFile(file)
                   .flatMap(source -> checkAndFormat(source, file, formatted, unchanged, needsFormatting))
                   .onFailure(cause -> {
-                      errors.incrementAndGet();
-                      System.err.println("  error: " + file + " - " + cause.message());
-                  });
+                                 errors.incrementAndGet();
+                                 System.err.println("  error: " + file + " - " + cause.message());
+                             });
     }
 
     private org.pragmatica.lang.Result<SourceFile> checkAndFormat(SourceFile source,
-                                                                   Path file,
-                                                                   AtomicInteger formatted,
-                                                                   AtomicInteger unchanged,
-                                                                   List<Path> needsFormatting) {
+                                                                  Path file,
+                                                                  AtomicInteger formatted,
+                                                                  AtomicInteger unchanged,
+                                                                  List<Path> needsFormatting) {
         return formatter.isFormatted(source)
                         .flatMap(isFormatted -> isFormatted
-                            ? handleUnchanged(source, file, unchanged)
-                            : handleNeedsFormatting(source, file, formatted, needsFormatting));
+                                                ? handleUnchanged(source, file, unchanged)
+                                                : handleNeedsFormatting(source, file, formatted, needsFormatting));
     }
 
     private org.pragmatica.lang.Result<SourceFile> handleUnchanged(SourceFile source,
-                                                                    Path file,
-                                                                    AtomicInteger unchanged) {
+                                                                   Path file,
+                                                                   AtomicInteger unchanged) {
         unchanged.incrementAndGet();
         if (verbose) {
             System.out.println("  unchanged: " + file);
@@ -123,9 +123,9 @@ public class FormatCommand implements Callable<Integer> {
     }
 
     private org.pragmatica.lang.Result<SourceFile> handleNeedsFormatting(SourceFile source,
-                                                                          Path file,
-                                                                          AtomicInteger formatted,
-                                                                          List<Path> needsFormatting) {
+                                                                         Path file,
+                                                                         AtomicInteger formatted,
+                                                                         List<Path> needsFormatting) {
         needsFormatting.add(file);
         if (checkOnly) {
             System.out.println("  needs formatting: " + file);
@@ -135,26 +135,26 @@ public class FormatCommand implements Callable<Integer> {
     }
 
     private org.pragmatica.lang.Result<SourceFile> formatAndWrite(SourceFile source,
-                                                                   Path file,
-                                                                   AtomicInteger formatted) {
+                                                                  Path file,
+                                                                  AtomicInteger formatted) {
         return formatter.format(source)
                         .flatMap(formattedSource -> writeFormatted(formattedSource, file, formatted));
     }
 
     private org.pragmatica.lang.Result<SourceFile> writeFormatted(SourceFile formattedSource,
-                                                                   Path file,
-                                                                   AtomicInteger formatted) {
+                                                                  Path file,
+                                                                  AtomicInteger formatted) {
         if (dryRun) {
             System.out.println("  would format: " + file);
             return org.pragmatica.lang.Result.success(formattedSource);
         }
         return formattedSource.write()
                               .onSuccess(_ -> {
-                                  formatted.incrementAndGet();
-                                  if (verbose) {
-                                      System.out.println("  formatted: " + file);
-                                  }
-                              });
+                                             formatted.incrementAndGet();
+                                             if (verbose) {
+                                                 System.out.println("  formatted: " + file);
+                                             }
+                                         });
     }
 
     private void printSummary(int formatted, int unchanged, int errors, List<Path> needsFormatting) {

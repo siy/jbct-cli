@@ -112,33 +112,38 @@ public record JbctConfig(FormatterConfig formatter,
      */
     public JbctConfig merge(Option<JbctConfig> other) {
         return other.map(o -> {
-            // Merge formatter config (use other if different from default)
-            var mergedFormatter = this.formatter;
-            if (!o.formatter.equals(FormatterConfig.DEFAULT)) {
-                mergedFormatter = o.formatter;
-            }
-            // Merge lint config (use other if different from default)
-            var mergedLint = this.lint;
-            if (!o.lint.equals(LintConfig.DEFAULT)) {
-                mergedLint = o.lint;
-            }
-            // Merge source directories (use other if not default)
-            var mergedSourceDirs = this.sourceDirectories;
-            if (!o.sourceDirectories.equals(List.of("src/main/java"))) {
-                mergedSourceDirs = o.sourceDirectories;
-            }
-            // Merge business packages (use other if not default)
-            var mergedBusinessPackages = this.businessPackages;
-            if (!o.businessPackages.equals(List.of("**.usecase.**", "**.domain.**"))) {
-                mergedBusinessPackages = o.businessPackages;
-            }
-            // Merge slice packages (use other if not empty)
-            var mergedSlicePackages = this.slicePackages;
-            if (!o.slicePackages.isEmpty()) {
-                mergedSlicePackages = o.slicePackages;
-            }
-            return jbctConfig(mergedFormatter, mergedLint, mergedSourceDirs, mergedBusinessPackages, mergedSlicePackages);
-        }).or(this);
+                             // Merge formatter config (use other if different from default)
+        var mergedFormatter = this.formatter;
+                             if (!o.formatter.equals(FormatterConfig.DEFAULT)) {
+                                 mergedFormatter = o.formatter;
+                             }
+                             // Merge lint config (use other if different from default)
+        var mergedLint = this.lint;
+                             if (!o.lint.equals(LintConfig.DEFAULT)) {
+                                 mergedLint = o.lint;
+                             }
+                             // Merge source directories (use other if not default)
+        var mergedSourceDirs = this.sourceDirectories;
+                             if (!o.sourceDirectories.equals(List.of("src/main/java"))) {
+                                 mergedSourceDirs = o.sourceDirectories;
+                             }
+                             // Merge business packages (use other if not default)
+        var mergedBusinessPackages = this.businessPackages;
+                             if (!o.businessPackages.equals(List.of("**.usecase.**", "**.domain.**"))) {
+                                 mergedBusinessPackages = o.businessPackages;
+                             }
+                             // Merge slice packages (use other if not empty)
+        var mergedSlicePackages = this.slicePackages;
+                             if (!o.slicePackages.isEmpty()) {
+                                 mergedSlicePackages = o.slicePackages;
+                             }
+                             return jbctConfig(mergedFormatter,
+                                               mergedLint,
+                                               mergedSourceDirs,
+                                               mergedBusinessPackages,
+                                               mergedSlicePackages);
+                         })
+                    .or(this);
     }
 
     /**

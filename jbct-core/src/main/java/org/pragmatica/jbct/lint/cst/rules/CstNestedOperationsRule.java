@@ -44,16 +44,15 @@ public class CstNestedOperationsRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find lambdas with nested operations
-        return findAll(root, RuleId.Lambda.class)
-                      .stream()
+        return findAll(root, RuleId.Lambda.class).stream()
                       .filter(lambda -> hasNestedOperations(lambda, source))
                       .map(lambda -> createDiagnostic(lambda, source, ctx));
     }

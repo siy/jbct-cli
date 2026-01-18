@@ -43,22 +43,20 @@ public class CstMethodReferencePreferenceRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-        return findAll(root, RuleId.Lambda.class)
-                      .stream()
+        return findAll(root, RuleId.Lambda.class).stream()
                       .map(lambda -> checkLambda(lambda, source, ctx))
                       .flatMap(Option::stream);
     }
 
     private Option<Diagnostic> checkLambda(CstNode lambda, String source, LintContext ctx) {
-        var lambdaText = text(lambda, source)
-                             .trim();
+        var lambdaText = text(lambda, source).trim();
         // Check for constructor lambda: x -> new Type(x)
         var constructorMatch = CONSTRUCTOR_LAMBDA.matcher(lambdaText);
         if (constructorMatch.matches()) {

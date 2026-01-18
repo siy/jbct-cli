@@ -11,12 +11,10 @@ import java.util.Set;
 public sealed interface UrlValidation permits UrlValidation.unused {
     record unused() implements UrlValidation {}
 
-    Set<String> TRUSTED_DOMAINS = Set.of(
-        "github.com",
-        "raw.githubusercontent.com",
-        "api.github.com",
-        "objects.githubusercontent.com"
-    );
+    Set<String> TRUSTED_DOMAINS = Set.of("github.com",
+                                         "raw.githubusercontent.com",
+                                         "api.github.com",
+                                         "objects.githubusercontent.com");
 
     /**
      * Validate a download URL is safe (HTTPS, trusted domain).
@@ -27,37 +25,33 @@ public sealed interface UrlValidation permits UrlValidation.unused {
     static Result<URI> validateDownloadUrl(String url) {
         if (url == null || url.isBlank()) {
             return SecurityError.InvalidUrl.invalidUrl(url, "URL is null or blank")
-                                           .result();
+                                .result();
         }
-
         URI uri;
-        try {
+        try{
             uri = URI.create(url);
         } catch (IllegalArgumentException e) {
-            return SecurityError.InvalidUrl.invalidUrl(url, "malformed URL: " + e.getMessage())
-                                           .result();
+            return SecurityError.InvalidUrl.invalidUrl(url,
+                                                       "malformed URL: " + e.getMessage())
+                                .result();
         }
-
         // Require HTTPS
         var scheme = uri.getScheme();
         if (scheme == null || !scheme.equalsIgnoreCase("https")) {
             return SecurityError.InvalidUrl.invalidUrl(url, "HTTPS required")
-                                           .result();
+                                .result();
         }
-
         // Validate domain against whitelist
         var host = uri.getHost();
         if (host == null) {
             return SecurityError.InvalidUrl.invalidUrl(url, "no host specified")
-                                           .result();
+                                .result();
         }
-
         var hostLower = host.toLowerCase();
         if (!TRUSTED_DOMAINS.contains(hostLower)) {
             return SecurityError.UntrustedDomain.untrustedDomain(url, hostLower)
-                                                .result();
+                                .result();
         }
-
         return Result.success(uri);
     }
 }

@@ -62,7 +62,8 @@ public final class RouteConfigLoader {
             return FILE_NOT_FOUND.result();
         }
         return TomlParser.parseFile(configPath)
-                         .fold(_ -> PARSE_ERROR.<TomlDocument>result(), Result::success)
+                         .fold(_ -> PARSE_ERROR.<TomlDocument>result(),
+                               Result::success)
                          .flatMap(RouteConfigLoader::buildRouteConfig);
     }
 
@@ -111,7 +112,8 @@ public final class RouteConfigLoader {
 
     private static Result<Map.Entry<String, RouteDsl>> parseRouteEntry(Map.Entry<String, String> entry) {
         return RouteDsl.parse(entry.getValue())
-                       .map(dsl -> Map.entry(entry.getKey(), dsl));
+                       .map(dsl -> Map.entry(entry.getKey(),
+                                             dsl));
     }
 
     private static Map<String, RouteDsl> toImmutableMap(List<Map.Entry<String, RouteDsl>> entries) {
@@ -152,15 +154,15 @@ public final class RouteConfigLoader {
         var explicitSection = toml.getSection("errors.explicit");
         for (var entry : explicitSection.entrySet()) {
             var typeName = entry.getKey();
-            parseStatusCodeSafely(entry.getValue())
-                .onPresent(statusCode -> mappings.put(typeName, statusCode))
-                .onEmpty(() -> LOGGER.log(WARNING, "Invalid status code for type '" + typeName + "': " + entry.getValue()));
+            parseStatusCodeSafely(entry.getValue()).onPresent(statusCode -> mappings.put(typeName, statusCode))
+                                 .onEmpty(() -> LOGGER.log(WARNING,
+                                                           "Invalid status code for type '" + typeName + "': " + entry.getValue()));
         }
         return Map.copyOf(mappings);
     }
 
     private static Option<Integer> parseStatusCodeSafely(String value) {
-        try {
+        try{
             return Option.some(Integer.parseInt(value));
         } catch (NumberFormatException _) {
             return Option.none();
@@ -168,10 +170,10 @@ public final class RouteConfigLoader {
     }
 
     private static int parseHttpStatus(String key) {
-        try {
+        try{
             return Integer.parseInt(key.substring(5));
         } catch (NumberFormatException _) {
-            return -1;
+            return - 1;
         }
     }
 }

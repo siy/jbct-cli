@@ -69,16 +69,15 @@ public class CstZoneMixingRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find methods with monadic chains
-        return findAll(root, RuleId.MethodDecl.class)
-                      .stream()
+        return findAll(root, RuleId.MethodDecl.class).stream()
                       .filter(method -> hasMonadicChain(method, source))
                       .flatMap(method -> checkChainForZoneMixing(method, source, ctx));
     }
@@ -110,8 +109,7 @@ public class CstZoneMixingRule implements CstLintRule {
                                          List<String> violations) {
         Matcher matcher = pattern.matcher(text);
         while (matcher.find()) {
-            extractVerb(matcher.group(verbGroup))
-                       .filter(verb -> ZONE_3_VERBS.contains(verb.toLowerCase()))
+            extractVerb(matcher.group(verbGroup)).filter(verb -> ZONE_3_VERBS.contains(verb.toLowerCase()))
                        .filter(verb -> !violations.contains(verb))
                        .onPresent(violations::add);
         }

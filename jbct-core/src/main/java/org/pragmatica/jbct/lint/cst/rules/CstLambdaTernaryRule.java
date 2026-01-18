@@ -23,22 +23,20 @@ public class CstLambdaTernaryRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-        return findAll(root, RuleId.Lambda.class)
-                      .stream()
+        return findAll(root, RuleId.Lambda.class).stream()
                       .filter(lambda -> hasTernary(lambda, source))
                       .map(lambda -> createDiagnostic(lambda, ctx));
     }
 
     private boolean hasTernary(CstNode lambda, String source) {
-        return contains(lambda, RuleId.Ternary.class) || text(lambda, source)
-                                                             .contains("?");
+        return contains(lambda, RuleId.Ternary.class) || text(lambda, source).contains("?");
     }
 
     private Diagnostic createDiagnostic(CstNode lambda, LintContext ctx) {

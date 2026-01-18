@@ -96,7 +96,6 @@ public sealed interface ConfigLoader permits ConfigLoader.unused {
      * Get the default user config file path.
      */
     static Path getUserConfigPath() {
-        return getUserConfigDir()
-                               .resolve(USER_CONFIG_NAME);
+        return getUserConfigDir().resolve(USER_CONFIG_NAME);
     }
 }

@@ -145,9 +145,7 @@ public class CstPrinter {
         // Handle leading trivia
         // TypeArgs/TypeParams/TypeArg: skip leading whitespace to prevent errant space inside generics
         // OrdinaryUnit: skip leading whitespace since we control file layout
-        var isTypeRelated = node.rule() instanceof RuleId.TypeArgs
-                            || node.rule() instanceof RuleId.TypeParams
-                            || node.rule() instanceof RuleId.TypeArg;
+        var isTypeRelated = node.rule() instanceof RuleId.TypeArgs || node.rule() instanceof RuleId.TypeParams || node.rule() instanceof RuleId.TypeArg;
         var isOrdinaryUnit = node.rule() instanceof RuleId.OrdinaryUnit;
         var effectiveMode = (isTypeRelated || isOrdinaryUnit)
                             ? TriviaMode.SKIP_LEADING
@@ -250,8 +248,7 @@ public class CstPrinter {
 
     private void printOrdinaryUnit(CstNode.NonTerminal ou) {
         // Print package declaration
-        var hasPackage = childByRule(ou, RuleId.PackageDecl.class)
-                                    .onPresent(this::printNode)
+        var hasPackage = childByRule(ou, RuleId.PackageDecl.class).onPresent(this::printNode)
                                     .isPresent();
         // Collect and organize imports
         var imports = childrenByRule(ou, RuleId.ImportDecl.class);
@@ -283,31 +280,21 @@ public class CstPrinter {
     private void printOrganizedImports(List<CstNode> imports) {
         // Group imports: pragmatica, java/javax, other, static
         var pragmatica = imports.stream()
-                                .filter(i -> text(i, source)
-                                                 .contains("org.pragmatica"))
-                                .filter(i -> !text(i, source)
-                                                  .contains("static"))
+                                .filter(i -> text(i, source).contains("org.pragmatica"))
+                                .filter(i -> !text(i, source).contains("static"))
                                 .toList();
         var javaImports = imports.stream()
-                                 .filter(i -> text(i, source)
-                                                  .contains("java.") || text(i, source)
-                                                                            .contains("javax."))
-                                 .filter(i -> !text(i, source)
-                                                   .contains("static"))
+                                 .filter(i -> text(i, source).contains("java.") || text(i, source).contains("javax."))
+                                 .filter(i -> !text(i, source).contains("static"))
                                  .toList();
         var otherImports = imports.stream()
-                                  .filter(i -> !text(i, source)
-                                                    .contains("org.pragmatica"))
-                                  .filter(i -> !text(i, source)
-                                                    .contains("java."))
-                                  .filter(i -> !text(i, source)
-                                                    .contains("javax."))
-                                  .filter(i -> !text(i, source)
-                                                    .contains("static"))
+                                  .filter(i -> !text(i, source).contains("org.pragmatica"))
+                                  .filter(i -> !text(i, source).contains("java."))
+                                  .filter(i -> !text(i, source).contains("javax."))
+                                  .filter(i -> !text(i, source).contains("static"))
                                   .toList();
         var staticImports = imports.stream()
-                                   .filter(i -> text(i, source)
-                                                    .contains("static"))
+                                   .filter(i -> text(i, source).contains("static"))
                                    .toList();
         boolean needsBlank = false;
         if (!pragmatica.isEmpty()) {
@@ -339,8 +326,7 @@ public class CstPrinter {
     }
 
     private void printImportDecl(CstNode.NonTerminal imp) {
-        var importText = text(imp, source)
-                             .trim();
+        var importText = text(imp, source).trim();
         print(importText);
         println();
     }
@@ -362,16 +348,16 @@ public class CstPrinter {
         println();
         // Print enum constants
         childByRule(enumBody, RuleId.EnumConsts.class)
-                   .onPresent(consts -> {
-                                  var leadingTrivia = consts.leadingTrivia();
-                                  boolean hasComments = leadingTrivia.stream()
-                                                                     .anyMatch(t -> t instanceof Trivia.LineComment || t instanceof Trivia.BlockComment);
-                                  printIndent();
-                                  if (hasComments) {
-                                      printCommentsOnly(leadingTrivia);
-                                  }
-                                  printEnumConsts((CstNode.NonTerminal) consts);
-                              });
+        .onPresent(consts -> {
+                       var leadingTrivia = consts.leadingTrivia();
+                       boolean hasComments = leadingTrivia.stream()
+                                                          .anyMatch(t -> t instanceof Trivia.LineComment || t instanceof Trivia.BlockComment);
+                       printIndent();
+                       if (hasComments) {
+                           printCommentsOnly(leadingTrivia);
+                       }
+                       printEnumConsts((CstNode.NonTerminal) consts);
+                   });
         // Print semicolon if there are class members (fields, constructors, methods)
         if (!classMembers.isEmpty()) {
             print(";");
@@ -450,7 +436,7 @@ public class CstPrinter {
      * Common helper for printing braced bodies (class, annotation, record members).
      */
     private void printBracedBody(List<CstNode> children,
-                                 Class< ? extends RuleId> memberRule,
+                                 Class<? extends RuleId> memberRule,
                                  java.util.function.BiPredicate<CstNode, CstNode> needsBlankLine) {
         var hasMembers = children.stream()
                                  .anyMatch(c -> memberRule.isInstance(c.rule()));
@@ -679,9 +665,8 @@ public class CstPrinter {
         // Check if primary has a method access (contains '.')
         boolean primaryHasMethodAccess = primary != null && hasMethodAccessInPrimary(primary);
         // If primary has method access AND there's a bare () PostOp, that's the first chain link
-        boolean hasInvocationOfMethodInPrimary = primaryHasMethodAccess
-                                                 && postOps.stream()
-                                                           .anyMatch(this::isBareInvocationPostOp);
+        boolean hasInvocationOfMethodInPrimary = primaryHasMethodAccess && postOps.stream()
+                                                                                  .anyMatch(this::isBareInvocationPostOp);
         int chainLinkCount = dotPlusParenPostOps.size() + (hasInvocationOfMethodInPrimary
                                                            ? 1
                                                            : 0);
@@ -802,8 +787,7 @@ public class CstPrinter {
             } else if (afterTypeArgs && child.rule() instanceof RuleId.Identifier) {
                 // After TypeArgs, print Identifier WITHOUT automatic spacing
                 // This handles: Result.<Integer>failure() (no space after >)
-                var identText = text(child, source)
-                                    .trim();
+                var identText = text(child, source).trim();
                 print(identText);
                 afterTypeArgs = false;
             } else if (isTerminalWithText(child, "(")) {
@@ -1428,8 +1412,7 @@ public class CstPrinter {
             } else if (child.rule() instanceof RuleId.Type && isVarargs) {
                 // For varargs, Type may include trailing dots from parser quirk
                 // Print type without trailing dots
-                var typeText = text(child, source)
-                                   .trim();
+                var typeText = text(child, source).trim();
                 if (typeText.endsWith("...")) {
                     typeText = typeText.substring(0, typeText.length() - 3);
                 }
@@ -1449,13 +1432,11 @@ public class CstPrinter {
         // Find all identifiers (these are the actual parameters)
         var identifierTexts = children.stream()
                                       .filter(c -> c.rule() instanceof RuleId.Identifier)
-                                      .map(c -> text(c, source)
-                                                    .trim())
+                                      .map(c -> text(c, source).trim())
                                       .collect(java.util.stream.Collectors.toSet());
         for (var child : children) {
             var rule = child.rule();
-            var childText = text(child, source)
-                                .trim();
+            var childText = text(child, source).trim();
             if (rule instanceof RuleId.Identifier) {
                 // Always print identifiers
                 printWithSpacing(childText);
@@ -1733,11 +1714,9 @@ public class CstPrinter {
         boolean isSimple = memberText.trim()
                                      .endsWith(";") && !memberText.contains("{");
         boolean prevIsSimple = prevMember != null &&
-        text(prevMember, source)
-            .trim()
+        text(prevMember, source).trim()
             .endsWith(";") &&
-        !text(prevMember, source)
-             .contains("{");
+        !text(prevMember, source).contains("{");
         // No blank line between consecutive simple interface methods
         if (isSimple && prevIsSimple) {
             return false;

@@ -49,10 +49,9 @@ public record SourceRoot(Path path) {
      * Load all Java source files as SourceFile objects.
      */
     public Result<List<SourceFile>> loadJavaFiles() {
-        return findJavaFiles()
-                            .map(paths -> paths.stream()
-                                               .map(SourceFile::sourceFile)
-                                               .toList())
+        return findJavaFiles().map(paths -> paths.stream()
+                                                 .map(SourceFile::sourceFile)
+                                                 .toList())
                             .flatMap((Fn1<Result<List<SourceFile>>, List<Result<SourceFile>>>) Result::allOf);
     }
 }

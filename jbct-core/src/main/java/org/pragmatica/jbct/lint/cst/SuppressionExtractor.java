@@ -26,7 +26,6 @@ public final class SuppressionExtractor {
      * A suppression scope with the suppressed rules and line range.
      */
     public record Suppression(Set<String> ruleIds, int startLine, int endLine) {
-
         public static Suppression suppression(Set<String> ruleIds, int startLine, int endLine) {
             return new Suppression(Set.copyOf(ruleIds), startLine, endLine);
         }
@@ -57,9 +56,7 @@ public final class SuppressionExtractor {
         var annotations = findAll(root, RuleId.Annotation.class);
         for (var annotation : annotations) {
             // Check if this is @SuppressWarnings
-            var name = findFirst(annotation, RuleId.QualifiedName.class)
-                                .map(qn -> text(qn, source)
-                                               .trim())
+            var name = findFirst(annotation, RuleId.QualifiedName.class).map(qn -> text(qn, source).trim())
                                 .or("");
             if (!"SuppressWarnings".equals(name) && !"java.lang.SuppressWarnings".equals(name)) {
                 continue;
@@ -114,8 +111,7 @@ public final class SuppressionExtractor {
     private static Option<CstNode> findAnnotatedDeclaration(CstNode root, CstNode annotation) {
         // Walk up the tree from the annotation to find what it annotates
         // Annotations can appear on: TypeDecl, ClassMember, Param, LocalVar, etc.
-        return findAncestorPath(root, annotation)
-                               .flatMap(SuppressionExtractor::findDeclarationInPath);
+        return findAncestorPath(root, annotation).flatMap(SuppressionExtractor::findDeclarationInPath);
     }
 
     private static Option<CstNode> findDeclarationInPath(List<CstNode> path) {

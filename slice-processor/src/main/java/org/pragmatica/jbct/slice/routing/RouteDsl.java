@@ -29,7 +29,6 @@ public record RouteDsl(String method,
                        String pathTemplate,
                        List<PathParam> pathParams,
                        List<QueryParam> queryParams) {
-
     public RouteDsl {
         pathParams = List.copyOf(pathParams);
         queryParams = List.copyOf(queryParams);

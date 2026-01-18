@@ -32,33 +32,26 @@ public class CstAcronymNamingRule implements CstLintRule {
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
         // Check class declarations
-        var classDiagnostics = findAll(root, RuleId.ClassDecl.class)
-                                      .stream()
+        var classDiagnostics = findAll(root, RuleId.ClassDecl.class).stream()
                                       .flatMap(decl -> checkTypeName(decl, source, ctx));
         // Check interface declarations
-        var interfaceDiagnostics = findAll(root, RuleId.InterfaceDecl.class)
-                                          .stream()
+        var interfaceDiagnostics = findAll(root, RuleId.InterfaceDecl.class).stream()
                                           .flatMap(decl -> checkTypeName(decl, source, ctx));
         // Check enum declarations
-        var enumDiagnostics = findAll(root, RuleId.EnumDecl.class)
-                                     .stream()
+        var enumDiagnostics = findAll(root, RuleId.EnumDecl.class).stream()
                                      .flatMap(decl -> checkTypeName(decl, source, ctx));
         // Check record declarations
-        var recordDiagnostics = findAll(root, RuleId.RecordDecl.class)
-                                       .stream()
+        var recordDiagnostics = findAll(root, RuleId.RecordDecl.class).stream()
                                        .flatMap(decl -> checkTypeName(decl, source, ctx));
         // Check method declarations
-        var methodDiagnostics = findAll(root, RuleId.MethodDecl.class)
-                                       .stream()
+        var methodDiagnostics = findAll(root, RuleId.MethodDecl.class).stream()
                                        .flatMap(method -> checkMethodName(method, source, ctx));
         return Stream.of(classDiagnostics, interfaceDiagnostics, enumDiagnostics, recordDiagnostics, methodDiagnostics)
                      .flatMap(s -> s);
     }
 
     private Stream<Diagnostic> checkTypeName(CstNode decl, String source, LintContext ctx) {
-        return childByRule(decl, RuleId.Identifier.class)
-                          .map(id -> text(id, source)
-                                         .trim())
+        return childByRule(decl, RuleId.Identifier.class).map(id -> text(id, source).trim())
                           .filter(this::hasAcronymViolation)
                           .map(name -> createDiagnostic(decl,
                                                         "Type",
@@ -69,9 +62,7 @@ public class CstAcronymNamingRule implements CstLintRule {
     }
 
     private Stream<Diagnostic> checkMethodName(CstNode method, String source, LintContext ctx) {
-        return childByRule(method, RuleId.Identifier.class)
-                          .map(id -> text(id, source)
-                                         .trim())
+        return childByRule(method, RuleId.Identifier.class).map(id -> text(id, source).trim())
                           .filter(this::hasAcronymViolation)
                           .map(name -> createDiagnostic(method,
                                                         "Method",

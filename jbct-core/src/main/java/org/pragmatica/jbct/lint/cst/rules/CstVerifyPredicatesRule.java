@@ -69,23 +69,21 @@ public class CstVerifyPredicatesRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find if statements with validation patterns
-        return findAll(root, RuleId.Stmt.class)
-                      .stream()
+        return findAll(root, RuleId.Stmt.class).stream()
                       .filter(stmt -> isIfStatement(stmt, source))
                       .flatMap(stmt -> findValidationPatterns(stmt, source, ctx));
     }
 
     private boolean isIfStatement(CstNode stmt, String source) {
-        var stmtText = text(stmt, source)
-                           .trim();
+        var stmtText = text(stmt, source).trim();
         return stmtText.startsWith("if");
     }
 

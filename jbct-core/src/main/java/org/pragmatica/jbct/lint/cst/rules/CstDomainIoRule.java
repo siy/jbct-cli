@@ -49,8 +49,7 @@ public class CstDomainIoRule implements CstLintRule {
             return Stream.empty();
         }
         // Check imports for I/O packages
-        return findAll(root, RuleId.ImportDecl.class)
-                      .stream()
+        return findAll(root, RuleId.ImportDecl.class).stream()
                       .filter(imp -> isIoImport(imp, source))
                       .map(imp -> createDiagnostic(imp, source, ctx));
     }
@@ -76,8 +75,7 @@ public class CstDomainIoRule implements CstLintRule {
     }
 
     private Diagnostic createDiagnostic(CstNode imp, String source, LintContext ctx) {
-        var importText = text(imp, source)
-                             .trim();
+        var importText = text(imp, source).trim();
         return Diagnostic.diagnostic(RULE_ID,
                                      ctx.severityFor(RULE_ID),
                                      ctx.fileName(),

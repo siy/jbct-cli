@@ -34,33 +34,30 @@ public class CstNestedWrapperRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
-        return findAll(root, RuleId.MethodDecl.class)
-                      .stream()
+        return findAll(root, RuleId.MethodDecl.class).stream()
                       .flatMap(method -> checkMethod(method, source, ctx));
     }
 
     private Stream<Diagnostic> checkMethod(CstNode method, String source, LintContext ctx) {
-        return childByRule(method, RuleId.Type.class)
-                       .flatMap(type -> checkTypeForNesting(method, type, source, ctx))
-                       .stream();
+        return childByRule(method, RuleId.Type.class).flatMap(type -> checkTypeForNesting(method, type, source, ctx))
+                          .stream();
     }
 
     private Option<Diagnostic> checkTypeForNesting(CstNode method, CstNode type, String source, LintContext ctx) {
         var typeText = text(type, source).trim();
         return detectNestedWrapper(typeText)
-                       .map(nestedPattern -> {
-                           var methodName = childByRule(method, RuleId.Identifier.class)
-                                                       .map(id -> text(id, source))
-                                                       .or("(unknown)");
-                           return createDiagnostic(method, methodName, nestedPattern, ctx);
-                       });
+        .map(nestedPattern -> {
+                 var methodName = childByRule(method, RuleId.Identifier.class).map(id -> text(id, source))
+                                             .or("(unknown)");
+                 return createDiagnostic(method, methodName, nestedPattern, ctx);
+             });
     }
 
     private Option<String> detectNestedWrapper(String typeText) {

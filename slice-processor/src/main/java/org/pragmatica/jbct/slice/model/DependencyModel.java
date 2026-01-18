@@ -22,7 +22,7 @@ public record DependencyModel(String parameterName,
         var paramName = param.getSimpleName()
                              .toString();
         var type = param.asType();
-        if (!(type instanceof DeclaredType dt)) {
+        if (! (type instanceof DeclaredType dt)) {
             return Causes.cause("Dependency parameter must be an interface: " + paramName)
                          .result();
         }
@@ -69,7 +69,7 @@ public record DependencyModel(String parameterName,
      * External dependencies need proxies; internal ones are called directly.
      */
     public boolean isExternal(String basePackage) {
-        return !interfacePackage.startsWith(basePackage);
+        return ! interfacePackage.startsWith(basePackage);
     }
 
     /**
@@ -93,7 +93,8 @@ public record DependencyModel(String parameterName,
         }
         // Acronym handling: "HTTPService" -> "httpService"
         if (i < interfaceSimpleName.length()) {
-            return interfaceSimpleName.substring(0, i - 1).toLowerCase() + interfaceSimpleName.substring(i - 1);
+            return interfaceSimpleName.substring(0, i - 1)
+                                      .toLowerCase() + interfaceSimpleName.substring(i - 1);
         }
         return interfaceSimpleName.toLowerCase();
     }

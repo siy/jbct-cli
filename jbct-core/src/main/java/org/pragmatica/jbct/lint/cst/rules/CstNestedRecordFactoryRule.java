@@ -23,19 +23,17 @@ public class CstNestedRecordFactoryRule implements CstLintRule {
 
     @Override
     public Stream<Diagnostic> analyze(CstNode root, String source, LintContext ctx) {
-        var packageName = findFirst(root, RuleId.PackageDecl.class)
-                                   .flatMap(pd -> findFirst(pd, RuleId.QualifiedName.class))
+        var packageName = findFirst(root, RuleId.PackageDecl.class).flatMap(pd -> findFirst(pd,
+                                                                                            RuleId.QualifiedName.class))
                                    .map(qn -> text(qn, source))
                                    .or("");
         if (!ctx.isBusinessPackage(packageName)) {
             return Stream.empty();
         }
         // Find ClassMember nodes with static methods containing local record declarations
-        return findAll(root, RuleId.ClassMember.class)
-                      .stream()
+        return findAll(root, RuleId.ClassMember.class).stream()
                       .filter(member -> isStaticMember(member, source))
-                      .flatMap(member -> findFirst(member, RuleId.MethodDecl.class)
-                                                  .stream())
+                      .flatMap(member -> findFirst(member, RuleId.MethodDecl.class).stream())
                       .filter(method -> containsLocalRecord(method, source))
                       .map(method -> createDiagnostic(method, source, ctx));
     }
@@ -55,8 +53,7 @@ public class CstNestedRecordFactoryRule implements CstLintRule {
     }
 
     private Diagnostic createDiagnostic(CstNode method, String source, LintContext ctx) {
-        var methodName = childByRule(method, RuleId.Identifier.class)
-                                    .map(id -> text(id, source))
+        var methodName = childByRule(method, RuleId.Identifier.class).map(id -> text(id, source))
                                     .or("(unknown)");
         return Diagnostic.diagnostic(RULE_ID,
                                      ctx.severityFor(RULE_ID),

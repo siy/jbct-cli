@@ -60,24 +60,20 @@ public class PackageSlicesMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         if (skip) {
-            getLog()
-                  .info("Skipping slice packaging");
+            getLog().info("Skipping slice packaging");
             return;
         }
         var manifestDir = new File(classesDirectory, "META-INF/slice");
         if (!manifestDir.exists() || !manifestDir.isDirectory()) {
-            getLog()
-                  .info("No slice manifests found in " + manifestDir);
+            getLog().info("No slice manifests found in " + manifestDir);
             return;
         }
         var manifestFiles = manifestDir.listFiles((dir, name) -> name.endsWith(".manifest"));
         if (manifestFiles == null || manifestFiles.length == 0) {
-            getLog()
-                  .info("No .manifest files found");
+            getLog().info("No .manifest files found");
             return;
         }
-        getLog()
-              .info("Found " + manifestFiles.length + " slice manifest(s)");
+        getLog().info("Found " + manifestFiles.length + " slice manifest(s)");
         for (var manifestFile : manifestFiles) {
             processManifest(manifestFile.toPath());
         }
@@ -89,8 +85,7 @@ public class PackageSlicesMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to load manifest: " + manifestPath);
         }
         var manifest = result.unwrap();
-        getLog()
-              .info("Processing slice: " + manifest.sliceName());
+        getLog().info("Processing slice: " + manifest.sliceName());
         // Classify dependencies
         var classification = classifyDependencies(manifest);
         // Create API JAR
@@ -98,8 +93,9 @@ public class PackageSlicesMojo extends AbstractMojo {
         // Create Impl JAR (fat JAR with dependencies file and manifest entries)
         createImplJar(manifest, classification);
         // Generate POMs
-        generatePom(manifest, true);  // API POM
-        generatePom(manifest, false); // Impl POM
+        generatePom(manifest, true);
+        // API POM
+        generatePom(manifest, false);
     }
 
     private DependencyClassification classifyDependencies(SliceManifest manifest) {
@@ -138,7 +134,7 @@ public class PackageSlicesMojo extends AbstractMojo {
         var artifactId = artifact.getArtifactId();
         // Aether runtime libraries - always provided by platform, skip entirely
         return "org.pragmatica-lite.aether".equals(groupId) &&
-               ("slice-annotations".equals(artifactId) || "slice-api".equals(artifactId) || "infra-api".equals(artifactId));
+        ("slice-annotations".equals(artifactId) || "slice-api".equals(artifactId) || "infra-api".equals(artifactId));
     }
 
     private boolean isSliceDependency(Artifact artifact) {
@@ -150,8 +146,7 @@ public class PackageSlicesMojo extends AbstractMojo {
         try (var jar = new JarFile(file)) {
             return jar.getEntry(SLICE_API_PROPERTIES) != null;
         } catch (IOException e) {
-            getLog()
-                  .debug("Could not read JAR: " + file + " - " + e.getMessage());
+            getLog().debug("Could not read JAR: " + file + " - " + e.getMessage());
             return false;
         }
     }
@@ -189,8 +184,7 @@ public class PackageSlicesMojo extends AbstractMojo {
             mavenArchiver.setOutputFile(jarFile);
             var config = new MavenArchiveConfiguration();
             mavenArchiver.createArchive(null, project, config);
-            getLog()
-                  .info("Created API JAR: " + jarFile.getName());
+            getLog().info("Created API JAR: " + jarFile.getName());
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to create API JAR", e);
         }
@@ -225,9 +219,9 @@ public class PackageSlicesMojo extends AbstractMojo {
                                     manifest.slicePackage() + "." + manifest.sliceName() + "Factory");
             mavenArchiver.createArchive(null, project, config);
             getLog()
-                  .info("Created Impl JAR: " + jarFile.getName() + " (fat JAR with " + classification.externalDeps()
-                                                                                                     .size()
-                        + " bundled libs)");
+            .info("Created Impl JAR: " + jarFile.getName() + " (fat JAR with " + classification.externalDeps()
+                                                                                               .size()
+                  + " bundled libs)");
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to create Impl JAR", e);
         }
@@ -255,8 +249,7 @@ public class PackageSlicesMojo extends AbstractMojo {
                       .filter(dir -> !dir.equals(sliceDir))
                       .forEach(dir -> addDirectoryClasses(archiver, dir, classesPath));
             } catch (IOException e) {
-                getLog()
-                      .debug("Could not scan slice subpackages: " + e.getMessage());
+                getLog().debug("Could not scan slice subpackages: " + e.getMessage());
             }
         }
     }
@@ -276,8 +269,7 @@ public class PackageSlicesMojo extends AbstractMojo {
                                                 relativePath);
                            });
         } catch (IOException e) {
-            getLog()
-                  .debug("Could not read directory: " + dir + " - " + e.getMessage());
+            getLog().debug("Could not read directory: " + dir + " - " + e.getMessage());
         }
     }
 
@@ -309,14 +301,14 @@ public class PackageSlicesMojo extends AbstractMojo {
                     // Extract and add to archiver
                     try (var input = jar.getInputStream(entry)) {
                         var tempFile = Files.createTempFile("jbct-", ".tmp");
-                        tempFile.toFile().deleteOnExit();
+                        tempFile.toFile()
+                                .deleteOnExit();
                         Files.copy(input, tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                         archiver.addFile(tempFile.toFile(), entryName);
                     }
                 }
             } catch (IOException e) {
-                getLog()
-                      .warn("Could not bundle library: " + file.getName() + " - " + e.getMessage());
+                getLog().warn("Could not bundle library: " + file.getName() + " - " + e.getMessage());
             }
         }
     }
@@ -404,8 +396,7 @@ public class PackageSlicesMojo extends AbstractMojo {
         var pomFile = new File(outputDirectory, artifactId + "-" + project.getVersion() + ".pom");
         try (var writer = new FileWriter(pomFile)) {
             writer.write(generatePomContent(manifest, isApi));
-            getLog()
-                  .debug("Generated POM: " + pomFile.getName());
+            getLog().debug("Generated POM: " + pomFile.getName());
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate POM", e);
         }

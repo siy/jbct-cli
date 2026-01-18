@@ -165,7 +165,8 @@ public class RouteSourceGenerator {
             generateServiceFile(qualifiedName);
             return Result.success(Unit.unit());
         } catch (Exception e) {
-            return Causes.cause("Failed to generate routes class: " + e.getClass().getSimpleName() + ": " + e.getMessage())
+            return Causes.cause("Failed to generate routes class: " + e.getClass()
+                                                                       .getSimpleName() + ": " + e.getMessage())
                          .result();
         }
     }
@@ -173,7 +174,7 @@ public class RouteSourceGenerator {
     private void generateServiceFile(String qualifiedName) throws IOException {
         // Read existing entries if file exists
         Set<String> entries = new LinkedHashSet<>();
-        try {
+        try{
             FileObject existing = filer.getResource(StandardLocation.CLASS_OUTPUT, "", SERVICE_FILE);
             try (var reader = new BufferedReader(existing.openReader(true))) {
                 String line;
@@ -184,11 +185,7 @@ public class RouteSourceGenerator {
                     }
                 }
             }
-        } catch (IOException _) {
-            // File doesn't exist yet - expected on first compilation
-        } catch (IllegalArgumentException _) {
-            // Filer.getResource throws IAE for non-existent resources in some implementations
-        }
+        } catch (IOException _) {} catch (IllegalArgumentException _) {}
         // Add the new entry
         entries.add(qualifiedName);
         // Write all entries
@@ -561,7 +558,8 @@ public class RouteSourceGenerator {
 
     private String queryParamList(List<QueryParam> queryParams) {
         return queryParams.stream()
-                          .map(q -> "QueryParameter." + typeToQueryParameter(q.type()) + "(\"" + escapeJavaString(q.name()) + "\")")
+                          .map(q -> "QueryParameter." + typeToQueryParameter(q.type()) + "(\"" + escapeJavaString(q.name())
+                                    + "\")")
                           .collect(Collectors.joining(", "));
     }
 

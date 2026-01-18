@@ -8,13 +8,14 @@ import org.pragmatica.lang.Option;
 import org.pragmatica.lang.Result;
 import org.pragmatica.lang.Unit;
 import org.pragmatica.lang.utils.Causes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Updates AI tools from the coding-technology GitHub repository.
@@ -91,8 +92,7 @@ public final class AiToolsUpdater {
     private Result<List<Path>> downloadFiles(String commitSha) {
         return GitHubContentFetcher.discoverFiles(http, REPO, BRANCH, AI_TOOLS_PREFIX)
                                    .flatMap(this::downloadAllFiles)
-                                   .flatMap(files -> saveCurrentVersion(commitSha)
-                                                                       .map(_ -> files));
+                                   .flatMap(files -> saveCurrentVersion(commitSha).map(_ -> files));
     }
 
     private Result<List<Path>> downloadAllFiles(List<String> remotePaths) {
@@ -115,7 +115,7 @@ public final class AiToolsUpdater {
         if (!Files.exists(versionFile)) {
             return Option.none();
         }
-        try {
+        try{
             var content = Files.readString(versionFile)
                                .trim();
             return Option.option(content);

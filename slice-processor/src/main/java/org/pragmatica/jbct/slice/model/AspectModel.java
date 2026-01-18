@@ -78,6 +78,6 @@ public record AspectModel(List<String> kinds, Option<KeyExtractorInfo> keyExtrac
      * Check if any aspects are present.
      */
     public boolean hasAspects() {
-        return !kinds.isEmpty();
+        return ! kinds.isEmpty();
     }
 }
