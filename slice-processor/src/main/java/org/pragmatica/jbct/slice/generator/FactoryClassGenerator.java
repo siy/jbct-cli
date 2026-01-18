@@ -1,7 +1,9 @@
 package org.pragmatica.jbct.slice.generator;
 
 import org.pragmatica.jbct.slice.model.DependencyModel;
+import org.pragmatica.jbct.slice.model.MethodModel;
 import org.pragmatica.jbct.slice.model.SliceModel;
+import org.pragmatica.lang.Option;
 import org.pragmatica.lang.Result;
 import org.pragmatica.lang.Unit;
 import org.pragmatica.lang.utils.Causes;
@@ -15,9 +17,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
-
-import org.pragmatica.lang.Option;
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +32,9 @@ import java.util.List;
  * <p>
  * External dependencies get local proxy records inside create() method.
  * Internal dependencies are instantiated via their factory methods.
+ * <p>
+ * When methods have @Aspect annotations, generates wrapper record with
+ * aspect-wrapped method implementations.
  */
 public class FactoryClassGenerator {
     private final Filer filer;
@@ -123,6 +125,18 @@ public class FactoryClassGenerator {
         out.println("import org.pragmatica.lang.Promise;");
         out.println("import org.pragmatica.lang.Unit;");
         out.println("import org.pragmatica.lang.type.TypeToken;");
+
+        // Aspect-related imports
+        if (model.hasAspects()) {
+            out.println("import org.pragmatica.aether.slice.SliceRuntime;");
+            out.println("import org.pragmatica.aether.infra.aspect.Aspects;");
+            out.println("import org.pragmatica.lang.Functions.Fn1;");
+        }
+        if (model.hasCache()) {
+            out.println("import org.pragmatica.aether.infra.aspect.Cache;");
+            out.println("import org.pragmatica.aether.infra.aspect.CacheConfig;");
+        }
+
         out.println();
         out.println("import java.util.List;");
 
@@ -156,14 +170,22 @@ public class FactoryClassGenerator {
             out.println();
         }
 
+        // Generate wrapper record if aspects are present
+        if (model.hasAspects()) {
+            generateWrapperRecord(out, model);
+            out.println();
+        }
+
         // Instantiate internal dependencies
         for (var dep : internalDeps) {
             out.println("        var " + dep.parameterName() + " = " +
                        dep.interfaceSimpleName() + "." + dep.factoryMethodName() + "();");
         }
 
-        // Build flatMap chain for handle creation or direct return if no external deps
-        if (externalDeps.isEmpty()) {
+        // Build the creation chain
+        if (model.hasAspects()) {
+            generateAspectCreateChain(out, model, externalDeps, internalDeps);
+        } else if (externalDeps.isEmpty()) {
             var factoryArgs = model.dependencies()
                                    .stream()
                                    .map(DependencyModel::parameterName)
@@ -176,6 +198,156 @@ public class FactoryClassGenerator {
         }
 
         out.println("    }");
+    }
+
+    private void generateWrapperRecord(PrintWriter out, SliceModel model) {
+        var sliceName = model.simpleName();
+        var wrapperName = sliceName + "Wrapper";
+
+        // Generate record components - one Fn1 per method
+        var components = new ArrayList<String>();
+        for (var method : model.methods()) {
+            var responseType = method.responseType()
+                                     .toString();
+            var paramType = method.parameterType()
+                                  .toString();
+            components.add("Fn1<Promise<" + responseType + ">, " + paramType + "> " + method.name() + "Fn");
+        }
+
+        out.println("        record " + wrapperName + "(" + String.join(",\n                                  ", components) + ")");
+        out.println("               implements " + sliceName + " {");
+
+        // Generate method implementations
+        for (var method : model.methods()) {
+            var responseType = method.responseType()
+                                     .toString();
+            var paramType = method.parameterType()
+                                  .toString();
+            out.println();
+            out.println("            @Override");
+            out.println("            public Promise<" + responseType + "> " + method.name() + "(" + paramType + " request) {");
+            out.println("                return " + method.name() + "Fn.apply(request);");
+            out.println("            }");
+        }
+
+        out.println("        }");
+    }
+
+    private void generateAspectCreateChain(PrintWriter out,
+                                            SliceModel model,
+                                            List<DependencyModel> externalDeps,
+                                            List<DependencyModel> internalDeps) {
+        var sliceName = model.simpleName();
+        var wrapperName = sliceName + "Wrapper";
+
+        // Collect all cache methods for cache creation
+        var cacheMethods = model.methods()
+                                .stream()
+                                .filter(m -> m.aspects()
+                                              .hasCache())
+                                .toList();
+
+        // Start with SliceRuntime.getAspectFactory()
+        out.println("        return SliceRuntime.getAspectFactory()");
+        out.println("                           .async()");
+
+        // Generate cache creation flatMaps
+        var cacheVarNames = new ArrayList<String>();
+        for (int i = 0; i < cacheMethods.size(); i++) {
+            var method = cacheMethods.get(i);
+            var cacheVarName = method.name() + "Cache";
+            cacheVarNames.add(cacheVarName);
+
+            var keyExtractor = method.aspects()
+                                     .keyExtractor()
+                                     .or(() -> {
+                                         throw new IllegalStateException("CACHE aspect requires key extractor");
+                                     });
+            var keyType = keyExtractor.keyType();
+            var responseType = method.responseType()
+                                     .toString();
+            var cacheName = lowercaseFirst(sliceName) + "." + method.name();
+
+            out.println("                           .flatMap(factory -> CacheConfig.cacheConfig(\"" + cacheName + "\",");
+            out.println("                                                                       new TypeToken<" + keyType + ">() {},");
+            out.println("                                                                       new TypeToken<" + responseType + ">() {})");
+            out.println("                                                          .async()");
+            out.println("                                                          .flatMap(cfg -> factory.create(Cache.class, cfg).async()))");
+        }
+
+        // Handle external dependencies
+        if (!externalDeps.isEmpty()) {
+            var allHandles = new ArrayList<HandleInfo>();
+            for (var dep : externalDeps) {
+                var methods = collectProxyMethods(dep);
+                for (var proxyMethod : methods) {
+                    allHandles.add(new HandleInfo(dep, proxyMethod));
+                }
+            }
+
+            for (var handle : allHandles) {
+                out.println("                           .flatMap(" + (cacheVarNames.isEmpty() ? "factory" : cacheVarNames.getLast()) +
+                           " -> " + generateMethodHandleCall(handle) + ")");
+            }
+        }
+
+        // Final map to create wrapper
+        var lastVar = !externalDeps.isEmpty()
+                      ? collectProxyMethods(externalDeps.getLast()).getLast().name + "Handle"
+                      : !cacheVarNames.isEmpty()
+                        ? cacheVarNames.getLast()
+                        : "factory";
+
+        out.println("                           .map(" + lastVar + " -> {");
+
+        // Instantiate external dependency proxies
+        for (var dep : externalDeps) {
+            var methods = collectProxyMethods(dep);
+            var handleArgs = methods.stream()
+                                    .map(m -> dep.parameterName() + "_" + m.name)
+                                    .toList();
+            out.println("                               var " + dep.parameterName() + " = new " + dep.localRecordName() +
+                       "(" + String.join(", ", handleArgs) + ");");
+        }
+
+        // Create the impl instance
+        var factoryArgs = model.dependencies()
+                               .stream()
+                               .map(DependencyModel::parameterName)
+                               .toList();
+        out.println("                               var impl = " + sliceName + "." + model.factoryMethodName() +
+                   "(" + String.join(", ", factoryArgs) + ");");
+        out.println();
+
+        // Create wrapped functions for each method
+        int cacheIdx = 0;
+        for (var method : model.methods()) {
+            var wrappedVar = method.name() + "Wrapped";
+            if (method.aspects()
+                      .hasCache()) {
+                var keyExtractor = method.aspects()
+                                         .keyExtractor()
+                                         .or(() -> {
+                                             throw new IllegalStateException("CACHE aspect requires key extractor");
+                                         });
+                var cacheVar = cacheVarNames.get(cacheIdx++);
+                out.println("                               var " + wrappedVar + " = Aspects.withCaching(impl::" + method.name() +
+                           ", " + keyExtractor.extractorExpression() + ", " + cacheVar + ");");
+            } else {
+                out.println("                               Fn1<Promise<" + method.responseType() + ">, " +
+                           method.parameterType() + "> " + wrappedVar + " = impl::" + method.name() + ";");
+            }
+        }
+        out.println();
+
+        // Return wrapped instance
+        var wrappedArgs = model.methods()
+                               .stream()
+                               .map(m -> m.name() + "Wrapped")
+                               .toList();
+        out.println("                               return aspect.apply(new " + wrapperName + "(" +
+                   String.join(", ", wrappedArgs) + "));");
+        out.println("                           });");
     }
 
     private void generateFlatMapChain(PrintWriter out,
@@ -226,16 +398,23 @@ public class FactoryClassGenerator {
                                .toList();
         out.println(indent + "    return aspect.apply(" + sliceName + "." + model.factoryMethodName() +
                    "(" + String.join(", ", factoryArgs) + "));");
-        out.println(indent + "})");
 
-        // Close all flatMaps
-        for (int i = 1; i < allHandles.size(); i++) {
-            indent = indent.substring(4);
-            out.println(indent + ")");
+        // Close all flatMaps and the final map
+        if (allHandles.size() == 1) {
+            // Single handle: just close .map with semicolon
+            out.println(indent + "});");
+        } else {
+            // Multiple handles: close .map, then close all flatMaps
+            out.println(indent + "})");
+            for (int i = 1; i < allHandles.size(); i++) {
+                indent = indent.substring(4);
+                if (i == allHandles.size() - 1) {
+                    out.println(indent + ");");
+                } else {
+                    out.println(indent + ")");
+                }
+            }
         }
-
-        // Convert Result to Promise
-        out.println("            .async();");
     }
 
     private record HandleInfo(DependencyModel dep, ProxyMethodInfo method) {

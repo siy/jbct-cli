@@ -17,6 +17,11 @@ public record SliceModel(String packageName,
                          List<MethodModel> methods,
                          List<DependencyModel> dependencies,
                          ExecutableElement factoryMethod) {
+    public SliceModel {
+        methods = List.copyOf(methods);
+        dependencies = List.copyOf(dependencies);
+    }
+
     public static Result<SliceModel> sliceModel(TypeElement element, ProcessingEnvironment env) {
         var packageName = env.getElementUtils()
                              .getPackageOf(element)
@@ -27,7 +32,7 @@ public record SliceModel(String packageName,
         var qualifiedName = element.getQualifiedName()
                                    .toString();
         var apiPackage = packageName + ".api";
-        return extractMethods(element)
+        return extractMethods(element, env)
                              .flatMap(methods -> findFactoryMethod(element, simpleName)
                                                                   .flatMap(factoryMethod -> extractDependencies(factoryMethod,
                                                                                                                 env)
@@ -40,7 +45,7 @@ public record SliceModel(String packageName,
                                                                                                                                                    factoryMethod))));
     }
 
-    private static Result<List<MethodModel>> extractMethods(TypeElement element) {
+    private static Result<List<MethodModel>> extractMethods(TypeElement element, ProcessingEnvironment env) {
         var results = element.getEnclosedElements()
                              .stream()
                              .filter(e -> e.getKind() == ElementKind.METHOD)
@@ -49,7 +54,7 @@ public record SliceModel(String packageName,
                                             .contains(Modifier.STATIC))
                              .filter(m -> !m.getModifiers()
                                             .contains(Modifier.DEFAULT))
-                             .map(MethodModel::methodModel)
+                             .map(m -> MethodModel.methodModel(m, env))
                              .toList();
         return Result.allOf(results);
     }
@@ -81,7 +86,19 @@ public record SliceModel(String packageName,
     }
 
     public boolean hasDependencies() {
-        return ! dependencies.isEmpty();
+        return !dependencies.isEmpty();
+    }
+
+    public boolean hasAspects() {
+        return methods.stream()
+                      .anyMatch(m -> m.aspects()
+                                      .hasAspects());
+    }
+
+    public boolean hasCache() {
+        return methods.stream()
+                      .anyMatch(m -> m.aspects()
+                                      .hasCache());
     }
 
     public String factoryMethodName() {

@@ -38,6 +38,7 @@ class SliceProcessorTest {
 
             public interface Promise<T> {
                 <R> Promise<R> map(java.util.function.Function<T, R> fn);
+                <R> Promise<R> flatMap(java.util.function.Function<T, Promise<R>> fn);
                 static <T> Promise<T> success(T value) { return null; }
             }
             """);
@@ -104,23 +105,189 @@ class SliceProcessorTest {
             }
             """);
 
+    private static final JavaFileObject METHOD_HANDLE = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.slice.MethodHandle",
+            """
+            package org.pragmatica.aether.slice;
+
+            import org.pragmatica.lang.Promise;
+
+            public interface MethodHandle<R, I> {
+                Promise<R> invoke(I request);
+            }
+            """);
+
     private static final JavaFileObject INVOKER_FACADE = JavaFileObjects.forSourceString(
             "org.pragmatica.aether.slice.SliceInvokerFacade",
             """
             package org.pragmatica.aether.slice;
 
             import org.pragmatica.lang.Promise;
+            import org.pragmatica.lang.type.TypeToken;
 
             public interface SliceInvokerFacade {
                 <T> Promise<T> invoke(String artifact, String method, Object request, Class<T> responseType);
+                <R, I> Promise<MethodHandle<R, I>> methodHandle(String artifact, String method, TypeToken<I> requestType, TypeToken<R> responseType);
+            }
+            """);
+
+    // Aspect-related stubs
+    private static final JavaFileObject ASPECT_KIND = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.infra.aspect.AspectKind",
+            """
+            package org.pragmatica.aether.infra.aspect;
+
+            public enum AspectKind { CACHE, LOG, METRICS, RETRY, TIMEOUT }
+            """);
+
+    private static final JavaFileObject ASPECT_ANNOTATION = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.infra.aspect.Aspect",
+            """
+            package org.pragmatica.aether.infra.aspect;
+
+            import java.lang.annotation.*;
+
+            @Target({ElementType.TYPE, ElementType.METHOD})
+            @Retention(RetentionPolicy.SOURCE)
+            public @interface Aspect {
+                AspectKind[] value();
+            }
+            """);
+
+    private static final JavaFileObject KEY_ANNOTATION = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.infra.aspect.Key",
+            """
+            package org.pragmatica.aether.infra.aspect;
+
+            import java.lang.annotation.*;
+
+            @Target(ElementType.RECORD_COMPONENT)
+            @Retention(RetentionPolicy.SOURCE)
+            public @interface Key {}
+            """);
+
+    private static final JavaFileObject FN1 = JavaFileObjects.forSourceString(
+            "org.pragmatica.lang.Functions",
+            """
+            package org.pragmatica.lang;
+
+            public final class Functions {
+                public interface Fn1<R, T> {
+                    R apply(T input);
+                }
+            }
+            """);
+
+    private static final JavaFileObject RESULT = JavaFileObjects.forSourceString(
+            "org.pragmatica.lang.Result",
+            """
+            package org.pragmatica.lang;
+
+            public interface Result<T> {
+                Promise<T> async();
+                static <T> Result<T> success(T value) { return null; }
+            }
+            """);
+
+    private static final JavaFileObject OPTION = JavaFileObjects.forSourceString(
+            "org.pragmatica.lang.Option",
+            """
+            package org.pragmatica.lang;
+
+            public interface Option<T> {
+                static <T> Option<T> option(T value) { return null; }
+                Result<T> toResult(Object cause);
+            }
+            """);
+
+    private static final JavaFileObject SLICE_RUNTIME = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.slice.SliceRuntime",
+            """
+            package org.pragmatica.aether.slice;
+
+            import org.pragmatica.lang.Result;
+
+            public final class SliceRuntime {
+                public static Result<AspectFactory> getAspectFactory() { return null; }
+            }
+            """);
+
+    private static final JavaFileObject ASPECT_FACTORY = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.slice.AspectFactory",
+            """
+            package org.pragmatica.aether.slice;
+
+            import org.pragmatica.lang.Result;
+
+            public interface AspectFactory {
+                <C, R> Result<R> create(Class<R> type, C config);
+            }
+            """);
+
+    private static final JavaFileObject CACHE = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.infra.aspect.Cache",
+            """
+            package org.pragmatica.aether.infra.aspect;
+
+            import org.pragmatica.lang.Promise;
+            import org.pragmatica.lang.Option;
+            import org.pragmatica.lang.Unit;
+
+            public interface Cache<K, V> {
+                Promise<Option<V>> get(K key);
+                Promise<Unit> put(K key, V value);
+            }
+            """);
+
+    private static final JavaFileObject CACHE_CONFIG = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.infra.aspect.CacheConfig",
+            """
+            package org.pragmatica.aether.infra.aspect;
+
+            import org.pragmatica.lang.Result;
+            import org.pragmatica.lang.type.TypeToken;
+
+            public record CacheConfig<K, V>(String name, TypeToken<K> keyType, TypeToken<V> valueType) {
+                public static <K, V> Result<CacheConfig<K, V>> cacheConfig(String name,
+                                                                            TypeToken<K> keyType,
+                                                                            TypeToken<V> valueType) {
+                    return null;
+                }
+            }
+            """);
+
+    private static final JavaFileObject ASPECTS = JavaFileObjects.forSourceString(
+            "org.pragmatica.aether.infra.aspect.Aspects",
+            """
+            package org.pragmatica.aether.infra.aspect;
+
+            import org.pragmatica.lang.Functions.Fn1;
+            import org.pragmatica.lang.Promise;
+
+            public final class Aspects {
+                public static <T, K, R> Fn1<Promise<R>, T> withCaching(Fn1<Promise<R>, T> fn,
+                                                                        Fn1<K, T> keyExtractor,
+                                                                        Cache<K, R> cache) {
+                    return null;
+                }
             }
             """);
 
     private List<JavaFileObject> commonSources() {
         return new ArrayList<>(List.of(
                 SLICE_ANNOTATION, PROMISE, UNIT, TYPE_TOKEN,
-                ASPECT, SLICE, SLICE_METHOD, METHOD_NAME, INVOKER_FACADE
+                ASPECT, SLICE, SLICE_METHOD, METHOD_NAME, METHOD_HANDLE, INVOKER_FACADE
         ));
+    }
+
+    private List<JavaFileObject> aspectSources() {
+        var sources = commonSources();
+        sources.addAll(List.of(
+                ASPECT_KIND, ASPECT_ANNOTATION, KEY_ANNOTATION,
+                FN1, RESULT, OPTION,
+                SLICE_RUNTIME, ASPECT_FACTORY, CACHE, CACHE_CONFIG, ASPECTS
+        ));
+        return sources;
     }
 
     @Test
@@ -244,11 +411,11 @@ class SliceProcessorTest {
         assertCompilation(compilation).generatedSourceFile("test.api.OrderService");
         assertCompilation(compilation).generatedSourceFile("test.OrderServiceFactory");
 
-        // Verify proxy record is generated inside factory
+        // Verify proxy record is generated inside factory with MethodHandle
         assertCompilation(compilation)
                   .generatedSourceFile("test.OrderServiceFactory")
                   .contentsAsUtf8String()
-                  .contains("record inventoryService(SliceInvokerFacade invoker) implements InventoryService");
+                  .contains("record inventoryService(MethodHandle<");
     }
 
     @Test
@@ -368,8 +535,8 @@ class SliceProcessorTest {
         // Internal dependency calls factory
         assertThat(factoryContent).contains("OrderValidator.orderValidator()");
 
-        // External dependency gets proxy record
-        assertThat(factoryContent).contains("record paymentService(SliceInvokerFacade invoker) implements PaymentService");
+        // External dependency gets proxy record with MethodHandle
+        assertThat(factoryContent).contains("record paymentService(MethodHandle<");
     }
 
     @Test
@@ -460,8 +627,8 @@ class SliceProcessorTest {
         assertThat(factoryContent).contains("OrderValidator.orderValidator()");
         assertThat(factoryContent).contains("PricingEngine.pricingEngine()");
 
-        // External dependency gets proxy
-        assertThat(factoryContent).contains("record inventoryService(SliceInvokerFacade invoker) implements InventoryService");
+        // External dependency gets proxy with MethodHandle
+        assertThat(factoryContent).contains("record inventoryService(MethodHandle<");
 
         // Factory instantiates slice with all dependencies
         assertThat(factoryContent).contains("OrderProcessor.orderProcessor(validator, pricing, inventory)");
@@ -502,8 +669,8 @@ class SliceProcessorTest {
                                         .getCharContent(false)
                                         .toString();
 
-        // createSlice method exists
-        assertThat(factoryContent).contains("public static Promise<Slice> createSlice");
+        // userServiceSlice method exists (follows {sliceName}Slice naming)
+        assertThat(factoryContent).contains("public static Promise<Slice> userServiceSlice");
 
         // All methods are registered
         assertThat(factoryContent).contains("delegate::getUser");
@@ -695,5 +862,291 @@ class SliceProcessorTest {
         assertThat(manifestContent).contains("dependencies.count=1");
         assertThat(manifestContent).contains("dependency.0.interface=inventory.InventoryService");
         assertThat(manifestContent).contains("dependency.0.external=true");
+    }
+
+    // ========== Aspect Tests ==========
+
+    @Test
+    void should_generate_cache_wrapper_with_key_extractor() throws Exception {
+        var userId = JavaFileObjects.forSourceString("test.dto.UserId",
+                                                     """
+            package test.dto;
+
+            public record UserId(String value) {}
+            """);
+
+        var request = JavaFileObjects.forSourceString("test.dto.GetUserRequest",
+                                                      """
+            package test.dto;
+
+            import org.pragmatica.aether.infra.aspect.Key;
+
+            public record GetUserRequest(@Key UserId userId, boolean includeDetails) {}
+            """);
+
+        var response = JavaFileObjects.forSourceString("test.dto.User",
+                                                       """
+            package test.dto;
+
+            public record User(String id, String name) {}
+            """);
+
+        var source = JavaFileObjects.forSourceString("test.UserService",
+                                                     """
+            package test;
+
+            import org.pragmatica.aether.slice.annotation.Slice;
+            import org.pragmatica.aether.infra.aspect.Aspect;
+            import org.pragmatica.aether.infra.aspect.AspectKind;
+            import org.pragmatica.lang.Promise;
+            import test.dto.GetUserRequest;
+            import test.dto.User;
+
+            @Slice
+            public interface UserService {
+                @Aspect(AspectKind.CACHE)
+                Promise<User> getUser(GetUserRequest request);
+
+                static UserService userService() {
+                    return null;
+                }
+            }
+            """);
+
+        var sources = aspectSources();
+        sources.add(userId);
+        sources.add(request);
+        sources.add(response);
+        sources.add(source);
+
+        Compilation compilation = javac()
+                                       .withProcessors(new SliceProcessor())
+                                       .compile(sources);
+
+        assertCompilation(compilation).succeeded();
+
+        var factoryContent = compilation.generatedSourceFile("test.UserServiceFactory")
+                                        .orElseThrow()
+                                        .getCharContent(false)
+                                        .toString();
+
+        // Wrapper record generated
+        assertThat(factoryContent).contains("record UserServiceWrapper(");
+        assertThat(factoryContent).contains("implements UserService");
+
+        // Cache config with correct types
+        assertThat(factoryContent).contains("CacheConfig.cacheConfig(\"userService.getUser\"");
+        assertThat(factoryContent).contains("new TypeToken<test.dto.UserId>() {}");
+        assertThat(factoryContent).contains("new TypeToken<test.dto.User>() {}");
+
+        // Key extractor uses method reference with fully qualified type
+        assertThat(factoryContent).contains("Aspects.withCaching(impl::getUser, test.dto.GetUserRequest::userId,");
+
+        // SliceRuntime.getAspectFactory() chain
+        assertThat(factoryContent).contains("SliceRuntime.getAspectFactory()");
+    }
+
+    @Test
+    void should_use_identity_extractor_when_no_key_annotation() throws Exception {
+        var request = JavaFileObjects.forSourceString("test.dto.GetUserRequest",
+                                                      """
+            package test.dto;
+
+            public record GetUserRequest(String userId, boolean includeDetails) {}
+            """);
+
+        var response = JavaFileObjects.forSourceString("test.dto.User",
+                                                       """
+            package test.dto;
+
+            public record User(String id, String name) {}
+            """);
+
+        var source = JavaFileObjects.forSourceString("test.UserService",
+                                                     """
+            package test;
+
+            import org.pragmatica.aether.slice.annotation.Slice;
+            import org.pragmatica.aether.infra.aspect.Aspect;
+            import org.pragmatica.aether.infra.aspect.AspectKind;
+            import org.pragmatica.lang.Promise;
+            import test.dto.GetUserRequest;
+            import test.dto.User;
+
+            @Slice
+            public interface UserService {
+                @Aspect(AspectKind.CACHE)
+                Promise<User> getUser(GetUserRequest request);
+
+                static UserService userService() {
+                    return null;
+                }
+            }
+            """);
+
+        var sources = aspectSources();
+        sources.add(request);
+        sources.add(response);
+        sources.add(source);
+
+        Compilation compilation = javac()
+                                       .withProcessors(new SliceProcessor())
+                                       .compile(sources);
+
+        assertCompilation(compilation).succeeded();
+
+        var factoryContent = compilation.generatedSourceFile("test.UserServiceFactory")
+                                        .orElseThrow()
+                                        .getCharContent(false)
+                                        .toString();
+
+        // Identity extractor (request type as key)
+        assertThat(factoryContent).contains("new TypeToken<test.dto.GetUserRequest>() {}");
+        assertThat(factoryContent).contains("request -> request");
+    }
+
+    @Test
+    void should_fail_on_multiple_key_annotations() {
+        var request = JavaFileObjects.forSourceString("test.dto.GetUserRequest",
+                                                      """
+            package test.dto;
+
+            import org.pragmatica.aether.infra.aspect.Key;
+
+            public record GetUserRequest(@Key String userId, @Key String tenantId) {}
+            """);
+
+        var source = JavaFileObjects.forSourceString("test.UserService",
+                                                     """
+            package test;
+
+            import org.pragmatica.aether.slice.annotation.Slice;
+            import org.pragmatica.aether.infra.aspect.Aspect;
+            import org.pragmatica.aether.infra.aspect.AspectKind;
+            import org.pragmatica.lang.Promise;
+            import test.dto.GetUserRequest;
+
+            @Slice
+            public interface UserService {
+                @Aspect(AspectKind.CACHE)
+                Promise<String> getUser(GetUserRequest request);
+
+                static UserService userService() {
+                    return null;
+                }
+            }
+            """);
+
+        var sources = aspectSources();
+        sources.add(request);
+        sources.add(source);
+
+        Compilation compilation = javac()
+                                       .withProcessors(new SliceProcessor())
+                                       .compile(sources);
+
+        assertCompilation(compilation).failed();
+        assertCompilation(compilation).hadErrorContaining("Multiple @Key annotations");
+    }
+
+    @Test
+    void should_not_generate_wrapper_for_methods_without_aspects() throws Exception {
+        var source = JavaFileObjects.forSourceString("test.UserService",
+                                                     """
+            package test;
+
+            import org.pragmatica.aether.slice.annotation.Slice;
+            import org.pragmatica.lang.Promise;
+
+            @Slice
+            public interface UserService {
+                Promise<String> getUser(String userId);
+
+                static UserService userService() {
+                    return null;
+                }
+            }
+            """);
+
+        var sources = aspectSources();
+        sources.add(source);
+
+        Compilation compilation = javac()
+                                       .withProcessors(new SliceProcessor())
+                                       .compile(sources);
+
+        assertCompilation(compilation).succeeded();
+
+        var factoryContent = compilation.generatedSourceFile("test.UserServiceFactory")
+                                        .orElseThrow()
+                                        .getCharContent(false)
+                                        .toString();
+
+        // No wrapper record
+        assertThat(factoryContent).doesNotContain("UserServiceWrapper");
+        // No aspect imports
+        assertThat(factoryContent).doesNotContain("SliceRuntime");
+        assertThat(factoryContent).doesNotContain("Aspects");
+    }
+
+    @Test
+    void should_generate_mixed_wrapped_and_unwrapped_methods() throws Exception {
+        var request = JavaFileObjects.forSourceString("test.dto.GetUserRequest",
+                                                      """
+            package test.dto;
+
+            import org.pragmatica.aether.infra.aspect.Key;
+
+            public record GetUserRequest(@Key String userId) {}
+            """);
+
+        var source = JavaFileObjects.forSourceString("test.UserService",
+                                                     """
+            package test;
+
+            import org.pragmatica.aether.slice.annotation.Slice;
+            import org.pragmatica.aether.infra.aspect.Aspect;
+            import org.pragmatica.aether.infra.aspect.AspectKind;
+            import org.pragmatica.lang.Promise;
+            import test.dto.GetUserRequest;
+
+            @Slice
+            public interface UserService {
+                @Aspect(AspectKind.CACHE)
+                Promise<String> getUser(GetUserRequest request);
+
+                Promise<Boolean> updateUser(String request);
+
+                static UserService userService() {
+                    return null;
+                }
+            }
+            """);
+
+        var sources = aspectSources();
+        sources.add(request);
+        sources.add(source);
+
+        Compilation compilation = javac()
+                                       .withProcessors(new SliceProcessor())
+                                       .compile(sources);
+
+        assertCompilation(compilation).succeeded();
+
+        var factoryContent = compilation.generatedSourceFile("test.UserServiceFactory")
+                                        .orElseThrow()
+                                        .getCharContent(false)
+                                        .toString();
+
+        // Wrapper record with both method Fn1 components
+        assertThat(factoryContent).contains("record UserServiceWrapper(");
+        assertThat(factoryContent).contains("getUserFn");
+        assertThat(factoryContent).contains("updateUserFn");
+
+        // getUser is cached
+        assertThat(factoryContent).contains("getUserWrapped = Aspects.withCaching(impl::getUser");
+
+        // updateUser is direct method reference (no caching)
+        assertThat(factoryContent).contains("updateUserWrapped = impl::updateUser");
     }
 }
