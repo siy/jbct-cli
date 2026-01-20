@@ -338,23 +338,26 @@ public final class SliceProjectInitializer {
             </properties>
 
             <dependencies>
-                <!-- Pragmatica Lite Core -->
+                <!-- Pragmatica Lite Core (provided by Aether runtime) -->
                 <dependency>
                     <groupId>org.pragmatica-lite</groupId>
                     <artifactId>core</artifactId>
                     <version>${pragmatica-lite.version}</version>
+                    <scope>provided</scope>
                 </dependency>
 
-                <!-- Aether Slice API -->
+                <!-- Aether Slice API (provided by Aether runtime) -->
                 <dependency>
                     <groupId>org.pragmatica-lite.aether</groupId>
                     <artifactId>slice-annotations</artifactId>
                     <version>${aether.version}</version>
+                    <scope>provided</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.pragmatica-lite.aether</groupId>
                     <artifactId>slice-api</artifactId>
                     <version>${aether.version}</version>
+                    <scope>provided</scope>
                 </dependency>
 
                 <!-- Slice Annotation Processor -->
@@ -365,7 +368,7 @@ public final class SliceProjectInitializer {
                     <scope>provided</scope>
                 </dependency>
 
-                <!-- Add other slice API dependencies here -->
+                <!-- Add other slice API dependencies here (use 'provided' scope for Aether runtime libs) -->
 
                 <!-- Testing -->
                 <dependency>

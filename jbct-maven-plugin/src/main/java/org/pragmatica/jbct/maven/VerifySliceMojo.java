@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.jar.Manifest;
 import java.util.stream.Stream;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -64,9 +66,10 @@ public class VerifySliceMojo extends AbstractMojo {
     private ValidationResult validateSlice() {
         var manifestResult = checkManifestEntries();
         var propsResult = checkSliceApiProperties();
+        var scopeResult = checkRuntimeDependencyScopes();
         var errors = new ArrayList<String>();
         var warnings = new ArrayList<String>();
-        Stream.of(manifestResult, propsResult)
+        Stream.of(manifestResult, propsResult, scopeResult)
               .forEach(partial -> {
                   errors.addAll(partial.errors());
                   warnings.addAll(partial.warnings());
@@ -116,6 +119,32 @@ public class VerifySliceMojo extends AbstractMojo {
         } catch (IOException e) {
             return PartialResult.error("Failed to read slice-api.properties: " + e.getMessage());
         }
+    }
+
+    /**
+     * Validates that Aether runtime and Pragmatica Lite dependencies are marked as 'provided'.
+     * These libraries are provided by the Aether runtime and should not be bundled with slices.
+     */
+    private PartialResult checkRuntimeDependencyScopes() {
+        // Group IDs that must use 'provided' scope
+        var runtimeGroupIds = Set.of("org.pragmatica-lite", "org.pragmatica-lite.aether");
+        // Artifact IDs that are exceptions (e.g., slice-processor is correctly provided for compilation)
+        var allowedNonProvided = Set.of("slice-processor");
+        var errors = new ArrayList<String>();
+        for (var artifact : project.getDependencyArtifacts()) {
+            var groupId = artifact.getGroupId();
+            var artifactId = artifact.getArtifactId();
+            var scope = artifact.getScope();
+            if (runtimeGroupIds.contains(groupId) && !allowedNonProvided.contains(artifactId)) {
+                if (!Artifact.SCOPE_PROVIDED.equals(scope) && !Artifact.SCOPE_TEST.equals(scope)) {
+                    errors.add("Dependency " + groupId + ":" + artifactId + " must have 'provided' scope. "
+                               + "Aether runtime libraries should not be bundled with slices. " + "Current scope: " + (scope == null
+                                                                                                                       ? "compile"
+                                                                                                                       : scope));
+                }
+            }
+        }
+        return PartialResult.partialResult(errors, List.of());
     }
 
     private void checkRequired(Properties props, String key, List<String> errors) {
