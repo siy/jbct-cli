@@ -37,6 +37,7 @@
 - Slice processor: `FactoryClassGenerator` adds `.async()` for `Result` to `Promise` conversion (pragmatica-lite 0.10.0 compatibility)
 - Slice packaging: filter out all `org.pragmatica-lite` and `org.pragmatica-lite.aether` artifacts from dependencies file
 - Slice packaging: only include direct dependencies in dependencies file (exclude transitives of provided deps)
+- Slice packaging: read slice/API artifact names from manifest instead of deriving from Maven artifact ID
 - Slice processor: factory method name follows RFC-0001 (`{sliceName}` not `create`)
 - Slice processor: `RouteSourceGenerator` escapes paths and query param names in generated code
 - Slice processor: `DependencyModel.localRecordName()` handles empty strings and acronyms

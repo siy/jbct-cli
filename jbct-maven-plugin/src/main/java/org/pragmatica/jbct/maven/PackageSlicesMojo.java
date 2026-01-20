@@ -121,8 +121,9 @@ public class PackageSlicesMojo extends AbstractMojo {
                 infraDeps.add(toArtifactInfo(artifact));
             } else if (isSliceDependency(artifact) && isDirectDependency) {
                 // Slice dependencies - add both API and slice entry (direct only)
+                // Read actual artifact names from manifest (not Maven artifact ID)
                 apiDeps.add(toApiArtifactInfo(artifact));
-                sliceDeps.add(toArtifactInfo(artifact));
+                sliceDeps.add(toSliceArtifactInfo(artifact));
             } else if ("provided".equals(scope) && isDirectDependency) {
                 // Shared dependencies (provided scope, non-infra, direct only)
                 sharedDeps.add(toArtifactInfo(artifact));
@@ -150,16 +151,28 @@ public class PackageSlicesMojo extends AbstractMojo {
     }
 
     private boolean isSliceDependency(Artifact artifact) {
+        return readSliceManifest(artifact) != null;
+    }
+
+    private java.util.Properties readSliceManifest(Artifact artifact) {
         var file = artifact.getFile();
         if (file == null || !file.exists() || !file.getName()
                                                    .endsWith(".jar")) {
-            return false;
+            return null;
         }
         try (var jar = new JarFile(file)) {
-            return jar.getEntry(SLICE_API_PROPERTIES) != null;
+            var entry = jar.getEntry(SLICE_API_PROPERTIES);
+            if (entry == null) {
+                return null;
+            }
+            var props = new java.util.Properties();
+            try (var stream = jar.getInputStream(entry)) {
+                props.load(stream);
+            }
+            return props;
         } catch (IOException e) {
             getLog().debug("Could not read JAR: " + file + " - " + e.getMessage());
-            return false;
+            return null;
         }
     }
 
@@ -167,8 +180,31 @@ public class PackageSlicesMojo extends AbstractMojo {
         return new ArtifactInfo(artifact.getGroupId(), artifact.getArtifactId(), toSemverRange(artifact.getVersion()));
     }
 
+    private ArtifactInfo toSliceArtifactInfo(Artifact artifact) {
+        // Read slice artifact from manifest (has correct naming: groupId:artifactId-sliceName)
+        var props = readSliceManifest(artifact);
+        if (props != null) {
+            var sliceArtifact = props.getProperty("slice.artifact");
+            if (sliceArtifact != null && sliceArtifact.contains(":")) {
+                var parts = sliceArtifact.split(":");
+                return new ArtifactInfo(parts[0], parts[1], toSemverRange(artifact.getVersion()));
+            }
+        }
+        // Fallback to Maven artifact
+        return toArtifactInfo(artifact);
+    }
+
     private ArtifactInfo toApiArtifactInfo(Artifact artifact) {
-        // Convert slice artifact to its API artifact (add -api suffix)
+        // Read API artifact from manifest (has correct naming: groupId:artifactId-sliceName-api)
+        var props = readSliceManifest(artifact);
+        if (props != null) {
+            var apiArtifact = props.getProperty("api.artifact");
+            if (apiArtifact != null && apiArtifact.contains(":")) {
+                var parts = apiArtifact.split(":");
+                return new ArtifactInfo(parts[0], parts[1], toSemverRange(artifact.getVersion()));
+            }
+        }
+        // Fallback: derive from Maven artifact (legacy)
         var apiArtifactId = artifact.getArtifactId() + "-api";
         return new ArtifactInfo(artifact.getGroupId(), apiArtifactId, toSemverRange(artifact.getVersion()));
     }
