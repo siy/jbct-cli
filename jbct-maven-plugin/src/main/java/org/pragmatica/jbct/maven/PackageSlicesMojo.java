@@ -104,37 +104,49 @@ public class PackageSlicesMojo extends AbstractMojo {
         var infraDeps = new ArrayList<ArtifactInfo>();
         var sliceDeps = new ArrayList<ArtifactInfo>();
         var externalDeps = new ArrayList<Artifact>();
+        // Collect direct dependency keys for filtering transitives
+        var directDependencyKeys = collectDirectDependencyKeys();
         for (var artifact : project.getArtifacts()) {
             var artifactId = artifact.getArtifactId();
             var scope = artifact.getScope();
-            // Skip Aether runtime libs - always provided by platform
+            // Skip Aether runtime libs and pragmatica-lite - always provided by platform
             if (isAetherRuntime(artifact)) {
                 continue;
             }
-            if (artifactId.startsWith("infra-")) {
-                // Infrastructure dependencies
+            // Skip transitives of provided dependencies (only include direct deps in dependencies file)
+            var key = artifact.getGroupId() + ":" + artifact.getArtifactId();
+            var isDirectDependency = directDependencyKeys.contains(key);
+            if (artifactId.startsWith("infra-") && isDirectDependency) {
+                // Infrastructure dependencies (direct only)
                 infraDeps.add(toArtifactInfo(artifact));
-            } else if (isSliceDependency(artifact)) {
-                // Slice dependencies - add both API and slice entry
+            } else if (isSliceDependency(artifact) && isDirectDependency) {
+                // Slice dependencies - add both API and slice entry (direct only)
                 apiDeps.add(toApiArtifactInfo(artifact));
                 sliceDeps.add(toArtifactInfo(artifact));
-            } else if ("provided".equals(scope)) {
-                // Shared dependencies (provided scope, non-infra)
+            } else if ("provided".equals(scope) && isDirectDependency) {
+                // Shared dependencies (provided scope, non-infra, direct only)
                 sharedDeps.add(toArtifactInfo(artifact));
             } else if ("compile".equals(scope) || "runtime".equals(scope)) {
-                // External libs - bundle into fat JAR
+                // External libs - bundle into fat JAR (includes transitives)
                 externalDeps.add(artifact);
             }
         }
         return new DependencyClassification(apiDeps, sharedDeps, infraDeps, sliceDeps, externalDeps);
     }
 
+    private java.util.Set<String> collectDirectDependencyKeys() {
+        var keys = new java.util.HashSet<String>();
+        for (var dep : project.getDependencies()) {
+            keys.add(dep.getGroupId() + ":" + dep.getArtifactId());
+        }
+        return keys;
+    }
+
     private boolean isAetherRuntime(Artifact artifact) {
         var groupId = artifact.getGroupId();
-        var artifactId = artifact.getArtifactId();
-        // Aether runtime libraries - always provided by platform, skip entirely
-        return "org.pragmatica-lite.aether".equals(groupId) &&
-        ("slice-annotations".equals(artifactId) || "slice-api".equals(artifactId) || "infra-api".equals(artifactId));
+        // All pragmatica-lite and aether libraries are provided by platform
+        // This includes core, http-routing-adapter, and all their transitives
+        return "org.pragmatica-lite".equals(groupId) || "org.pragmatica-lite.aether".equals(groupId);
     }
 
     private boolean isSliceDependency(Artifact artifact) {
