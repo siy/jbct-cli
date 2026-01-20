@@ -58,6 +58,46 @@ public Promise<OrderResult> placeOrder(PlaceOrderRequest request) {
 
 ## Adding Dependencies
 
+### Runtime Dependencies (Aether Platform)
+
+Slices run on the Aether runtime, which provides core libraries. These **must** use `provided` scope to avoid bundling conflicts:
+
+```xml
+<!-- Pragmatica Lite Core (provided by Aether runtime) -->
+<dependency>
+    <groupId>org.pragmatica-lite</groupId>
+    <artifactId>core</artifactId>
+    <version>${pragmatica-lite.version}</version>
+    <scope>provided</scope>
+</dependency>
+
+<!-- Aether Slice API (provided by Aether runtime) -->
+<dependency>
+    <groupId>org.pragmatica-lite.aether</groupId>
+    <artifactId>slice-annotations</artifactId>
+    <version>${aether.version}</version>
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>org.pragmatica-lite.aether</groupId>
+    <artifactId>slice-api</artifactId>
+    <version>${aether.version}</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+**Why `provided` scope?**
+- Aether runtime already includes these libraries
+- Bundling them creates version conflicts and bloated JARs
+- The `jbct:verify-slice` goal enforces this requirement
+
+**Validation:**
+The build fails with an error if these dependencies are not `provided`:
+```
+Dependency org.pragmatica-lite:core must have 'provided' scope.
+Aether runtime libraries should not be bundled with slices.
+```
+
 ### External Dependencies (Other Slices)
 
 To depend on another slice:

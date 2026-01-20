@@ -1,17 +1,23 @@
 # Changelog
 
-## [0.5.0] - 2026-01-18
+## [0.5.0] - 2026-01-20
 
 ### Added
 - Security: `SecurityError` sealed interface with `PathTraversal`, `InvalidUrl`, `UntrustedDomain` error types
+- Slice verify: dependency scope validation for Aether runtime libraries
+  - `jbct:verify-slice` now fails if `org.pragmatica-lite` or `org.pragmatica-lite.aether` dependencies are not `provided` scope
+  - Prevents accidental bundling of runtime libraries in slice JARs
 - Security: `PathValidation` utility rejects path traversal attempts (`..`, absolute paths, escaping base)
 - Security: `UrlValidation` utility enforces HTTPS and GitHub domain whitelist
 - Shared: `GitHubContentFetcher` extracts common GitHub API patterns (commit SHA, file discovery, downloads)
 - Slice processor: `@Aspect` and `@Key` annotation processing for cache-wrapped slice methods
 - Slice processor: `AspectModel` and `KeyExtractorInfo` model classes for aspect metadata
 - Slice processor: method name validation per RFC-0001 (must match `^[a-z][a-zA-Z0-9]+$`)
+- Slice processor test: `should_generate_slice_api_properties_with_correct_artifact_naming`
 
 ### Changed
+- Build: bump Pragmatica Lite to 0.10.0
+- Slice init: template dependencies now use `provided` scope for all runtime libs (`core`, `slice-annotations`, `slice-api`)
 - Slice processor: proxy generation uses `TypeToken<R>` instead of `Class<R>` per aether SliceInvokerFacade
 - Slice processor: `KeyExtractorInfo` uses Result-returning factories with validation
 - Slice processor: `MethodModel` extracts lambdas to named methods, uses stream-based processing
@@ -27,6 +33,8 @@
 - Refactor: `AiToolsUpdater` and `AiToolsInstaller` delegate to `GitHubContentFetcher`
 
 ### Fixed
+- Slice processor: `ManifestGenerator` writes correct slice artifact naming (`groupId:artifactId-sliceName`)
+- Slice processor: `FactoryClassGenerator` adds `.async()` for `Result` to `Promise` conversion (pragmatica-lite 0.10.0 compatibility)
 - Slice processor: factory method name follows RFC-0001 (`{sliceName}` not `create`)
 - Slice processor: `RouteSourceGenerator` escapes paths and query param names in generated code
 - Slice processor: `DependencyModel.localRecordName()` handles empty strings and acronyms
