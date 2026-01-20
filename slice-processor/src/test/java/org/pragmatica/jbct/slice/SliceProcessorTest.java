@@ -123,11 +123,12 @@ class SliceProcessorTest {
             package org.pragmatica.aether.slice;
 
             import org.pragmatica.lang.Promise;
+            import org.pragmatica.lang.Result;
             import org.pragmatica.lang.type.TypeToken;
 
             public interface SliceInvokerFacade {
                 <T> Promise<T> invoke(String artifact, String method, Object request, Class<T> responseType);
-                <R, I> Promise<MethodHandle<R, I>> methodHandle(String artifact, String method, TypeToken<I> requestType, TypeToken<R> responseType);
+                <R, I> Result<MethodHandle<R, I>> methodHandle(String artifact, String method, TypeToken<I> requestType, TypeToken<R> responseType);
             }
             """);
 
@@ -275,7 +276,7 @@ class SliceProcessorTest {
 
     private List<JavaFileObject> commonSources() {
         return new ArrayList<>(List.of(
-                SLICE_ANNOTATION, PROMISE, UNIT, TYPE_TOKEN,
+                SLICE_ANNOTATION, PROMISE, UNIT, TYPE_TOKEN, RESULT,
                 ASPECT, SLICE, SLICE_METHOD, METHOD_NAME, METHOD_HANDLE, INVOKER_FACADE
         ));
     }
@@ -284,7 +285,7 @@ class SliceProcessorTest {
         var sources = commonSources();
         sources.addAll(List.of(
                 ASPECT_KIND, ASPECT_ANNOTATION, KEY_ANNOTATION,
-                FN1, RESULT, OPTION,
+                FN1, OPTION,
                 SLICE_RUNTIME, ASPECT_FACTORY, CACHE, CACHE_CONFIG, ASPECTS
         ));
         return sources;
@@ -1339,5 +1340,53 @@ class SliceProcessorTest {
 
         assertCompilation(compilation).failed();
         assertCompilation(compilation).hadErrorContaining("with type argument");
+    }
+
+    @Test
+    void should_generate_slice_api_properties_with_correct_artifact_naming() throws Exception {
+        var source = JavaFileObjects.forSourceString("test.OrderService",
+                                                     """
+            package test;
+
+            import org.pragmatica.aether.slice.annotation.Slice;
+            import org.pragmatica.lang.Promise;
+
+            @Slice
+            public interface OrderService {
+                Promise<String> placeOrder(String orderId);
+
+                static OrderService orderService() {
+                    return null;
+                }
+            }
+            """);
+
+        var sources = commonSources();
+        sources.add(source);
+
+        Compilation compilation = javac()
+                                       .withProcessors(new SliceProcessor())
+                                       .withOptions("-Aslice.groupId=org.example",
+                                                    "-Aslice.artifactId=orders")
+                                       .compile(sources);
+
+        assertCompilation(compilation).succeeded();
+
+        // Verify slice-api.properties was generated with correct artifact naming
+        var propsFile = compilation.generatedFile(
+                javax.tools.StandardLocation.CLASS_OUTPUT,
+                "",
+                "META-INF/slice-api.properties");
+
+        assertThat(propsFile.isPresent()).isTrue();
+
+        var propsContent = propsFile.orElseThrow()
+                                    .getCharContent(false)
+                                    .toString();
+
+        // Slice artifact should use naming convention: {moduleArtifactId}-{sliceName}
+        // e.g., orders-order-service (not just "orders")
+        assertThat(propsContent).contains("slice.artifact=org.example\\:orders-order-service");
+        assertThat(propsContent).contains("api.artifact=org.example\\:orders-order-service-api");
     }
 }

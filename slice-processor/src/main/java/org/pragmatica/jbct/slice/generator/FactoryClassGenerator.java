@@ -421,7 +421,7 @@ public class FactoryClassGenerator {
         return "invoker.methodHandle(\"" + artifact + "\", \"" + methodName + "\",\n"
                + "                                                     new TypeToken<" + handle.method.paramType
                + ">() {},\n" + "                                                     new TypeToken<" + handle.method.responseType
-               + ">() {})";
+               + ">() {}).async()";
     }
 
     private record ProxyMethodInfo(String name, String responseType, String paramType) {}

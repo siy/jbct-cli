@@ -33,10 +33,12 @@ public class ManifestGenerator {
     public Result<Unit> generate(SliceModel model) {
         try{
             var props = new Properties();
-            // API artifact (with classifier)
-            props.setProperty("api.artifact", getArtifactFromEnv() + ":api");
-            // Slice artifact (without classifier)
-            props.setProperty("slice.artifact", getArtifactFromEnv());
+            // Slice artifact uses naming convention: {moduleArtifactId}-{sliceName}
+            var sliceArtifact = getSliceArtifact(model.simpleName());
+            // API artifact (with -api suffix)
+            props.setProperty("api.artifact", sliceArtifact + "-api");
+            // Slice artifact
+            props.setProperty("slice.artifact", sliceArtifact);
             // API interface fully qualified name
             props.setProperty("api.interface",
                               model.apiPackage() + "." + model.simpleName());
@@ -64,6 +66,12 @@ public class ManifestGenerator {
         var groupId = options.getOrDefault("slice.groupId", "unknown");
         var artifactId = options.getOrDefault("slice.artifactId", "unknown");
         return groupId + ":" + artifactId;
+    }
+
+    private String getSliceArtifact(String sliceName) {
+        var groupId = options.getOrDefault("slice.groupId", "unknown");
+        var artifactId = options.getOrDefault("slice.artifactId", "unknown");
+        return groupId + ":" + artifactId + "-" + toKebabCase(sliceName);
     }
 
     private String getProcessorVersion() {
