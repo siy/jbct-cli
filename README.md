@@ -182,7 +182,6 @@ alignChainedCalls = true
 [lint]
 failOnWarning = false
 businessPackages = ["**.usecase.**", "**.domain.**"]
-slicePackages = ["**.usecase.**"]  # Required for JBCT-SLICE-01
 
 [lint.rules]
 JBCT-RET-01 = "error"
@@ -286,7 +285,6 @@ alignChainedCalls = true
 [lint]
 failOnWarning = false
 businessPackages = ["**.usecase.**", "**.domain.**"]
-slicePackages = ["**.usecase.**"]  # Required for JBCT-SLICE-01
 
 [lint.rules]
 JBCT-RET-01 = "error"
@@ -294,7 +292,7 @@ JBCT-STY-01 = "warning"
 JBCT-LOG-01 = "off"
 ```
 
-## Lint Rules (37 total)
+## Lint Rules (36 total)
 
 ### Return Kinds
 
@@ -406,18 +404,6 @@ JBCT-LOG-01 = "off"
 | Rule | Severity | Description |
 |------|----------|-------------|
 | `JBCT-SEAL-01` | WARNING | Error interfaces extending Cause should be sealed |
-
-### Slice Architecture
-
-| Rule | Severity | Description |
-|------|----------|-------------|
-| `JBCT-SLICE-01` | ERROR | External slice dependencies must use API interface (requires `slicePackages` config) |
-
-**Note:** JBCT-SLICE-01 requires `slicePackages` configuration:
-```toml
-[lint]
-slicePackages = ["**.usecase.**"]  # Configure your slice package patterns
-```
 
 ## Formatter Style
 
