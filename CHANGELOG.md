@@ -12,7 +12,9 @@
 - Slice init: implementation pattern changed to record-based (nested record in interface)
 - Slice init: factory now accepts Config dependency parameter
 - Slice init: removed separate *Impl.java, SampleRequest.java, SampleResponse.java files
-- Slice init: Request/Response/Error records now nested in @Slice interface
+- Slice init: Request/Response/Error/Config records now nested in @Slice interface
+- Slice init: removed "Sample" prefix from Request/Response records
+- Slice init: inner implementation record uses lowercased slice name, not "Impl"
 
 ### Fixed
 

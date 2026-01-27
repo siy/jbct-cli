@@ -78,11 +78,13 @@ class SliceProjectInitializerTest {
         assertThat(content)
                   .contains("static InventoryService inventoryService(Config config)");
         assertThat(content)
-                  .contains("record SampleRequest");
+                  .contains("record Request");
         assertThat(content)
-                  .contains("record SampleResponse");
+                  .contains("record Response");
         assertThat(content)
                   .contains("record Config");
+        assertThat(content)
+                  .contains("record inventoryService");
     }
 
     @Test

@@ -521,21 +521,21 @@ public final class SliceProjectInitializer {
         public interface {{sliceName}} {
 
             /**
-             * Sample request record.
+             * Request record.
              */
-            record SampleRequest(String value) {
-                public static Result<SampleRequest> sampleRequest(String value) {
+            record Request(String value) {
+                public static Result<Request> request(String value) {
                     if (value == null || value.isBlank()) {
                         return Result.failure(ValidationError.emptyValue());
                     }
-                    return Result.success(new SampleRequest(value));
+                    return Result.success(new Request(value));
                 }
             }
 
             /**
-             * Sample response record.
+             * Response record.
              */
-            record SampleResponse(String result) {}
+            record Response(String result) {}
 
             /**
              * Configuration record for slice dependencies.
@@ -557,17 +557,17 @@ public final class SliceProjectInitializer {
                 }
             }
 
-            Promise<SampleResponse> process(SampleRequest request);
+            Promise<Response> process(Request request);
 
             static {{sliceName}} {{factoryMethodName}}(Config config) {
-                record {{sliceName}}Impl(Config config) implements {{sliceName}} {
+                record {{factoryMethodName}}(Config config) implements {{sliceName}} {
                     @Override
-                    public Promise<SampleResponse> process(SampleRequest request) {
-                        var response = new SampleResponse(config.prefix() + ": " + request.value());
+                    public Promise<Response> process(Request request) {
+                        var response = new Response(config.prefix() + ": " + request.value());
                         return Promise.successful(response);
                     }
                 }
-                return new {{sliceName}}Impl(config);
+                return new {{factoryMethodName}}(config);
             }
         }
         """;
@@ -586,8 +586,8 @@ public final class SliceProjectInitializer {
 
             @Test
             void should_process_request() {
-                var request = {{sliceName}}.SampleRequest.sampleRequest("test")
-                                                         .getOrThrow();
+                var request = {{sliceName}}.Request.request("test")
+                                                   .getOrThrow();
 
                 var response = slice.process(request).await();
 
