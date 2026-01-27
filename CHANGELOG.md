@@ -5,6 +5,8 @@
 ### Added
 
 ### Changed
+- Build: bump Aether to 0.8.1
+- CI: re-enabled slice-processor-tests module
 
 ### Fixed
 
