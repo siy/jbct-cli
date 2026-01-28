@@ -88,7 +88,7 @@ public record SliceManifest(String sliceName,
         var requestClasses = parseList(props.getProperty("request.classes", ""));
         var responseClasses = parseList(props.getProperty("response.classes", ""));
         var baseArtifact = props.getProperty("base.artifact", "");
-        var implArtifactId = props.getProperty("impl.artifactId", "");
+        var implArtifactId = props.getProperty("slice.artifactId", "");
         var dependencies = parseDependencies(props);
         var configFile = props.getProperty("config.file", "");
         return Result.success(new SliceManifest(sliceName,

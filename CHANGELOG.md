@@ -14,6 +14,9 @@
 - VerifySliceMojo: validates manifest files instead of slice-api.properties
 - PackageSlicesMojo: reads slice metadata from .manifest files
 - SliceProjectValidator: checks for .manifest files instead of slice-api.properties
+- SliceManifest: reads `slice.artifactId` property (was incorrectly reading `impl.artifactId`)
+- PackageSlicesMojo: fixed JAR naming bug (empty artifact prefix in JAR names)
+- PackageSlicesMojo: fixed JAR overwriting bug (multiple slices now create separate JARs)
 - FactoryClassGenerator: infrastructure deps (CacheService, etc.) now use InfraStore.instance().get()
 - FactoryClassGenerator: only slice dependencies are proxied via SliceInvokerFacade
 - FactoryClassGenerator: reduced flatMap chain depth (e.g., 13→3 for UrlShortener with mixed deps)
