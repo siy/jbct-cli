@@ -76,13 +76,13 @@ class SliceProjectInitializerTest {
         assertThat(content)
                   .contains("public interface InventoryService");
         assertThat(content)
-                  .contains("static InventoryService inventoryService(Config config)");
+                  .contains("static InventoryService inventoryService()");
         assertThat(content)
                   .contains("record Request");
         assertThat(content)
                   .contains("record Response");
         assertThat(content)
-                  .contains("record Config");
+                  .contains("sealed interface ValidationError extends Cause");
         assertThat(content)
                   .contains("record inventoryService");
     }

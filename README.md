@@ -140,9 +140,10 @@ Creates Maven project with:
 
 For slice projects (`--slice`), also creates:
 - `@Slice` annotated interface with factory method
-- Implementation class
-- Sample request/response records
+- Nested implementation record
+- Request/Response/ValidationError records (nested in interface)
 - Unit test
+- Maven annotation processor configuration
 
 ### Update
 
