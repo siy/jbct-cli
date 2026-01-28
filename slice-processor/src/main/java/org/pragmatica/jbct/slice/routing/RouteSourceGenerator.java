@@ -151,11 +151,6 @@ public class RouteSourceGenerator {
         if (!routeConfig.hasRoutes()) {
             return Result.success(Option.none());
         }
-        // Validate that http-routing-adapter is on classpath
-        var validationResult = validateHttpRoutingDependency();
-        if (validationResult.isFailure()) {
-            return validationResult.map(_ -> Option.none());
-        }
         try{
             var routesName = model.simpleName() + "Routes";
             var qualifiedName = model.packageName() + "." + routesName;
@@ -168,27 +163,6 @@ public class RouteSourceGenerator {
         } catch (Exception e) {
             return Causes.cause("Failed to generate routes class: " + e.getClass()
                                                                        .getSimpleName() + ": " + e.getMessage())
-                         .result();
-        }
-    }
-
-    private Result<Unit> validateHttpRoutingDependency() {
-        try{
-            Class.forName("org.pragmatica.aether.http.adapter.SliceRouterFactory");
-            return Result.success(Unit.unit());
-        } catch (ClassNotFoundException _) {
-            var message = """
-                          HTTP routing configured but dependency missing.
-                          Add to pom.xml:
-                          <dependency>
-                            <groupId>org.pragmatica-lite.aether</groupId>
-                            <artifactId>http-routing-adapter</artifactId>
-                            <version>${aether.version}</version>
-                            <scope>provided</scope>
-                          </dependency>
-                          """;
-            messager.printMessage(Diagnostic.Kind.ERROR, message);
-            return Causes.cause("Missing http-routing-adapter dependency")
                          .result();
         }
     }

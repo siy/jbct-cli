@@ -3,8 +3,13 @@ package org.pragmatica.jbct.maven;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -67,6 +72,7 @@ public class CollectSliceDepsMojo extends AbstractMojo {
             }
         }
         writeOutput(mappings);
+        validateHttpRoutingDependency();
     }
 
     private void extractSliceManifest(File jarFile, String version, Properties mappings) throws IOException {
@@ -118,5 +124,57 @@ public class CollectSliceDepsMojo extends AbstractMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to write slice dependencies", e);
         }
+    }
+
+    private void validateHttpRoutingDependency() throws MojoExecutionException {
+        // Scan for routes.toml files in src/main/resources
+        var resourcesDir = new File(project.getBasedir(), "src/main/resources");
+        if (!resourcesDir.exists()) {
+            return;
+        }
+        var routesTomlFiles = findRoutesTomlFiles(resourcesDir.toPath());
+        if (routesTomlFiles.isEmpty()) {
+            return;
+        }
+        // Check if http-routing-adapter dependency exists
+        var hasRoutingAdapter = project.getArtifacts()
+                                       .stream()
+                                       .anyMatch(artifact -> "org.pragmatica-lite.aether".equals(artifact.getGroupId()) &&
+        "http-routing-adapter".equals(artifact.getArtifactId()));
+        if (!hasRoutingAdapter) {
+            var sliceNames = routesTomlFiles.stream()
+                                            .map(path -> resourcesDir.toPath()
+                                                                     .relativize(path)
+                                                                     .toString())
+                                            .toList();
+            var message = String.format("""
+                                        HTTP routing configured but dependency missing.
+                                        Found routes.toml in: %s
+
+                                        Add to pom.xml:
+                                        <dependency>
+                                          <groupId>org.pragmatica-lite.aether</groupId>
+                                          <artifactId>http-routing-adapter</artifactId>
+                                          <version>${aether.version}</version>
+                                          <scope>provided</scope>
+                                        </dependency>
+                                        """,
+                                        String.join(", ", sliceNames));
+            throw new MojoExecutionException(message);
+        }
+    }
+
+    private List<Path> findRoutesTomlFiles(Path resourcesDir) {
+        var routesTomlFiles = new ArrayList<Path>();
+        try (Stream<Path> paths = Files.walk(resourcesDir)) {
+            paths.filter(Files::isRegularFile)
+                 .filter(path -> path.getFileName()
+                                     .toString()
+                                     .equals("routes.toml"))
+                 .forEach(routesTomlFiles::add);
+        } catch (IOException e) {
+            getLog().debug("Error scanning resources directory: " + e.getMessage());
+        }
+        return routesTomlFiles;
     }
 }
