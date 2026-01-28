@@ -75,6 +75,12 @@ public class InitCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        // Validate group ID
+        if (!isValidPackageName(groupId)) {
+            System.err.println("Error: Invalid group ID '" + groupId + "'");
+            System.err.println("Group ID must be a valid Java package name (e.g., com.example, org.mycompany)");
+            return 1;
+        }
         // Determine project directory
         if (projectDir == null) {
             projectDir = Path.of(System.getProperty("user.dir"));
@@ -218,5 +224,53 @@ public class InitCommand implements Callable<Integer> {
         } else {
             System.out.println("No AI tools files to install.");
         }
+    }
+
+    private static boolean isValidPackageName(String packageName) {
+        if (packageName == null || packageName.isBlank()) {
+            return false;
+        }
+        if (packageName.startsWith(".") || packageName.endsWith(".")) {
+            return false;
+        }
+        if (packageName.contains("..")) {
+            return false;
+        }
+        var segments = packageName.split("\\.");
+        for (var segment : segments) {
+            if (!isValidJavaIdentifier(segment)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isValidJavaIdentifier(String identifier) {
+        if (identifier == null || identifier.isEmpty()) {
+            return false;
+        }
+        if (!Character.isJavaIdentifierStart(identifier.charAt(0))) {
+            return false;
+        }
+        for (int i = 1; i < identifier.length(); i++) {
+            if (!Character.isJavaIdentifierPart(identifier.charAt(i))) {
+                return false;
+            }
+        }
+        // Reject Java keywords
+        return ! isJavaKeyword(identifier);
+    }
+
+    private static boolean isJavaKeyword(String word) {
+        return switch (word) {
+            case "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
+            "class", "const", "continue", "default", "do", "double", "else", "enum",
+            "extends", "final", "finally", "float", "for", "goto", "if", "implements",
+            "import", "instanceof", "int", "interface", "long", "native", "new", "package",
+            "private", "protected", "public", "return", "short", "static", "strictfp",
+            "super", "switch", "synchronized", "this", "throw", "throws", "transient",
+            "try", "void", "volatile", "while", "true", "false", "null" -> true;
+            default -> false;
+        };
     }
 }

@@ -379,6 +379,19 @@ public final class SliceProjectInitializer {
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-compiler-plugin</artifactId>
                         <version>3.14.0</version>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.pragmatica-lite</groupId>
+                                    <artifactId>slice-processor</artifactId>
+                                    <version>${jbct.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                            <compilerArgs>
+                                <arg>-Aslice.groupId={{groupId}}</arg>
+                                <arg>-Aslice.artifactId={{artifactId}}</arg>
+                            </compilerArgs>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -539,15 +552,6 @@ public final class SliceProjectInitializer {
             record Response(String result) {}
 
             /**
-             * Configuration record for slice dependencies.
-             */
-            record Config(String prefix) {
-                public static Config config(String prefix) {
-                    return new Config(prefix);
-                }
-            }
-
-            /**
              * Validation error.
              */
             sealed interface ValidationError extends Cause {
@@ -565,15 +569,15 @@ public final class SliceProjectInitializer {
 
             Promise<Response> process(Request request);
 
-            static {{sliceName}} {{factoryMethodName}}(Config config) {
-                record {{factoryMethodName}}(Config config) implements {{sliceName}} {
+            static {{sliceName}} {{factoryMethodName}}() {
+                record {{factoryMethodName}}() implements {{sliceName}} {
                     @Override
                     public Promise<Response> process(Request request) {
-                        var response = new Response(config.prefix() + ": " + request.value());
+                        var response = new Response("Processed: " + request.value());
                         return Promise.success(response);
                     }
                 }
-                return new {{factoryMethodName}}(config);
+                return new {{factoryMethodName}}();
             }
         }
         """;
@@ -587,8 +591,7 @@ public final class SliceProjectInitializer {
 
         class {{sliceName}}Test {
 
-            private final {{sliceName}}.Config config = {{sliceName}}.Config.config("Processed");
-            private final {{sliceName}} slice = {{sliceName}}.{{factoryMethodName}}(config);
+            private final {{sliceName}} slice = {{sliceName}}.{{factoryMethodName}}();
 
             @Test
             void should_process_request() {
