@@ -30,7 +30,6 @@ public class ManifestGenerator {
         this.options = options;
     }
 
-
     private String getArtifactFromEnv() {
         var groupId = options.getOrDefault("slice.groupId", "unknown");
         var artifactId = options.getOrDefault("slice.artifactId", "unknown");

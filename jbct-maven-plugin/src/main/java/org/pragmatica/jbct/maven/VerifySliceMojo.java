@@ -107,7 +107,8 @@ public class VerifySliceMojo extends AbstractMojo {
                                        .getOutputDirectory(),
                                 "META-INF/slice");
         if (!sliceDir.exists() || !sliceDir.isDirectory()) {
-            return PartialResult.error("META-INF/slice/ directory not found. " + "Ensure annotation processor is configured.");
+            return PartialResult.error("META-INF/slice/ directory not found. "
+                                       + "Ensure annotation processor is configured.");
         }
         var manifestFiles = sliceDir.listFiles((dir, name) -> name.endsWith(".manifest"));
         if (manifestFiles == null || manifestFiles.length == 0) {
@@ -189,7 +190,7 @@ public class VerifySliceMojo extends AbstractMojo {
                 var entry = entries.nextElement();
                 if (entry.getName()
                          .startsWith("META-INF/slice/") && entry.getName()
-                                                                  .endsWith(".manifest")) {
+                                                                .endsWith(".manifest")) {
                     return true;
                 }
             }

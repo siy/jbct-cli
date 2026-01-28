@@ -156,7 +156,7 @@ public class PackageSlicesMojo extends AbstractMojo {
                 var entry = entries.nextElement();
                 if (entry.getName()
                          .startsWith(SLICE_MANIFEST_DIR) && entry.getName()
-                                                                  .endsWith(".manifest")) {
+                                                                 .endsWith(".manifest")) {
                     return true;
                 }
             }
@@ -179,7 +179,7 @@ public class PackageSlicesMojo extends AbstractMojo {
                 var entry = entries.nextElement();
                 if (entry.getName()
                          .startsWith(SLICE_MANIFEST_DIR) && entry.getName()
-                                                                  .endsWith(".manifest")) {
+                                                                 .endsWith(".manifest")) {
                     var props = new java.util.Properties();
                     try (var stream = jar.getInputStream(entry)) {
                         props.load(stream);
@@ -205,7 +205,7 @@ public class PackageSlicesMojo extends AbstractMojo {
             var sliceArtifactId = props.getProperty("slice.artifactId");
             var baseArtifact = props.getProperty("base.artifact");
             if (sliceArtifactId != null && baseArtifact != null && baseArtifact.contains(":")) {
-                var groupId = baseArtifact.split(":")[0];
+                var groupId = baseArtifact.split(":") [0];
                 return new ArtifactInfo(groupId, sliceArtifactId, toSemverRange(artifact.getVersion()));
             }
         }

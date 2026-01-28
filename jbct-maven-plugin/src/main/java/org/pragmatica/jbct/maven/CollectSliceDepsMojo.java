@@ -93,7 +93,7 @@ public class CollectSliceDepsMojo extends AbstractMojo {
                 var baseArtifact = props.getProperty("base.artifact");
                 String groupId;
                 if (baseArtifact != null && baseArtifact.contains(":")) {
-                    groupId = baseArtifact.split(":")[0];
+                    groupId = baseArtifact.split(":") [0];
                 } else {
                     getLog().warn("Missing or invalid base.artifact in " + jarFile.getName() + " (" + entryName + ")");
                     continue;
