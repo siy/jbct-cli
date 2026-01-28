@@ -549,7 +549,7 @@ public final class SliceProjectInitializer {
             /**
              * Validation error.
              */
-            sealed interface ValidationError {
+            sealed interface ValidationError extends Cause {
                 record EmptyValue() implements ValidationError {}
 
                 static ValidationError emptyValue() {
@@ -564,7 +564,7 @@ public final class SliceProjectInitializer {
                     @Override
                     public Promise<Response> process(Request request) {
                         var response = new Response(config.prefix() + ": " + request.value());
-                        return Promise.successful(response);
+                        return Promise.success(response);
                     }
                 }
                 return new {{factoryMethodName}}(config);

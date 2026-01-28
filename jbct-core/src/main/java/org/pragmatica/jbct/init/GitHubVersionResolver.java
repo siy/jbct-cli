@@ -104,21 +104,17 @@ public final class GitHubVersionResolver {
     private static String maxVersion(String v1, String v2) {
         var parts1 = v1.split("\\.");
         var parts2 = v2.split("\\.");
-
         for (int i = 0; i < Math.min(parts1.length, parts2.length); i++) {
-            final var index = i; // Make effectively final for lambda
+            final var index = i;
+            // Make effectively final for lambda
             var comparison = Number.parseInt(parts1[index])
                                    .flatMap(num1 -> Number.parseInt(parts2[index])
                                                           .map(num2 -> Integer.compare(num1, num2)));
-
-            var cmp = comparison.fold(
-                    _ -> {
-                        LOG.debug("Failed to parse version numbers, using v1: {} vs v2: {}", v1, v2);
-                        return 0; // Treat as equal on parse error
-                    },
-                    value -> value
-            );
-
+            var cmp = comparison.fold(_ -> {
+                                          LOG.debug("Failed to parse version numbers, using v1: {} vs v2: {}", v1, v2);
+                                          return 0;
+                                      },
+                                      value -> value);
             if (cmp > 0) {
                 return v1;
             }
@@ -126,9 +122,10 @@ public final class GitHubVersionResolver {
                 return v2;
             }
         }
-
         // If all parts are equal, prefer longer version (e.g., 1.0.0 > 1.0)
-        return parts1.length >= parts2.length ? v1 : v2;
+        return parts1.length >= parts2.length
+               ? v1
+               : v2;
     }
 
     private String getVersion(String owner, String repo, String defaultVersion) {
