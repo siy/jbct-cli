@@ -126,7 +126,31 @@ public class PackageSlicesMojo extends AbstractMojo {
                 externalDeps.add(artifact);
             }
         }
+        // Add same-module slice dependencies from manifest
+        addLocalSliceDependencies(manifest, sliceDeps);
         return new DependencyClassification(sharedDeps, infraDeps, sliceDeps, externalDeps);
+    }
+
+    private void addLocalSliceDependencies(SliceManifest manifest, List<ArtifactInfo> sliceDeps) {
+        // Check manifest dependencies for local slices (same module)
+        for (var dep : manifest.dependencies()) {
+            // Local slice dependencies have artifact coordinates but may be UNRESOLVED
+            if (dep.artifact() == null || dep.artifact()
+                                             .isEmpty()) {
+                continue;
+            }
+            // Check if this is a local slice (same groupId and base artifactId)
+            var depArtifact = dep.artifact();
+            if (depArtifact.startsWith(project.getGroupId() + ":" + project.getArtifactId() + "-")) {
+                // Extract slice artifact ID and create version range
+                var version = "^" + project.getVersion();
+                sliceDeps.add(new ArtifactInfo(project.getGroupId(),
+                                               depArtifact.substring(project.getGroupId()
+                                                                            .length() + 1),
+                                               version));
+                getLog().debug("Added local slice dependency: " + depArtifact + ":" + version);
+            }
+        }
     }
 
     private java.util.Set<String> collectDirectDependencyKeys() {
