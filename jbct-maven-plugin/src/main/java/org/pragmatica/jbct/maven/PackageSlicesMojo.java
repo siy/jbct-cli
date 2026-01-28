@@ -139,9 +139,14 @@ public class PackageSlicesMojo extends AbstractMojo {
 
     private boolean isAetherRuntime(Artifact artifact) {
         var groupId = artifact.getGroupId();
-        // All pragmatica-lite and aether libraries are provided by platform
-        // This includes core, http-routing-adapter, and all their transitives
-        return "org.pragmatica-lite".equals(groupId) || "org.pragmatica-lite.aether".equals(groupId);
+        var artifactId = artifact.getArtifactId();
+        // Skip runtime libraries AND compile-only tools (slice-processor)
+        // Infrastructure (infra-*) and shared libs (core) should go in dependency file
+        if ("org.pragmatica-lite.aether".equals(groupId)) {
+            return artifactId.equals("slice-annotations") || artifactId.equals("slice-api");
+        }
+        // Skip slice-processor (compile-only tool)
+        return "org.pragmatica-lite".equals(groupId) && artifactId.equals("slice-processor");
     }
 
     private boolean isSliceDependency(Artifact artifact) {

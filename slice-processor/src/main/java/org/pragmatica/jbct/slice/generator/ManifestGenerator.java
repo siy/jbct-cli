@@ -58,6 +58,10 @@ public class ManifestGenerator {
         try{
             var props = new Properties();
             var sliceName = model.simpleName();
+            // Set context for resolving local dependencies
+            var groupId = options.getOrDefault("slice.groupId", "unknown");
+            var artifactId = options.getOrDefault("slice.artifactId", "unknown");
+            versionResolver.setSliceContext(model.packageName(), groupId, artifactId);
             // Slice identification
             props.setProperty("slice.name", sliceName);
             props.setProperty("slice.interface", model.qualifiedName());
@@ -74,8 +78,11 @@ public class ManifestGenerator {
             // Artifact coordinates
             props.setProperty("base.artifact", getArtifactFromEnv());
             props.setProperty("slice.artifactId", getArtifactIdFromEnv() + "-" + toKebabCase(sliceName));
-            // Dependencies for blueprint generation
-            var dependencies = model.dependencies();
+            // Dependencies for blueprint generation (exclude infrastructure - they're resolved via InfraStore)
+            var dependencies = model.dependencies()
+                                    .stream()
+                                    .filter(dep -> !dep.isInfrastructure())
+                                    .toList();
             props.setProperty("dependencies.count",
                               String.valueOf(dependencies.size()));
             int index = 0;

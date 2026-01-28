@@ -23,10 +23,23 @@ import java.util.Properties;
 public class DependencyVersionResolver {
     private final ProcessingEnvironment env;
     private final Properties sliceDeps;
+    private String currentSlicePackage;
+    private String baseGroupId;
+    private String baseArtifactId;
 
     public DependencyVersionResolver(ProcessingEnvironment env) {
         this.env = env;
         this.sliceDeps = loadSliceDeps();
+    }
+
+    /**
+     * Set context for resolving local dependencies (same module).
+     * Must be called before resolving dependencies for a slice.
+     */
+    public void setSliceContext(String slicePackage, String groupId, String artifactId) {
+        this.currentSlicePackage = slicePackage;
+        this.baseGroupId = groupId;
+        this.baseArtifactId = artifactId;
     }
 
     public DependencyModel resolve(DependencyModel dependency) {
@@ -66,7 +79,15 @@ public class DependencyVersionResolver {
         if (interfacePackage == null || interfacePackage.isEmpty()) {
             return dependency.withResolved("unknown:unknown", "UNRESOLVED");
         }
-        // Derive artifact from package: org.example.inventory.api -> org.example:inventory
+        // Check if this is a local dependency (same package as current slice)
+        if (currentSlicePackage != null && interfacePackage.equals(currentSlicePackage)) {
+            // Local dependency - use base artifact + slice name in kebab-case
+            var sliceName = dependency.interfaceSimpleName();
+            var kebabName = toKebabCase(sliceName);
+            var artifact = baseGroupId + ":" + baseArtifactId + "-" + kebabName;
+            return dependency.withResolved(artifact, "UNRESOLVED");
+        }
+        // External dependency - derive from package: org.example.inventory.api -> org.example:inventory
         var pkg = interfacePackage;
         // Remove .api suffix if present
         if (pkg.endsWith(".api")) {
@@ -79,6 +100,24 @@ public class DependencyVersionResolver {
         var groupId = String.join(".", java.util.Arrays.copyOf(parts, parts.length - 1));
         var artifactId = parts[parts.length - 1];
         return dependency.withResolved(groupId + ":" + artifactId, "UNRESOLVED");
+    }
+
+    private static String toKebabCase(String camelCase) {
+        if (camelCase == null || camelCase.isEmpty()) {
+            return camelCase;
+        }
+        var result = new StringBuilder();
+        result.append(Character.toLowerCase(camelCase.charAt(0)));
+        for (int i = 1; i < camelCase.length(); i++) {
+            char c = camelCase.charAt(i);
+            if (Character.isUpperCase(c)) {
+                result.append('-');
+                result.append(Character.toLowerCase(c));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 
     private Properties loadSliceDeps() {
