@@ -10,17 +10,12 @@ import org.pragmatica.lang.utils.Causes;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.tools.Diagnostic;
-import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardLocation;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -67,8 +62,6 @@ import java.util.stream.Collectors;
  * }</pre>
  */
 public class RouteSourceGenerator {
-    private static final String SERVICE_FILE = "META-INF/services/org.pragmatica.aether.http.adapter.SliceRouterFactory";
-
     private static final Map<String, String> TYPE_TO_PATH_PARAMETER = Map.ofEntries(Map.entry("String", "aString"),
                                                                                     Map.entry("java.lang.String",
                                                                                               "aString"),
@@ -147,11 +140,21 @@ public class RouteSourceGenerator {
         this.messager = messager;
     }
 
-    public Result<Unit> generate(SliceModel model,
-                                 RouteConfig routeConfig,
-                                 List<ErrorTypeMapping> errorMappings) {
+    /**
+     * Generates Routes class for a slice.
+     * Returns the qualified name of the generated class if routes exist, empty otherwise.
+     * The caller is responsible for writing the service file with all accumulated entries.
+     */
+    public Result<Option<String>> generate(SliceModel model,
+                                           RouteConfig routeConfig,
+                                           List<ErrorTypeMapping> errorMappings) {
         if (!routeConfig.hasRoutes()) {
-            return Result.success(Unit.unit());
+            return Result.success(Option.none());
+        }
+        // Validate that http-routing-adapter is on classpath
+        var validationResult = validateHttpRoutingDependency();
+        if (validationResult.isFailure()) {
+            return validationResult.map(_ -> Option.none());
         }
         try{
             var routesName = model.simpleName() + "Routes";
@@ -161,9 +164,7 @@ public class RouteSourceGenerator {
             try (var writer = new PrintWriter(file.openWriter())) {
                 generateRoutesClass(writer, model, routeConfig, errorMappings, routesName);
             }
-            // Generate/update service loader file
-            generateServiceFile(qualifiedName);
-            return Result.success(Unit.unit());
+            return Result.success(Option.some(qualifiedName));
         } catch (Exception e) {
             return Causes.cause("Failed to generate routes class: " + e.getClass()
                                                                        .getSimpleName() + ": " + e.getMessage())
@@ -171,29 +172,24 @@ public class RouteSourceGenerator {
         }
     }
 
-    private void generateServiceFile(String qualifiedName) throws IOException {
-        // Read existing entries if file exists
-        Set<String> entries = new LinkedHashSet<>();
+    private Result<Unit> validateHttpRoutingDependency() {
         try{
-            FileObject existing = filer.getResource(StandardLocation.CLASS_OUTPUT, "", SERVICE_FILE);
-            try (var reader = new BufferedReader(existing.openReader(true))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    var trimmed = line.trim();
-                    if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
-                        entries.add(trimmed);
-                    }
-                }
-            }
-        } catch (IOException _) {} catch (IllegalArgumentException _) {}
-        // Add the new entry
-        entries.add(qualifiedName);
-        // Write all entries
-        FileObject serviceFile = filer.createResource(StandardLocation.CLASS_OUTPUT, "", SERVICE_FILE);
-        try (var writer = new PrintWriter(serviceFile.openWriter())) {
-            for (var entry : entries) {
-                writer.println(entry);
-            }
+            Class.forName("org.pragmatica.aether.http.adapter.SliceRouterFactory");
+            return Result.success(Unit.unit());
+        } catch (ClassNotFoundException _) {
+            var message = """
+                          HTTP routing configured but dependency missing.
+                          Add to pom.xml:
+                          <dependency>
+                            <groupId>org.pragmatica-lite.aether</groupId>
+                            <artifactId>http-routing-adapter</artifactId>
+                            <version>${aether.version}</version>
+                            <scope>provided</scope>
+                          </dependency>
+                          """;
+            messager.printMessage(Diagnostic.Kind.ERROR, message);
+            return Causes.cause("Missing http-routing-adapter dependency")
+                         .result();
         }
     }
 

@@ -356,6 +356,14 @@ public final class SliceProjectInitializer {
                     <scope>provided</scope>
                 </dependency>
 
+                <!-- HTTP Routing Adapter (required for routes.toml) -->
+                <dependency>
+                    <groupId>org.pragmatica-lite.aether</groupId>
+                    <artifactId>http-routing-adapter</artifactId>
+                    <version>${aether.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+
                 <!-- Add other slice API dependencies here (use 'provided' scope for Aether runtime libs) -->
 
                 <!-- Testing -->

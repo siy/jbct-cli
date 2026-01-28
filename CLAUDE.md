@@ -340,7 +340,18 @@ Note: Proxy records for dependencies are generated as local records inside the f
 
 ### HTTP Routing Generation
 
-When `routes.toml` exists in the slice package resources, generates HTTP route handling:
+When `routes.toml` exists in the slice package resources, generates HTTP route handling.
+
+**Dependency requirement**: New projects created with `jbct init --slice` include `http-routing-adapter` automatically. For existing projects adding routing, add:
+```xml
+<dependency>
+    <groupId>org.pragmatica-lite.aether</groupId>
+    <artifactId>http-routing-adapter</artifactId>
+    <version>${aether.version}</version>
+    <scope>provided</scope>
+</dependency>
+```
+Compilation fails if `routes.toml` exists without this dependency.
 
 **Config location:** `src/main/resources/{slicePackage}/routes.toml`
 

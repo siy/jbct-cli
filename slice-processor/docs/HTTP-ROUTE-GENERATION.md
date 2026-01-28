@@ -4,6 +4,36 @@
 
 This document describes the automatic generation of HTTP route handling code from TOML configuration. The generated code bridges Aether slices with the `http-routing-adapter` module, enabling HTTP API exposure for slice methods.
 
+## Dependency Requirement
+
+**Required dependency**: When using `routes.toml`, the `http-routing-adapter` dependency must be present.
+
+**New projects**: Projects created with `jbct init --slice` include this dependency automatically:
+
+```xml
+<!-- HTTP Routing Adapter (required for routes.toml) -->
+<dependency>
+    <groupId>org.pragmatica-lite.aether</groupId>
+    <artifactId>http-routing-adapter</artifactId>
+    <version>${aether.version}</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+**Existing projects**: If adding routing to an existing slice project, add the dependency above.
+
+**Compile-time validation**: If `routes.toml` exists but the dependency is missing, compilation fails with:
+```
+ERROR: HTTP routing configured but dependency missing.
+Add to pom.xml:
+<dependency>
+  <groupId>org.pragmatica-lite.aether</groupId>
+  <artifactId>http-routing-adapter</artifactId>
+  <version>${aether.version}</version>
+  <scope>provided</scope>
+</dependency>
+```
+
 ## Generated Artifacts
 
 When `routes.toml` exists in the slice package resources, the processor generates:
