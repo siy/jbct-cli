@@ -551,7 +551,12 @@ public final class SliceProjectInitializer {
              * Validation error.
              */
             sealed interface ValidationError extends Cause {
-                record EmptyValue() implements ValidationError {}
+                record EmptyValue() implements ValidationError {
+                    @Override
+                    public String message() {
+                        return "Value cannot be empty";
+                    }
+                }
 
                 static ValidationError emptyValue() {
                     return new EmptyValue();
