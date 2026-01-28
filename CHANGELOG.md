@@ -3,6 +3,7 @@
 ## [0.6.0] - 2026-01-27
 
 ### Added
+- Init: groupId validation for `jbct init -g` parameter (validates Java package name format)
 
 ### Changed
 - Build: bump Aether to 0.8.1
@@ -10,13 +11,22 @@
 - Slice init: Java version 21 → 25
 - Slice init: updated default versions (Pragmatica Lite 0.11.1, Aether 0.8.1, JBCT 0.6.0)
 - Slice init: implementation pattern changed to record-based (nested record in interface)
-- Slice init: factory now accepts Config dependency parameter
+- Slice init: removed Config dependency from template (factory now parameterless)
+- Slice init: added annotation processor configuration to maven-compiler-plugin
+- Slice init: added compilerArgs with `-Aslice.groupId` and `-Aslice.artifactId`
 - Slice init: removed separate *Impl.java, SampleRequest.java, SampleResponse.java files
-- Slice init: Request/Response/Error/Config records now nested in @Slice interface
+- Slice init: Request/Response/Error records now nested in @Slice interface
 - Slice init: removed "Sample" prefix from Request/Response records
 - Slice init: inner implementation record uses lowercased slice name, not "Impl"
+- Init: version resolution uses running binary version as minimum (overrides GitHub API if newer)
+- Init: version comparison uses Result-based `Number.parseInt()` from pragmatica-lite
 
 ### Fixed
+- Slice init: `ValidationError` now extends `Cause` (required for `Result.failure`)
+- Slice init: added missing `Cause` import to template
+- Slice init: `Promise.success()` instead of `Promise.successful()`
+- Slice init: implemented `message()` method in `ValidationError.EmptyValue`
+- Slice init: test template now uses `.unwrap()` instead of `.getOrThrow()`
 
 ## [0.5.0] - 2026-01-20
 
