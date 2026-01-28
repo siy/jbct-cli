@@ -593,7 +593,7 @@ public final class SliceProjectInitializer {
             @Test
             void should_process_request() {
                 var request = {{sliceName}}.Request.request("test")
-                                                   .getOrThrow();
+                                                   .unwrap();
 
                 var response = slice.process(request).await();
 
