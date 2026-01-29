@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0] - 2026-01-27
+## [0.6.0] - 2026-01-29
 
 ### Added
 - Init: groupId validation for `jbct init -g` parameter (validates Java package name format)
