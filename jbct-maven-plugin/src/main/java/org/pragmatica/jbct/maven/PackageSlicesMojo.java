@@ -9,6 +9,12 @@ import java.lang.classfile.ClassFile;
 import java.lang.classfile.ClassModel;
 import java.lang.classfile.CodeModel;
 import java.lang.classfile.MethodModel;
+import java.lang.classfile.ClassElement;
+import java.lang.classfile.MethodElement;
+import java.lang.classfile.CodeElement;
+import java.lang.classfile.ClassBuilder;
+import java.lang.classfile.MethodBuilder;
+import java.lang.classfile.CodeBuilder;
 import java.lang.classfile.instruction.ConstantInstruction;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -486,53 +492,61 @@ public class PackageSlicesMojo extends AbstractMojo {
     private byte[] transformFactoryBytecode(File classFile, Map<String, String> versionMap)
     throws IOException {
         var originalBytes = Files.readAllBytes(classFile.toPath());
-        // Skip transformation if version map is empty
         if (versionMap.isEmpty()) {
             return originalBytes;
         }
         var cf = ClassFile.of();
         var classModel = cf.parse(originalBytes);
-        return cf.transformClass(classModel,
-                                 (classBuilder, classElement) -> {
-                                     if (classElement instanceof MethodModel methodModel) {
-                                         classBuilder.transformMethod(methodModel,
-                                                                      (methodBuilder, methodElement) -> {
-                                                                          if (methodElement instanceof CodeModel codeModel) {
-                                                                              methodBuilder.transformCode(codeModel,
-                                                                                                          (codeBuilder, codeElement) -> {
-                                                                                                              // Match LoadConstantInstruction (ldc) loading string constants
-        if (codeElement instanceof ConstantInstruction.LoadConstantInstruction ldc &&
-        ldc.constantValue() instanceof String str) {
-                                                                                                                  // Check if this is an UNRESOLVED artifact string
+        return cf.transformClass(classModel, (builder, element) -> transformClassElement(builder, element, versionMap));
+    }
+
+    private void transformClassElement(ClassBuilder builder, ClassElement element, Map<String, String> versionMap) {
+        if (element instanceof MethodModel methodModel) {
+            builder.transformMethod(methodModel,
+                                    (methodBuilder, methodElement) -> transformMethodElement(methodBuilder,
+                                                                                             methodElement,
+                                                                                             versionMap));
+        } else {
+            builder.with(element);
+        }
+    }
+
+    private void transformMethodElement(MethodBuilder builder, MethodElement element, Map<String, String> versionMap) {
+        if (element instanceof CodeModel codeModel) {
+            builder.transformCode(codeModel,
+                                  (codeBuilder, codeElement) -> transformCodeElement(codeBuilder,
+                                                                                     codeElement,
+                                                                                     versionMap));
+        } else {
+            builder.with(element);
+        }
+    }
+
+    private void transformCodeElement(CodeBuilder builder, CodeElement element, Map<String, String> versionMap) {
+        if (element instanceof ConstantInstruction.LoadConstantInstruction ldc && ldc.constantValue() instanceof String str) {
+            replaceUnresolvedConstant(builder, element, str, versionMap);
+        } else {
+            builder.with(element);
+        }
+    }
+
+    private void replaceUnresolvedConstant(CodeBuilder builder,
+                                           CodeElement element,
+                                           String str,
+                                           Map<String, String> versionMap) {
         if (str.contains(":UNRESOLVED")) {
-                                                                                                                      // Extract artifact without version: "groupId:artifactId:UNRESOLVED"
-        var lastColonIdx = str.lastIndexOf(":UNRESOLVED");
-                                                                                                                      if (lastColonIdx > 0) {
-                                                                                                                          var artifact = str.substring(0,
-                                                                                                                                                       lastColonIdx);
-                                                                                                                          var version = versionMap.get(artifact);
-                                                                                                                          if (version != null) {
-                                                                                                                              // Replace with resolved version
-        codeBuilder.loadConstant(artifact + ":" + version);
-                                                                                                                              getLog().debug("Transformed: " + str
-                                                                                                                                             + " → " + artifact
-                                                                                                                                             + ":" + version);
-                                                                                                                              return;
-                                                                                                                          }
-                                                                                                                      }
-                                                                                                                  }
-                                                                                                              }
-                                                                                                              // Keep original instruction if no match
-        codeBuilder.with(codeElement);
-                                                                                                          });
-                                                                          } else {
-                                                                              methodBuilder.with(methodElement);
-                                                                          }
-                                                                      });
-                                     } else {
-                                         classBuilder.with(classElement);
-                                     }
-                                 });
+            var lastColonIdx = str.lastIndexOf(":UNRESOLVED");
+            if (lastColonIdx > 0) {
+                var artifact = str.substring(0, lastColonIdx);
+                var version = versionMap.get(artifact);
+                if (version != null) {
+                    builder.loadConstant(artifact + ":" + version);
+                    getLog().debug("Transformed: " + str + " → " + artifact + ":" + version);
+                    return;
+                }
+            }
+        }
+        builder.with(element);
     }
 
     private void addClassFiles(JarArchiver archiver, String className, Map<String, String> versionMap)

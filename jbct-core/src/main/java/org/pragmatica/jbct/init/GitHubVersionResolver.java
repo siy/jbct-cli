@@ -37,6 +37,7 @@ public final class GitHubVersionResolver {
     // 24 hours
     private static final String GITHUB_API_BASE = "https://api.github.com/repos";
     private static final Pattern TAG_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"v?([^\"]+)\"");
+    private static final Duration API_TIMEOUT = Duration.ofSeconds(10);
 
     // Default fallback versions when offline or API fails
     private static final String DEFAULT_PRAGMATICA_VERSION = "0.11.1";
@@ -110,11 +111,11 @@ public final class GitHubVersionResolver {
             var comparison = Number.parseInt(parts1[index])
                                    .flatMap(num1 -> Number.parseInt(parts2[index])
                                                           .map(num2 -> Integer.compare(num1, num2)));
-            var cmp = comparison.fold(_ -> {
-                                          LOG.debug("Failed to parse version numbers, using v1: {} vs v2: {}", v1, v2);
-                                          return 0;
-                                      },
-                                      value -> value);
+            var cmp = comparison.recover(cause -> {
+                                             LOG.debug("Failed to parse version numbers, using v1: {} vs v2: {}", v1, v2);
+                                             return 0;
+                                         })
+                                .unwrap();
             if (cmp > 0) {
                 return v1;
             }
@@ -146,7 +147,7 @@ public final class GitHubVersionResolver {
         }
         // Fetch from GitHub
         return fetchLatestVersion(owner, repo).onSuccess(version -> updateCache(cacheKey, timestampKey, version))
-                                 .fold(_ -> defaultVersion, version -> version);
+                                 .or(defaultVersion);
     }
 
     private void updateCache(String cacheKey, String timestampKey, String version) {
@@ -162,7 +163,7 @@ public final class GitHubVersionResolver {
                                  .uri(URI.create(url))
                                  .header("Accept", "application/vnd.github.v3+json")
                                  .header("User-Agent", "jbct-cli")
-                                 .timeout(Duration.ofSeconds(10))
+                                 .timeout(API_TIMEOUT)
                                  .GET()
                                  .build();
         return http.sendString(request)
