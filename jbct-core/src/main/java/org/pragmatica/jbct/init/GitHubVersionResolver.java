@@ -107,15 +107,10 @@ public final class GitHubVersionResolver {
         var parts2 = v2.split("\\.");
         for (int i = 0; i < Math.min(parts1.length, parts2.length); i++) {
             final var index = i;
-            // Make effectively final for lambda
-            var comparison = Number.parseInt(parts1[index])
-                                   .flatMap(num1 -> Number.parseInt(parts2[index])
-                                                          .map(num2 -> Integer.compare(num1, num2)));
-            var cmp = comparison.recover(cause -> {
-                                             LOG.debug("Failed to parse version numbers, using v1: {} vs v2: {}", v1, v2);
-                                             return 0;
-                                         })
-                                .unwrap();
+            var cmp = Result.all(Number.parseInt(parts1[index]),
+                                 Number.parseInt(parts2[index]))
+                            .map((num1, num2) -> Integer.compare(num1, num2))
+                            .or(0);
             if (cmp > 0) {
                 return v1;
             }
