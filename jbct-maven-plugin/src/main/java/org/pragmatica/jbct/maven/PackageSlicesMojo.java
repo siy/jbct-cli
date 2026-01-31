@@ -645,7 +645,7 @@ public class PackageSlicesMojo extends AbstractMojo {
         sb.append("        <dependency>\n");
         sb.append("            <groupId>org.pragmatica-lite</groupId>\n");
         sb.append("            <artifactId>core</artifactId>\n");
-        sb.append("            <version>0.9.10</version>\n");
+        sb.append("            <version>0.11.2</version>\n");
         sb.append("        </dependency>\n");
         // And slice-api for runtime
         sb.append("        <dependency>\n");

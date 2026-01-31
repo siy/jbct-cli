@@ -679,7 +679,7 @@ class SliceProcessorTest {
         assertThat(factoryContent).contains("delegate::deleteUser");
 
         // Local adapter record
-        assertThat(factoryContent).contains("record userServiceSlice(UserService delegate) implements Slice");
+        assertThat(factoryContent).contains("record userServiceSlice(UserService delegate) implements Slice, UserService");
     }
 
     @Test

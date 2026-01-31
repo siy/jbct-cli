@@ -37,6 +37,7 @@ jbct-cli/
 jbct format <path>      # Format Java files
 jbct lint <path>        # Analyze for JBCT compliance
 jbct check <path>       # Format check + lint (for CI)
+jbct score <path>       # Calculate JBCT compliance score (0-100)
 jbct upgrade            # Update CLI from GitHub Releases
 jbct init [dir]         # Create new JBCT project + install AI tools
 jbct init --slice [dir] # Create new Aether slice project
@@ -68,11 +69,121 @@ JBCT-RET-01 = "error"
 JBCT-VO-01 = "warning"
 ```
 
+## JBCT Compliance Scoring
+
+The `jbct score` command calculates a 0-100 compliance score based on lint violations across 6 weighted categories.
+
+### Usage
+
+```bash
+# CLI
+jbct score <path>                    # Terminal output with progress bars
+jbct score --format json <path>      # JSON output
+jbct score --format badge <path>     # SVG badge
+jbct score --baseline 75 <path>      # Fail if score < 75
+
+# Maven
+mvn jbct:score
+mvn jbct:score -Djbct.score.baseline=75
+```
+
+### Scoring Formula
+
+**Category score:**
+```
+weighted_violations = Σ(count[severity] × multiplier[severity])
+  ERROR:   × 2.5
+  WARNING: × 1.0
+  INFO:    × 0.3
+
+category_score = 100 × (1 - weighted_violations / checkpoints)
+```
+
+**Overall score:**
+```
+overall_score = Σ(category_score[i] × weight[i])
+```
+
+### Scoring Categories
+
+| Category | Weight | Rules Included |
+|----------|--------|----------------|
+| Return Types | 25% | JBCT-RET-01, JBCT-RET-02, JBCT-RET-03, JBCT-NEST-02, JBCT-RES-01 |
+| Null Safety | 20% | JBCT-NULL-01, JBCT-NULL-02 |
+| Exception Hygiene | 20% | JBCT-EXC-01, JBCT-EXC-02, JBCT-NAME-02 |
+| Pattern Purity | 15% | JBCT-PAT-01, JBCT-NEST-01, JBCT-CHAIN-01, JBCT-IMPORT-01, JBCT-FQN-01, JBCT-DOMAIN-01, JBCT-LOOP-01, JBCT-LOG-01, JBCT-LOG-02 |
+| Factory Methods | 10% | JBCT-VO-01, JBCT-VO-02, JBCT-VO-03, JBCT-VO-04, JBCT-ERR-01, JBCT-NAME-01, JBCT-PARSE-01 |
+| Lambda Compliance | 10% | JBCT-LAM-01, JBCT-LAM-02, JBCT-LAM-03, JBCT-LAM-04, JBCT-STATIC-01 |
+
+### Output Formats
+
+**Terminal** (default):
+```
+╔═══════════════════════════════════════════════════╗
+║     JBCT COMPLIANCE SCORE: 85/100            ║
+╠═══════════════════════════════════════════════════╣
+║  RETURN TYPES       █████████████████░░░  85%    ║
+║  NULL SAFETY        ████████████████░░░░  80%    ║
+║  EXCEPTION HYGIENE  ██████████████████░░  90%    ║
+║  PATTERN PURITY     ███████████████░░░░░  75%    ║
+║  FACTORY METHODS    ████████████████████ 100%    ║
+║  LAMBDA COMPLIANCE  ██████████████████░░  90%    ║
+╚═══════════════════════════════════════════════════╝
+```
+
+**JSON**:
+```json
+{
+  "score": 85,
+  "breakdown": {
+    "return_types": 85,
+    "null_safety": 80,
+    "exception_hygiene": 90,
+    "pattern_purity": 75,
+    "factory_methods": 100,
+    "lambda_compliance": 90
+  },
+  "filesAnalyzed": 42
+}
+```
+
+**Badge** (SVG):
+- Color: green (≥75), yellow (≥60), orange (≥50), red (<50)
+- Format: `JBCT | 85/100`
+
+### CI Integration
+
+Use `--baseline` to enforce minimum score in CI:
+
+```bash
+jbct score --baseline 75 src/main/java || exit 1
+```
+
+Or with Maven:
+
+```xml
+<plugin>
+    <groupId>org.pragmatica-lite</groupId>
+    <artifactId>jbct-maven-plugin</artifactId>
+    <version>0.6.0</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>score</goal>
+            </goals>
+            <configuration>
+                <baseline>75</baseline>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
 ## Key Dependencies
 
-- **pragmatica-lite:core** (0.9.10) - Result, Option, Promise types
-- **pragmatica-lite:http-client** (0.9.10) - HTTP operations for upgrade/update
-- **pragmatica-lite:toml** (0.9.10) - TOML configuration parsing
+- **pragmatica-lite:core** (0.11.2) - Result, Option, Promise types
+- **pragmatica-lite:http-client** (0.11.2) - HTTP operations for upgrade/update
+- **pragmatica-lite:toml** (0.11.2) - TOML configuration parsing
 - **java-peglib** - PEG parser generator for CST-based parsing
 - **picocli** - CLI framework
 
@@ -181,27 +292,37 @@ http.sendString(request)
 
 ## Build Commands
 
+**Important**: This project uses its own jbct-maven-plugin (dogfooding), creating a dependency cycle. All reactor builds require `-Djbct.skip=true` to avoid the cycle error.
+
 ```bash
 # Compile
-mvn compile
+mvn compile -Djbct.skip=true
 
 # Run tests
-mvn test
+mvn test -Djbct.skip=true
 
 # Build distribution (creates tar.gz/zip)
-mvn package -DskipTests
+mvn package -DskipTests -Djbct.skip=true
 
-# Full verify (includes jbct:check)
-mvn verify
+# Full verify
+mvn verify -Djbct.skip=true
 
-# Format all source files
-mvn jbct:format
+# Format all source files (run on single module)
+mvn jbct:format -pl jbct-core
 
-# Check formatting and lint
-mvn jbct:check
+# Check formatting and lint (run on single module)
+mvn jbct:check -pl jbct-core
 ```
 
-**Note**: This project uses its own jbct-maven-plugin (dogfooding). The `jbct:check` goal runs automatically during `mvn verify`.
+### Installing to Local Repository
+
+Due to the dependency cycle, install modules individually:
+
+```bash
+mvn install -DskipTests -pl jbct-core -Djbct.skip=true
+mvn install -DskipTests -pl jbct-maven-plugin -Djbct.skip=true
+mvn install -DskipTests -pl jbct-cli,slice-processor,slice-processor-tests -Djbct.skip=true
+```
 
 ## Distribution
 
