@@ -284,6 +284,8 @@ public class PackageSlicesMojo extends AbstractMojo {
             bundleExternalLibs(archiver, classification.externalDeps());
             // Add dependency file
             addDependencyFile(archiver, manifest, depsContent);
+            // Add filtered service file for SliceRouterFactory
+            addServiceFile(archiver, manifest);
             var mavenArchiver = new MavenArchiver();
             mavenArchiver.setArchiver(archiver);
             mavenArchiver.setOutputFile(jarFile);
@@ -439,6 +441,31 @@ public class PackageSlicesMojo extends AbstractMojo {
         var tempFile = Files.createTempFile("deps-", ".txt");
         Files.writeString(tempFile, content);
         archiver.addFile(tempFile.toFile(), "META-INF/dependencies/" + factoryClassName);
+    }
+
+    private void addServiceFile(JarArchiver archiver, SliceManifest manifest)
+    throws MojoExecutionException {
+        var serviceFile = new File(classesDirectory,
+            "META-INF/services/org.pragmatica.aether.http.adapter.SliceRouterFactory");
+        if (!serviceFile.exists()) {
+            return;
+        }
+        try {
+            var routesClass = manifest.slicePackage() + "." + manifest.sliceName() + "Routes";
+            var lines = Files.readAllLines(serviceFile.toPath());
+            var filteredLines = lines.stream()
+                                     .filter(line -> line.trim().equals(routesClass))
+                                     .toList();
+            if (!filteredLines.isEmpty()) {
+                var tempService = Files.createTempFile("service-", ".txt");
+                Files.writeString(tempService, String.join("\n", filteredLines));
+                archiver.addFile(tempService.toFile(),
+                    "META-INF/services/org.pragmatica.aether.http.adapter.SliceRouterFactory");
+                getLog().debug("Added service file entry for: " + routesClass);
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to add service file", e);
+        }
     }
 
     /**

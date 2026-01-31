@@ -3,6 +3,7 @@ package org.pragmatica.jbct.slice.generator;
 import org.pragmatica.jbct.slice.model.DependencyModel;
 import org.pragmatica.jbct.slice.model.MethodModel;
 import org.pragmatica.jbct.slice.model.SliceModel;
+import org.pragmatica.lang.Option;
 import org.pragmatica.lang.Result;
 import org.pragmatica.lang.Unit;
 import org.pragmatica.lang.utils.Causes;
@@ -55,6 +56,14 @@ public class ManifestGenerator {
      * Written to META-INF/slice/{SliceName}.manifest
      */
     public Result<Unit> generateSliceManifest(SliceModel model) {
+        return generateSliceManifest(model, Option.none());
+    }
+
+    /**
+     * Generate per-slice manifest with optional Routes class.
+     * Written to META-INF/slice/{SliceName}.manifest
+     */
+    public Result<Unit> generateSliceManifest(SliceModel model, Option<String> routesClass) {
         try{
             var props = new Properties();
             var sliceName = model.simpleName();
@@ -68,7 +77,7 @@ public class ManifestGenerator {
             props.setProperty("slice.artifactSuffix", toKebabCase(sliceName));
             props.setProperty("slice.package", model.packageName());
             // Implementation classes
-            var implClasses = collectImplClasses(model);
+            var implClasses = collectImplClasses(model, routesClass);
             props.setProperty("impl.classes", String.join(",", implClasses));
             // Request/Response types from methods
             var requestTypes = collectRequestTypes(model);
@@ -119,7 +128,7 @@ public class ManifestGenerator {
         }
     }
 
-    private List<String> collectImplClasses(SliceModel model) {
+    private List<String> collectImplClasses(SliceModel model, Option<String> routesClass) {
         var classes = new ArrayList<String>();
         // Original @Slice interface
         classes.add(model.qualifiedName());
@@ -134,6 +143,8 @@ public class ManifestGenerator {
         for (var dep : model.dependencies()) {
             classes.add(model.packageName() + "." + model.simpleName() + "Factory$" + dep.localRecordName());
         }
+        // Add Routes class if generated
+        routesClass.onPresent(classes::add);
         return classes;
     }
 

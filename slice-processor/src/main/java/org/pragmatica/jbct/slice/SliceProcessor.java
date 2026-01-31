@@ -128,12 +128,10 @@ public class SliceProcessor extends AbstractProcessor {
     }
 
     private void generateArtifacts(TypeElement interfaceElement, SliceModel sliceModel) {
-        Result.all(generateFactory(interfaceElement, sliceModel),
-                   generateSliceManifest(interfaceElement, sliceModel),
-                   generateRoutes(interfaceElement, sliceModel))
-              .map((_, _, _) -> Unit.unit())
-              .onFailure(cause -> error(interfaceElement,
-                                        cause.message()));
+        generateFactory(interfaceElement, sliceModel)
+            .flatMap(_ -> generateRoutes(interfaceElement, sliceModel))
+            .flatMap(routesClassOpt -> generateSliceManifest(interfaceElement, sliceModel, routesClassOpt))
+            .onFailure(cause -> error(interfaceElement, cause.message()));
     }
 
     private Result<Unit> generateFactory(TypeElement interfaceElement, SliceModel sliceModel) {
@@ -142,18 +140,21 @@ public class SliceProcessor extends AbstractProcessor {
                                                     "Generated factory: " + sliceModel.simpleName() + "Factory"));
     }
 
-    private Result<Unit> generateSliceManifest(TypeElement interfaceElement, SliceModel sliceModel) {
-        return manifestGenerator.generateSliceManifest(sliceModel)
+    private Result<Unit> generateSliceManifest(TypeElement interfaceElement,
+                                               SliceModel sliceModel,
+                                               Option<String> routesClass) {
+        return manifestGenerator.generateSliceManifest(sliceModel, routesClass)
                                 .onSuccess(_ -> note(interfaceElement,
                                                      "Generated slice manifest: META-INF/slice/" + sliceModel.simpleName()
                                                      + ".manifest"));
     }
 
-    private Result<Unit> generateRoutes(TypeElement interfaceElement, SliceModel sliceModel) {
+    private Result<Option<String>> generateRoutes(TypeElement interfaceElement, SliceModel sliceModel) {
         var packageName = sliceModel.packageName();
         return loadRouteConfig(packageName)
-        .flatMap(configOpt -> configOpt.fold(() -> Result.success(Unit.unit()),
-                                             config -> generateRoutesFromConfig(interfaceElement, sliceModel, config)));
+            .flatMap(configOpt -> configOpt.fold(
+                () -> Result.success(Option.<String>none()),
+                config -> generateRoutesFromConfig(interfaceElement, sliceModel, config)));
     }
 
     private Result<Option<RouteConfig>> loadRouteConfig(String packageName) {
@@ -176,19 +177,17 @@ public class SliceProcessor extends AbstractProcessor {
         }
     }
 
-    private Result<Unit> generateRoutesFromConfig(TypeElement interfaceElement,
-                                                  SliceModel sliceModel,
-                                                  RouteConfig config) {
+    private Result<Option<String>> generateRoutesFromConfig(TypeElement interfaceElement,
+                                                            SliceModel sliceModel,
+                                                            RouteConfig config) {
         var packageName = sliceModel.packageName();
-        return errorDiscovery.discover(packageName,
-                                       config.errors())
+        return errorDiscovery.discover(packageName, config.errors())
                              .flatMap(errorMappings -> routeGenerator.generate(sliceModel, config, errorMappings))
                              .onSuccess(qualifiedNameOpt -> {
                                             qualifiedNameOpt.onPresent(routeServiceEntries::add);
                                             note(interfaceElement,
                                                  "Generated routes: " + sliceModel.simpleName() + "Routes");
-                                        })
-                             .map(_ -> Unit.unit());
+                                        });
     }
 
     private void error(Element element, String message) {
