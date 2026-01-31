@@ -28,5 +28,6 @@ jobs:
       - name: Install jbct-maven-plugin
         run: mvn install -B -DskipTests -pl jbct-maven-plugin -Djbct.skip=true
 
-      - name: Build and test all modules
-        run: mvn verify -B -pl jbct-core,jbct-cli,slice-processor,slice-processor-tests -Djbct.skip=true
+      # Note: slice-processor modules excluded - they depend on unpublished Aether libraries
+      - name: Build and test core modules
+        run: mvn verify -B -pl jbct-core,jbct-cli -Djbct.skip=true
