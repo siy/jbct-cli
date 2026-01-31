@@ -18,4 +18,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - run: mvn verify -B -Djbct.skip
+      # Install modules individually to break cyclic dependency
+      - name: Install jbct-core
+        run: mvn install -B -DskipTests -pl jbct-core -Djbct.skip=true
+
+      - name: Install jbct-maven-plugin
+        run: mvn install -B -DskipTests -pl jbct-maven-plugin -Djbct.skip=true
+
+      - name: Build and test all modules
+        run: mvn verify -B -pl jbct-core,jbct-cli,slice-processor,slice-processor-tests -Djbct.skip=true
