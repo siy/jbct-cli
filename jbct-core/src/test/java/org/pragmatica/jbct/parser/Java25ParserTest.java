@@ -16,10 +16,9 @@ class Java25ParserTest {
     void parseEmptyClass() {
         var result = parser.parse("class Foo { }");
         assertTrue(result.isSuccess(), () -> "Failed: " + result);
-        var cst = result.unwrap();
-        assertEquals("CompilationUnit",
-                     cst.rule()
-                        .name());
+        result.onSuccess(cst -> assertEquals("CompilationUnit",
+                                             cst.rule()
+                                                .name()));
     }
 
     @Test
@@ -100,25 +99,27 @@ class Java25ParserTest {
     void cstPreservesSourceLocation() {
         var result = parser.parse("class Foo { }");
         assertTrue(result.isSuccess());
-        var cst = result.unwrap();
-        var span = cst.span();
-        assertEquals(1,
-                     span.start()
-                         .line());
-        assertEquals(1,
-                     span.start()
-                         .column());
+        result.onSuccess(cst -> {
+                             var span = cst.span();
+                             assertEquals(1,
+                                          span.start()
+                                              .line());
+                             assertEquals(1,
+                                          span.start()
+                                              .column());
+                         });
     }
 
     @Test
     void cstHasChildren() {
         var result = parser.parse("class Foo { int x; }");
         assertTrue(result.isSuccess());
-        var cst = result.unwrap();
-        assertTrue(cst instanceof CstNode.NonTerminal);
-        var root = (CstNode.NonTerminal) cst;
-        assertFalse(root.children()
-                        .isEmpty());
+        result.onSuccess(cst -> {
+                             assertTrue(cst instanceof CstNode.NonTerminal);
+                             var root = (CstNode.NonTerminal) cst;
+                             assertFalse(root.children()
+                                             .isEmpty());
+                         });
     }
 
     @Test

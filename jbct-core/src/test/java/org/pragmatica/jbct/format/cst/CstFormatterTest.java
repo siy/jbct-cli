@@ -619,9 +619,12 @@ class CstFormatterTest {
         var content = Files.readString(path);
         var source = new SourceFile(path, content);
         // Format once
-        var firstPass = formatter.format(source)
-                                 .onFailure(cause -> fail("First format failed for " + fileName + ": " + cause.message()))
-                                 .unwrap();
+        var firstPassResult = formatter.format(source)
+                                       .onFailure(cause -> fail("First format failed for " + fileName + ": " + cause.message()));
+        if (firstPassResult.isFailure()) {
+            return; // Already failed above
+        }
+        var firstPass = firstPassResult.or(source);
         // Format 10 more times and verify no growth
         var current = firstPass;
         int firstLength = firstPass.content()
@@ -631,9 +634,12 @@ class CstFormatterTest {
         for (int i = 2; i <= 10; i++) {
             final var toFormat = current;
             final int passNum = i;
-            current = formatter.format(toFormat)
-                               .onFailure(cause -> fail("Format pass " + passNum + " failed for " + fileName + ": " + cause.message()))
-                               .unwrap();
+            var currentResult = formatter.format(toFormat)
+                                         .onFailure(cause -> fail("Format pass " + passNum + " failed for " + fileName + ": " + cause.message()));
+            if (currentResult.isFailure()) {
+                return; // Already failed above
+            }
+            current = currentResult.or(toFormat);
             int currentLength = current.content()
                                        .length();
             int currentLines = current.content()

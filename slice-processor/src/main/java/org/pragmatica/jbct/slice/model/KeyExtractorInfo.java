@@ -15,18 +15,6 @@ public record KeyExtractorInfo(String keyType, String extractorExpression) {
     private static final Pattern JAVA_IDENTIFIER = Pattern.compile("^[a-zA-Z_$][a-zA-Z0-9_$]*$");
 
     /**
-     * Compact constructor validates all fields.
-     */
-    public KeyExtractorInfo {
-        if (keyType == null || keyType.isEmpty()) {
-            throw new IllegalArgumentException("keyType cannot be null or empty");
-        }
-        if (extractorExpression == null || extractorExpression.isEmpty()) {
-            throw new IllegalArgumentException("extractorExpression cannot be null or empty");
-        }
-    }
-
-    /**
      * Create extractor for a single @Key-annotated field.
      *
      * @param keyType       Type of the annotated field

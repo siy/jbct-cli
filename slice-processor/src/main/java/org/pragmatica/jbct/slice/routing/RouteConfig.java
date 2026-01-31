@@ -61,15 +61,17 @@ public record RouteConfig(String prefix,
      * @return merged configuration
      */
     public RouteConfig merge(Option<RouteConfig> other) {
-        return other.map(o -> {
-                             var mergedPrefix = o.prefix.isEmpty()
-                                                ? this.prefix
-                                                : o.prefix;
-                             var mergedRoutes = mergeRoutes(this.routes, o.routes);
-                             var mergedErrors = this.errors.merge(Option.some(o.errors));
-                             return routeConfig(mergedPrefix, mergedRoutes, mergedErrors);
-                         })
+        return other.map(this::mergeWith)
                     .or(this);
+    }
+
+    private RouteConfig mergeWith(RouteConfig other) {
+        var mergedPrefix = other.prefix.isEmpty()
+                           ? this.prefix
+                           : other.prefix;
+        var mergedRoutes = mergeRoutes(this.routes, other.routes);
+        var mergedErrors = this.errors.merge(Option.some(other.errors));
+        return routeConfig(mergedPrefix, mergedRoutes, mergedErrors);
     }
 
     private static Map<String, RouteDsl> mergeRoutes(Map<String, RouteDsl> base,

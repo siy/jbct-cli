@@ -44,8 +44,8 @@ public class SliceProcessor extends AbstractProcessor {
     private DependencyVersionResolver versionResolver;
     private RouteSourceGenerator routeGenerator;
     private ErrorTypeDiscovery errorDiscovery;
-    private final java.util.Map<String, TypeElement> packageToSlice = new java.util.HashMap<>();
-    private final java.util.Set<String> routeServiceEntries = new java.util.LinkedHashSet<>();
+    private final java.util.Map<String, TypeElement> packageToSlice = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Set<String> routeServiceEntries = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<>());
 
     @Override
     public synchronized void init(javax.annotation.processing.ProcessingEnvironment processingEnv) {

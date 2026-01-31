@@ -71,16 +71,17 @@ public sealed interface ConfigLoader permits ConfigLoader.unused {
      * Find the project config file, searching up the directory tree.
      */
     static Option<Path> findProjectConfig(Path startDir) {
-        var dir = startDir.toAbsolutePath()
-                          .normalize();
-        while (dir != null) {
-            var configPath = dir.resolve(PROJECT_CONFIG_NAME);
-            if (Files.exists(configPath) && Files.isRegularFile(configPath)) {
-                return Option.option(configPath);
-            }
-            dir = dir.getParent();
-        }
-        return Option.none();
+        return findProjectConfigRecursive(Option.some(startDir.toAbsolutePath()
+                                                               .normalize()));
+    }
+
+    private static Option<Path> findProjectConfigRecursive(Option<Path> dirOpt) {
+        return dirOpt.flatMap(dir -> {
+                         var configPath = dir.resolve(PROJECT_CONFIG_NAME);
+                         return Files.exists(configPath) && Files.isRegularFile(configPath)
+                                ? Option.some(configPath)
+                                : findProjectConfigRecursive(Option.option(dir.getParent()));
+                     });
     }
 
     /**

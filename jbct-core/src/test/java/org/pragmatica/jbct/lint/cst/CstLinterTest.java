@@ -33,7 +33,8 @@ class CstLinterTest {
         var sourceFile = SourceFile.sourceFile(Path.of("Test.java"), source);
         var result = linter.lint(sourceFile);
         assertTrue(result.isSuccess(), () -> "Parse failed: " + result);
-        return result.unwrap();
+        return result.onFailure(cause -> fail("Parse failed: " + cause.message()))
+                     .or(List.of());
     }
 
     private void assertHasRule(List<Diagnostic> diagnostics, String ruleId) {

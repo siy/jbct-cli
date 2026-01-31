@@ -104,7 +104,7 @@ public class InitCommand implements Callable<Integer> {
             if (!Files.exists(projectDir)) {
                 try{
                     Files.createDirectories(projectDir);
-                } catch (Exception e) {
+                } catch (java.io.IOException e) {
                     System.err.println("Error: Failed to create directory: " + e.getMessage());
                     return 1;
                 }

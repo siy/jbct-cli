@@ -209,11 +209,11 @@ public class PackageSlicesMojo extends AbstractMojo {
         }
     }
 
-    private java.util.Properties readFirstSliceManifest(Artifact artifact) {
+    private java.util.Optional<java.util.Properties> readFirstSliceManifest(Artifact artifact) {
         var file = artifact.getFile();
         if (file == null || !file.exists() || !file.getName()
                                                    .endsWith(".jar")) {
-            return null;
+            return java.util.Optional.empty();
         }
         try (var jar = new JarFile(file)) {
             var entries = jar.entries();
@@ -226,13 +226,13 @@ public class PackageSlicesMojo extends AbstractMojo {
                     try (var stream = jar.getInputStream(entry)) {
                         props.load(stream);
                     }
-                    return props;
+                    return java.util.Optional.of(props);
                 }
             }
-            return null;
+            return java.util.Optional.empty();
         } catch (IOException e) {
             getLog().debug("Could not read JAR: " + file + " - " + e.getMessage());
-            return null;
+            return java.util.Optional.empty();
         }
     }
 
@@ -242,17 +242,20 @@ public class PackageSlicesMojo extends AbstractMojo {
 
     private ArtifactInfo toSliceArtifactInfo(Artifact artifact) {
         // Read slice artifact from manifest (has correct naming: groupId:artifactId-sliceName)
-        var props = readFirstSliceManifest(artifact);
-        if (props != null) {
-            var sliceArtifactId = props.getProperty("slice.artifactId");
-            var baseArtifact = props.getProperty("base.artifact");
-            if (sliceArtifactId != null && baseArtifact != null && baseArtifact.contains(":")) {
-                var groupId = baseArtifact.split(":") [0];
-                return new ArtifactInfo(groupId, sliceArtifactId, toSemverRange(artifact.getVersion()));
-            }
-        }
-        // Fallback to Maven artifact
-        return toArtifactInfo(artifact);
+        return readFirstSliceManifest(artifact)
+                   .flatMap(props -> {
+                                var sliceArtifactId = props.getProperty("slice.artifactId");
+                                var baseArtifact = props.getProperty("base.artifact");
+                                if (sliceArtifactId != null && baseArtifact != null && baseArtifact.contains(":")) {
+                                    var groupId = baseArtifact.split(":")[0];
+                                    return java.util.Optional.of(new ArtifactInfo(groupId,
+                                                                                  sliceArtifactId,
+                                                                                  toSemverRange(artifact.getVersion())));
+                                }
+                                return java.util.Optional.<ArtifactInfo>empty();
+                            })
+                   // Fallback to Maven artifact
+                   .orElseGet(() -> toArtifactInfo(artifact));
     }
 
     private String toSemverRange(String version) {

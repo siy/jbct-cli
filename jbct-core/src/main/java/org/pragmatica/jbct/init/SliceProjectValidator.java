@@ -85,15 +85,11 @@ public final class SliceProjectValidator {
             var errors = new ArrayList<String>();
             for (var manifestFile : manifestFiles) {
                 loadProperties(manifestFile)
-                .fold(cause -> {
-                          errors.add("Failed to read " + manifestFile.getFileName() + ": " + cause.message());
-                          return null;
-                      },
-                      props -> {
-                          checkRequired(props, "slice.interface", errors);
-                          checkRequired(props, "slice.artifactId", errors);
-                          return null;
-                      });
+                    .onFailure(cause -> errors.add("Failed to read " + manifestFile.getFileName() + ": " + cause.message()))
+                    .onSuccess(props -> {
+                                   checkRequired(props, "slice.interface", errors);
+                                   checkRequired(props, "slice.artifactId", errors);
+                               });
             }
             return PartialResult.partialResult(errors, List.of());
         } catch (Exception e) {
