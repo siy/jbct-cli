@@ -64,8 +64,7 @@ public sealed interface ConfigLoader permits ConfigLoader.unused {
         }
         return TomlParser.parseFile(path)
                          .map(JbctConfig::fromToml)
-                         .fold(_ -> Option.none(),
-                               Option::option);
+                         .option();
     }
 
     /**

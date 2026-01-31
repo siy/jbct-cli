@@ -49,31 +49,23 @@ public class CstFormatter {
 
     private Result<CstNode> parse(SourceFile source) {
         var result = parser.parseWithDiagnostics(source.content());
-        if (result.isSuccess() && result.node()
-                                        .isPresent()) {
-            return Result.success(result.node()
-                                        .unwrap());
+        if (result.isSuccess()) {
+            return result.node()
+                         .toResult(FormattingError.parseError(source.fileName(), 1, 1, "Parse error"));
         }
-        var diag = result.diagnostics()
-                         .stream()
-                         .findFirst();
-        if (diag.isPresent()) {
-            var span = diag.get()
-                           .span();
-            return FormattingError.parseError(source.fileName(),
-                                              span.start()
-                                                  .line(),
-                                              span.start()
-                                                  .column(),
-                                              diag.get()
-                                                  .message())
-                                  .result();
-        }
-        return FormattingError.parseError(source.fileName(),
-                                          1,
-                                          1,
-                                          "Parse error")
-                              .result();
+        return result.diagnostics()
+                     .stream()
+                     .findFirst()
+                     .map(d -> FormattingError.parseError(source.fileName(),
+                                                          d.span()
+                                                           .start()
+                                                           .line(),
+                                                          d.span()
+                                                           .start()
+                                                           .column(),
+                                                          d.message()))
+                     .orElse(FormattingError.parseError(source.fileName(), 1, 1, "Parse error"))
+                     .result();
     }
 
     private String formatCst(CstNode root, String source) {

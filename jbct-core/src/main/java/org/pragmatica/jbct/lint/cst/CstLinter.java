@@ -75,10 +75,9 @@ public class CstLinter {
 
     private Result<CstNode> parse(SourceFile source) {
         var result = parser.parseWithDiagnostics(source.content());
-        if (result.isSuccess() && result.node()
-                                        .isPresent()) {
-            return Result.success(result.node()
-                                        .unwrap());
+        if (result.isSuccess()) {
+            return result.node()
+                         .toResult(Causes.cause("Parse error in " + source.fileName()));
         }
         var errorMsg = result.diagnostics()
                              .stream()

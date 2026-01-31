@@ -129,8 +129,8 @@ public class InitCommand implements Callable<Integer> {
                 aiToolsInstalled = installer.install()
                                             .onFailure(cause -> System.err.println("Warning: Failed to install AI tools: " + cause.message()))
                                             .onSuccess(this::printAiToolsResult)
-                                            .fold(_ -> false,
-                                                  files -> !files.isEmpty());
+                                            .map(files -> !files.isEmpty())
+                                            .or(false);
             }
         }
         // Print summary
@@ -164,7 +164,8 @@ public class InitCommand implements Callable<Integer> {
         return initializer.initialize()
                           .onFailure(cause -> System.err.println("Error: " + cause.message()))
                           .onSuccess(this::printCreatedFiles)
-                          .fold(_ -> false, _ -> true);
+                          .map(_ -> true)
+                          .or(false);
     }
 
     private void printCreatedFiles(java.util.List<Path> createdFiles) {
@@ -177,7 +178,9 @@ public class InitCommand implements Callable<Integer> {
     }
 
     private boolean hasVersionOverrides() {
-        return pragmaticaVersion != null || aetherVersion != null || jbctVersion != null;
+        return org.pragmatica.lang.Option.option(pragmaticaVersion).isPresent()
+               || org.pragmatica.lang.Option.option(aetherVersion).isPresent()
+               || org.pragmatica.lang.Option.option(jbctVersion).isPresent();
     }
 
     private String effectivePragmaticaVersion() {
@@ -204,7 +207,8 @@ public class InitCommand implements Callable<Integer> {
                                                                          .onSuccess(createdFiles -> printSliceCreatedFiles(createdFiles,
                                                                                                                            initializer.sliceName())))
                                       .onFailure(cause -> System.err.println("Error: " + cause.message()))
-                                      .fold(_ -> false, _ -> true);
+                                      .map(_ -> true)
+                                      .or(false);
     }
 
     private void printSliceCreatedFiles(java.util.List<Path> createdFiles, String sliceName) {
@@ -227,16 +231,16 @@ public class InitCommand implements Callable<Integer> {
     }
 
     private static boolean isValidPackageName(String packageName) {
-        if (packageName == null || packageName.isBlank()) {
-            return false;
-        }
-        if (packageName.startsWith(".") || packageName.endsWith(".")) {
-            return false;
-        }
-        if (packageName.contains("..")) {
-            return false;
-        }
-        var segments = packageName.split("\\.");
+        return org.pragmatica.lang.Option.option(packageName)
+                                         .filter(s -> !s.isBlank())
+                                         .filter(s -> !s.startsWith(".") && !s.endsWith("."))
+                                         .filter(s -> !s.contains(".."))
+                                         .map(s -> s.split("\\."))
+                                         .filter(InitCommand::allValidIdentifiers)
+                                         .isPresent();
+    }
+
+    private static boolean allValidIdentifiers(String[] segments) {
         for (var segment : segments) {
             if (!isValidJavaIdentifier(segment)) {
                 return false;
@@ -246,19 +250,21 @@ public class InitCommand implements Callable<Integer> {
     }
 
     private static boolean isValidJavaIdentifier(String identifier) {
-        if (identifier == null || identifier.isEmpty()) {
-            return false;
-        }
-        if (!Character.isJavaIdentifierStart(identifier.charAt(0))) {
-            return false;
-        }
+        return org.pragmatica.lang.Option.option(identifier)
+                                         .filter(s -> !s.isEmpty())
+                                         .filter(s -> Character.isJavaIdentifierStart(s.charAt(0)))
+                                         .filter(InitCommand::allCharsValidIdentifierParts)
+                                         .filter(s -> !isJavaKeyword(s))
+                                         .isPresent();
+    }
+
+    private static boolean allCharsValidIdentifierParts(String identifier) {
         for (int i = 1; i < identifier.length(); i++) {
             if (!Character.isJavaIdentifierPart(identifier.charAt(i))) {
                 return false;
             }
         }
-        // Reject Java keywords
-        return ! isJavaKeyword(identifier);
+        return true;
     }
 
     private static boolean isJavaKeyword(String word) {

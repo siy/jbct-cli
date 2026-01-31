@@ -219,9 +219,13 @@ public class SliceProcessor extends AbstractProcessor {
     }
 
     private static String toKebabCase(String camelCase) {
-        if (camelCase == null || camelCase.isEmpty()) {
-            return camelCase;
-        }
+        return Option.option(camelCase)
+                     .filter(s -> !s.isEmpty())
+                     .map(SliceProcessor::doToKebabCase)
+                     .or("");
+    }
+
+    private static String doToKebabCase(String camelCase) {
         var result = new StringBuilder();
         result.append(Character.toLowerCase(camelCase.charAt(0)));
         for (int i = 1; i < camelCase.length(); i++) {

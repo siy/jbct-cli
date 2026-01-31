@@ -106,6 +106,39 @@ Exit codes:
 - `1` - Format or lint issues found
 - `2` - Internal error (parse failure, etc.)
 
+### Score
+
+Calculate JBCT compliance score (0-100):
+
+```bash
+jbct score src/main/java
+```
+
+Options:
+- `--format` / `-f` `<terminal|json|badge>` - Output format (default: terminal)
+- `--baseline` / `-b` `<score>` - Fail if score below threshold
+- `--verbose` / `-v` - Show detailed output
+- `--config <path>` - Path to configuration file
+
+Output formats:
+- `terminal` - Progress bars with category breakdown
+- `json` - Machine-readable JSON with full breakdown
+- `badge` - SVG badge for README
+
+Example with baseline:
+
+```bash
+jbct score --baseline 75 src/main/java  # Fail if score < 75
+```
+
+The score is calculated using density + severity weighting across 6 categories:
+- **Return Types** (25%) - Four return kinds compliance
+- **Null Safety** (20%) - No null returns or parameters
+- **Exception Hygiene** (20%) - No business exceptions
+- **Pattern Purity** (15%) - Clean functional composition
+- **Factory Methods** (10%) - Parse-don't-validate pattern
+- **Lambda Compliance** (10%) - Minimal lambda complexity
+
 ### Upgrade
 
 Self-update to the latest version:
@@ -206,6 +239,7 @@ Priority chain:
 | `jbct:format-check` | Check formatting (fail if issues) | verify |
 | `jbct:lint` | Run lint rules | verify |
 | `jbct:check` | Combined format-check + lint | verify |
+| `jbct:score` | Calculate JBCT compliance score | verify |
 | `jbct:collect-slice-deps` | Collect slice API dependencies | generate-sources |
 | `jbct:verify-slice` | Validate slice configuration | verify |
 
@@ -233,6 +267,13 @@ Full check (format + lint):
 
 ```bash
 mvn jbct:check
+```
+
+Calculate compliance score:
+
+```bash
+mvn jbct:score
+mvn jbct:score -Djbct.score.baseline=75
 ```
 
 ### Binding to Build Lifecycle

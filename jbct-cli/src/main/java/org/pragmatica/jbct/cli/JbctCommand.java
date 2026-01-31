@@ -15,6 +15,7 @@ import picocli.CommandLine.Option;
  subcommands = {FormatCommand.class,
  LintCommand.class,
  CheckCommand.class,
+ ScoreCommand.class,
  UpgradeCommand.class,
  InitCommand.class,
  UpdateCommand.class,

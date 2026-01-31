@@ -290,8 +290,10 @@ public class RouteSourceGenerator {
             var entry = validRoutes.get(i);
             var handlerName = entry.getKey();
             var routeDsl = entry.getValue();
-            var method = methodMap.get(handlerName);
-            generateRoute(out, routeConfig.prefix(), routeDsl, method, i < validRoutes.size() - 1);
+            var hasMore = i < validRoutes.size() - 1;
+            // methodOpt guaranteed present - we validated above
+            Option.option(methodMap.get(handlerName))
+                  .onPresent(method -> generateRoute(out, routeConfig.prefix(), routeDsl, method, hasMore));
         }
         out.println("        );");
         out.println("    }");
@@ -582,9 +584,12 @@ public class RouteSourceGenerator {
      * Handles quotes, backslashes, and common control characters.
      */
     private String escapeJavaString(String input) {
-        if (input == null) {
-            return "";
-        }
+        return Option.option(input)
+                     .map(this::doEscapeJavaString)
+                     .or("");
+    }
+
+    private String doEscapeJavaString(String input) {
         var sb = new StringBuilder(input.length());
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
