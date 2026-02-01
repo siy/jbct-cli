@@ -258,7 +258,8 @@ public class FactoryClassGenerator {
             out.println("                                                          .async()");
             out.println("                                                          .flatMap(cfg -> factory.create(Cache.class, cfg).async()))");
         }
-        // Handle infra dependencies first
+        // Handle infra dependencies first - keep flatMaps open for variable scoping
+        var openInfraFlatMaps = 0;
         if (!infraDeps.isEmpty()) {
             var infraPrevVar = cacheVarNames.isEmpty()
                                ? "factory"
@@ -266,9 +267,9 @@ public class FactoryClassGenerator {
             for (int i = 0; i < infraDeps.size(); i++) {
                 var infra = infraDeps.get(i);
                 var infraVarName = infra.parameterName();
-                out.println("                           .flatMap(" + infraPrevVar + " -> " + generateInfraStoreCall(infra)
-                            + ")");
+                out.println("                           .flatMap(" + infraPrevVar + " -> " + generateInfraStoreCall(infra));
                 infraPrevVar = infraVarName;
+                openInfraFlatMaps++;
             }
         }
         // Handle slice dependencies
@@ -341,7 +342,14 @@ public class FactoryClassGenerator {
         out.println("                               return aspect.apply(new " + wrapperName + "(" + String.join(", ",
                                                                                                                 wrappedArgs)
                     + "));");
-        out.println("                           });");
+        // Close the map
+        var closeIndent = "                           ";
+        out.println(closeIndent + "})");
+        // Close all open infra flatMaps
+        for (int i = 0; i < openInfraFlatMaps; i++) {
+            out.println(closeIndent + ")");
+        }
+        out.println(closeIndent.substring(4) + ";");
     }
 
     /**
@@ -517,6 +525,8 @@ public class FactoryClassGenerator {
                         ? ","
                         : "";
             var escapedMethodName = escapeJavaString(method.name());
+            // Note: MethodName.unwrap() is safe here because method names are validated
+            // at annotation processing time per RFC-0001
             out.println("                    new SliceMethod<>(");
             out.println("                        MethodName.methodName(\"" + escapedMethodName + "\").unwrap(),");
             out.println("                        delegate::" + method.name() + ",");
@@ -646,14 +656,15 @@ public class FactoryClassGenerator {
         if (!infraDeps.isEmpty()) {
             var firstInfra = infraDeps.getFirst();
             out.println("        return " + generateInfraStoreCall(firstInfra));
-            // Chain remaining infra deps
+            // Chain remaining infra deps - keep flatMaps open for variable scoping
             var indent = "            ";
+            var openFlatMaps = 0;
             for (int i = 1; i < infraDeps.size(); i++) {
                 var infra = infraDeps.get(i);
                 var prevInfra = infraDeps.get(i - 1);
-                out.println(indent + ".flatMap(" + prevInfra.parameterName() + " -> " + generateInfraStoreCall(infra)
-                            + ")");
+                out.println(indent + ".flatMap(" + prevInfra.parameterName() + " -> " + generateInfraStoreCall(infra));
                 indent += "    ";
+                openFlatMaps++;
             }
             // Chain slice dependency proxies if any
             if (!sliceDeps.isEmpty()) {
@@ -669,12 +680,14 @@ public class FactoryClassGenerator {
                 var firstHandle = allSliceHandles.getFirst();
                 out.println(indent + ".flatMap(" + lastInfra.parameterName() + " -> " + generateMethodHandleCall(firstHandle));
                 indent += "    ";
+                openFlatMaps++;
                 // Remaining handles use previous handle's varName
                 for (int i = 1; i < allSliceHandles.size(); i++) {
                     var handle = allSliceHandles.get(i);
                     var prevHandle = allSliceHandles.get(i - 1);
                     out.println(indent + ".flatMap(" + prevHandle.varName() + " -> " + generateMethodHandleCall(handle));
                     indent += "    ";
+                    openFlatMaps++;
                 }
                 // Final map with all dependencies
                 var lastHandle = allSliceHandles.getLast();
@@ -682,8 +695,8 @@ public class FactoryClassGenerator {
                 generateDependencyInstantiation(out, indent, sliceDeps, proxyMethodsCache);
                 generateFactoryCall(out, indent, model);
                 out.println(indent + "})");
-                // Close all flatMaps
-                for (int i = 0; i < infraDeps.size() - 1 + allSliceHandles.size(); i++) {
+                // Close all open flatMaps
+                for (int i = 0; i < openFlatMaps; i++) {
                     indent = indent.substring(4);
                     out.println(indent + ")");
                 }
@@ -694,8 +707,8 @@ public class FactoryClassGenerator {
                 out.println(indent + ".map(" + lastInfra.parameterName() + " -> {");
                 generateFactoryCall(out, indent, model);
                 out.println(indent + "})");
-                // Close all flatMaps
-                for (int i = 0; i < infraDeps.size() - 1; i++) {
+                // Close all open flatMaps
+                for (int i = 0; i < openFlatMaps; i++) {
                     indent = indent.substring(4);
                     out.println(indent + ")");
                 }

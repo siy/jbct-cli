@@ -142,6 +142,10 @@ public class GenerateBlueprintMojo extends AbstractMojo {
                     // Dependency already in graph with resolved version, skip adding duplicate
                     continue;
                 }
+                // UNRESOLVED dependency not in graph - skip and warn
+                getLog().warn("Skipping UNRESOLVED dependency: " + dep.artifact()
+                              + " - not found in local graph");
+                continue;
             }
             loadManifestFromDependency(dep.artifact(),
                                        dep.version()).onPresent(depManifest -> {
@@ -260,7 +264,20 @@ public class GenerateBlueprintMojo extends AbstractMojo {
                 if (dep.artifact() != null && !dep.artifact()
                                                   .isEmpty()) {
                     // Dependency with artifact coordinates
-                    depArtifact = dep.artifact() + ":" + dep.version();
+                    if ("UNRESOLVED".equals(dep.version())) {
+                        // Find matching resolved key in graph
+                        var artifactPrefix = dep.artifact() + ":";
+                        depArtifact = graph.keySet()
+                                           .stream()
+                                           .filter(key -> key.startsWith(artifactPrefix))
+                                           .findFirst()
+                                           .orElse(null);
+                        if (depArtifact == null) {
+                            continue; // Skip unresolved deps not in graph
+                        }
+                    } else {
+                        depArtifact = dep.artifact() + ":" + dep.version();
+                    }
                 } else {
                     // Local dependency: look up in interfaceToArtifact map
                     depArtifact = interfaceToArtifact.get(dep.interfaceQualifiedName());

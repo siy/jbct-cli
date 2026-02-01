@@ -23,7 +23,7 @@ This document describes the automatic generation of HTTP route handling code fro
 **Existing projects**: If adding routing to an existing slice project, add the dependency above.
 
 **Compile-time validation**: If `routes.toml` exists but the dependency is missing, compilation fails with:
-```text
+```
 ERROR: HTTP routing configured but dependency missing.
 Add to pom.xml:
 <dependency>
@@ -64,7 +64,7 @@ When `routes.toml` exists in the slice package resources, the processor generate
 - Single line per route
 
 **Syntax**:
-```
+```text
 "METHOD /path/{param:Type}?query1&query2:Type"
 ```
 
@@ -312,7 +312,7 @@ public final class UserServiceRoutes implements RouteSource, SliceRouterFactory<
 ```
 
 **Generated**: `META-INF/services/org.pragmatica.aether.http.adapter.SliceRouterFactory`
-```
+```text
 com.example.users.UserServiceRoutes
 ```
 
@@ -453,7 +453,7 @@ Route.<HealthStatus>get("/api/v1/health")
 
 If a type matches multiple patterns with different status codes:
 
-```
+```text
 ERROR: Ambiguous error mapping for 'UserNotFoundInvalid':
   - Matches HTTP_404 pattern "*NotFound*"
   - Matches HTTP_400 pattern "*Invalid*"
@@ -507,7 +507,7 @@ var router = factory.create(userServiceImpl);
 
 ## File Structure
 
-```
+```text
 slice-processor/
 ├── src/main/java/org/pragmatica/jbct/slice/
 │   ├── SliceProcessor.java              # Annotation processor entry point

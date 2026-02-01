@@ -44,6 +44,9 @@
 - Slice init: `Promise.success()` instead of `Promise.successful()`
 - Slice init: implemented `message()` method in `ValidationError.EmptyValue`
 - Slice init: test template now uses monadic composition instead of `.unwrap()`
+- FactoryClassGenerator: infra flatMaps now use proper nesting for variable scoping
+- GenerateBlueprintMojo: UNRESOLVED dependency edges now properly resolved in graph traversal
+- CollectSliceDepsMojo: improved base.artifact validation (rejects spaces, slashes)
 
 ## [0.5.0] - 2026-01-20
 
@@ -155,8 +158,6 @@
 
 ## [0.4.7] - 2026-01-10
 
-### Added
-
 ### Changed
 - Build: bump Pragmatica Lite to 0.9.10
 - Docs: update README with missing CLI options (--config, --version, --artifact-id, etc.)
@@ -172,8 +173,6 @@
 - Formatter: prevent leading newline accumulation in files without package declaration
 
 ## [0.4.6] - 2026-01-05
-
-### Added
 
 ### Changed
 - Build: bump Pragmatica Lite to 0.9.7
@@ -193,22 +192,14 @@
 
 ## [0.4.5] - 2026-01-02
 
-### Added
-
 ### Changed
 - Build: bump Pragmatica Lite to 0.9.4
 
-### Fixed
-
 ## [0.4.4] - 2026-01-01
-
-### Added
 
 ### Changed
 - AI tools: update to JBCT v2.0.10 with Pragmatica Lite Core 0.9.3
 - Build: bump Pragmatica Lite to 0.9.3
-
-### Fixed
 
 ## [0.4.3] - 2025-12-31
 
@@ -232,10 +223,6 @@
 - Linter: JBCT-PAT-02 no longer flags method references as fork-join (e.g., `Result::allOf`)
 
 ## [0.4.2] - 2025-12-30
-
-### Added
-
-### Changed
 
 ### Fixed
 - Parser: `record` as contextual keyword - works as method name, type name, field type, variable type

@@ -25,9 +25,11 @@ import org.apache.maven.project.MavenProject;
  *
  * <p>For each dependency JAR containing META-INF/slice/*.manifest files, extracts:
  * <ul>
- *   <li>slice.interface - the slice interface fully qualified name</li>
- *   <li>slice.artifactId - the slice artifact ID</li>
- *   <li>base.artifact - the groupId:baseArtifactId for dependency resolution</li>
+ *   <li>{@code slice.interface} - the slice interface fully qualified name</li>
+ *   <li>{@code slice.artifactId} - the slice artifact ID</li>
+ *   <li>{@code base.artifact} - the groupId:baseArtifactId for dependency resolution.
+ *       Format: {@code groupId:artifactId} where both components are non-blank Maven coordinates.
+ *       Example: {@code org.example:inventory-service}</li>
  * </ul>
  *
  * <p>Writes mappings to slice-deps.properties in format:
@@ -100,13 +102,15 @@ public class CollectSliceDepsMojo extends AbstractMojo {
                 var baseArtifact = props.getProperty("base.artifact");
                 String groupId;
                 if (baseArtifact != null && baseArtifact.contains(":")) {
-                    var parts = baseArtifact.split(":");
-                    if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+                    var parts = baseArtifact.split(":", -1);
+                    if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()
+                        || parts[0].contains(" ") || parts[1].contains(" ")
+                        || parts[0].contains("/") || parts[1].contains("/")) {
                         getLog().warn("Invalid base.artifact format in " + jarFile.getName() + " (" + entryName
                                       + "): expected 'groupId:artifactId', got '" + baseArtifact + "'");
                         continue;
                     }
-                    groupId = parts[0];
+                    groupId = parts[0].trim();
                 } else {
                     getLog().warn("Missing or invalid base.artifact in " + jarFile.getName() + " (" + entryName + ")");
                     continue;
