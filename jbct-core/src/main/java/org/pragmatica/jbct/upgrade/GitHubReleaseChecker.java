@@ -18,6 +18,7 @@ public final class GitHubReleaseChecker {
     private static final String GITHUB_API_URL = "https://api.github.com/repos/siy/jbct-cli/releases/latest";
     private static final Pattern VERSION_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"v?([^\"]+)\"");
     private static final Pattern ASSET_URL_PATTERN = Pattern.compile("\"browser_download_url\"\\s*:\\s*\"([^\"]+jbct[^\"]*\\.jar)\"");
+    private static final Duration API_TIMEOUT = Duration.ofSeconds(30);
 
     private final HttpOperations http;
     private final String apiUrl;
@@ -51,7 +52,7 @@ public final class GitHubReleaseChecker {
                                  .uri(URI.create(apiUrl))
                                  .header("Accept", "application/vnd.github.v3+json")
                                  .header("User-Agent", "jbct-cli")
-                                 .timeout(Duration.ofSeconds(30))
+                                 .timeout(API_TIMEOUT)
                                  .GET()
                                  .build();
         return http.sendString(request)

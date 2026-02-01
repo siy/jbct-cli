@@ -45,8 +45,9 @@ public final class JarInstaller {
      * Get the default installation path (~/.jbct/lib/jbct.jar).
      */
     public static Path defaultInstallPath() {
-        var userHome = System.getProperty("user.home");
-        return Path.of(userHome, DEFAULT_INSTALL_DIR, LIB_DIR, JAR_NAME);
+        return Option.option(System.getProperty("user.home"))
+                     .map(userHome -> Path.of(userHome, DEFAULT_INSTALL_DIR, LIB_DIR, JAR_NAME))
+                     .or(() -> Path.of(System.getProperty("java.io.tmpdir"), DEFAULT_INSTALL_DIR, LIB_DIR, JAR_NAME));
     }
 
     /**

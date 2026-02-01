@@ -6,6 +6,7 @@ import org.pragmatica.jbct.shared.HttpClients;
 import org.pragmatica.lang.Option;
 import org.pragmatica.lang.Result;
 import org.pragmatica.lang.Unit;
+import org.pragmatica.lang.parse.Number;
 import org.pragmatica.lang.utils.Causes;
 
 import java.io.IOException;
@@ -36,14 +37,31 @@ public final class GitHubVersionResolver {
     // 24 hours
     private static final String GITHUB_API_BASE = "https://api.github.com/repos";
     private static final Pattern TAG_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"v?([^\"]+)\"");
+    private static final Duration API_TIMEOUT = Duration.ofSeconds(10);
 
     // Default fallback versions when offline or API fails
-    private static final String DEFAULT_PRAGMATICA_VERSION = "0.9.10";
-    private static final String DEFAULT_AETHER_VERSION = "0.7.4";
-    private static final String DEFAULT_JBCT_VERSION = "0.4.9";
+    private static final String DEFAULT_PRAGMATICA_VERSION = "0.11.2";
+    private static final String DEFAULT_AETHER_VERSION = "0.8.1";
+    private static final String DEFAULT_JBCT_VERSION = "0.6.0";
+
+    // Running binary version (loaded from jbct-version.properties)
+    private static final String RUNNING_JBCT_VERSION = loadRunningVersion();
 
     private final HttpOperations http;
     private final Properties cache;
+
+    private static String loadRunningVersion() {
+        var props = new Properties();
+        try (var is = GitHubVersionResolver.class.getResourceAsStream("/jbct-version.properties")) {
+            if (is != null) {
+                props.load(is);
+                return props.getProperty("version", DEFAULT_JBCT_VERSION);
+            }
+        } catch (IOException e) {
+            LOG.debug("Failed to load jbct-version.properties: {}", e.getMessage());
+        }
+        return DEFAULT_JBCT_VERSION;
+    }
 
     private GitHubVersionResolver(HttpOperations http) {
         this.http = http;
@@ -73,9 +91,37 @@ public final class GitHubVersionResolver {
 
     /**
      * Get latest jbct-cli version.
+     * Uses the newer of: running binary version or latest GitHub release.
      */
     public String jbctVersion() {
-        return getVersion("siy", "jbct-cli", DEFAULT_JBCT_VERSION);
+        var githubVersion = getVersion("siy", "jbct-cli", DEFAULT_JBCT_VERSION);
+        return maxVersion(RUNNING_JBCT_VERSION, githubVersion);
+    }
+
+    /**
+     * Compare two semantic versions and return the newer one.
+     * Assumes format: major.minor.patch
+     */
+    private static String maxVersion(String v1, String v2) {
+        var parts1 = v1.split("\\.");
+        var parts2 = v2.split("\\.");
+        for (int i = 0; i < Math.min(parts1.length, parts2.length); i++) {
+            final var index = i;
+            var cmp = Result.all(Number.parseInt(parts1[index]),
+                                 Number.parseInt(parts2[index]))
+                            .map((num1, num2) -> Integer.compare(num1, num2))
+                            .or(0);
+            if (cmp > 0) {
+                return v1;
+            }
+            if (cmp < 0) {
+                return v2;
+            }
+        }
+        // If all parts are equal, prefer longer version (e.g., 1.0.0 > 1.0)
+        return parts1.length >= parts2.length
+               ? v1
+               : v2;
     }
 
     private String getVersion(String owner, String repo, String defaultVersion) {
@@ -96,7 +142,7 @@ public final class GitHubVersionResolver {
         }
         // Fetch from GitHub
         return fetchLatestVersion(owner, repo).onSuccess(version -> updateCache(cacheKey, timestampKey, version))
-                                 .fold(_ -> defaultVersion, version -> version);
+                                 .or(defaultVersion);
     }
 
     private void updateCache(String cacheKey, String timestampKey, String version) {
@@ -112,7 +158,7 @@ public final class GitHubVersionResolver {
                                  .uri(URI.create(url))
                                  .header("Accept", "application/vnd.github.v3+json")
                                  .header("User-Agent", "jbct-cli")
-                                 .timeout(Duration.ofSeconds(10))
+                                 .timeout(API_TIMEOUT)
                                  .GET()
                                  .build();
         return http.sendString(request)

@@ -127,7 +127,24 @@ public class GenerateBlueprintMojo extends AbstractMojo {
                 continue;
             }
             var depArtifact = dep.artifact() + ":" + dep.version();
+            // Skip if already in graph (includes local slices and previously resolved deps)
             if (graph.containsKey(depArtifact)) {
+                continue;
+            }
+            // Handle UNRESOLVED local dependencies - find matching resolved key in graph
+            if ("UNRESOLVED".equals(dep.version())) {
+                var artifactWithoutVersion = dep.artifact();
+                var resolvedKey = graph.keySet()
+                                       .stream()
+                                       .filter(key -> key.startsWith(artifactWithoutVersion + ":"))
+                                       .findFirst();
+                if (resolvedKey.isPresent()) {
+                    // Dependency already in graph with resolved version, skip adding duplicate
+                    continue;
+                }
+                // UNRESOLVED dependency not in graph - skip and warn
+                getLog().warn("Skipping UNRESOLVED dependency: " + dep.artifact()
+                              + " - not found in local graph");
                 continue;
             }
             loadManifestFromDependency(dep.artifact(),
@@ -247,7 +264,20 @@ public class GenerateBlueprintMojo extends AbstractMojo {
                 if (dep.artifact() != null && !dep.artifact()
                                                   .isEmpty()) {
                     // Dependency with artifact coordinates
-                    depArtifact = dep.artifact() + ":" + dep.version();
+                    if ("UNRESOLVED".equals(dep.version())) {
+                        // Find matching resolved key in graph
+                        var artifactPrefix = dep.artifact() + ":";
+                        depArtifact = graph.keySet()
+                                           .stream()
+                                           .filter(key -> key.startsWith(artifactPrefix))
+                                           .findFirst()
+                                           .orElse(null);
+                        if (depArtifact == null) {
+                            continue; // Skip unresolved deps not in graph
+                        }
+                    } else {
+                        depArtifact = dep.artifact() + ":" + dep.version();
+                    }
                 } else {
                     // Local dependency: look up in interfaceToArtifact map
                     depArtifact = interfaceToArtifact.get(dep.interfaceQualifiedName());
@@ -288,31 +318,6 @@ public class GenerateBlueprintMojo extends AbstractMojo {
                            .blueprint()
                            .instances())
               .append("\n");
-            // Add optional properties if configured
-            entry.config()
-                 .blueprint()
-                 .timeoutMs()
-                 .onPresent(timeout -> sb.append("timeout_ms = ")
-                                         .append(timeout)
-                                         .append("\n"));
-            entry.config()
-                 .blueprint()
-                 .memoryMb()
-                 .onPresent(memory -> sb.append("memory_mb = ")
-                                        .append(memory)
-                                        .append("\n"));
-            entry.config()
-                 .blueprint()
-                 .loadBalancing()
-                 .onPresent(lb -> sb.append("load_balancing = \"")
-                                    .append(lb)
-                                    .append("\"\n"));
-            entry.config()
-                 .blueprint()
-                 .affinityKey()
-                 .onPresent(key -> sb.append("affinity_key = \"")
-                                     .append(key)
-                                     .append("\"\n"));
             if (entry.isDependency()) {
                 sb.append("# transitive dependency\n");
             }

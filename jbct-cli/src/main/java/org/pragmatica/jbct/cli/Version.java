@@ -3,10 +3,14 @@ package org.pragmatica.jbct.cli;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Provides version information for JBCT CLI.
  */
 public final class Version {
+    private static final Logger LOG = LoggerFactory.getLogger(Version.class);
     private static final String VERSION;
 
     static {
@@ -15,7 +19,9 @@ public final class Version {
             if (is != null) {
                 props.load(is);
             }
-        } catch (IOException _) {}
+        } catch (IOException e) {
+            LOG.debug("Failed to load version properties: {}", e.getMessage());
+        }
         VERSION = props.getProperty("version", "unknown");
     }
 

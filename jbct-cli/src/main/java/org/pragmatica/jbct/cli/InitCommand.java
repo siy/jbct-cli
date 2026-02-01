@@ -75,17 +75,19 @@ public class InitCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        // Validate group ID
+        if (!isValidPackageName(groupId)) {
+            System.err.println("Error: Invalid group ID '" + groupId + "'");
+            System.err.println("Group ID must be a valid Java package name (e.g., com.example, org.mycompany)");
+            return 1;
+        }
         // Determine project directory
-        if (projectDir == null) {
-            projectDir = Path.of(System.getProperty("user.dir"));
-        } else {
-            projectDir = projectDir.toAbsolutePath();
-        }
+        projectDir = org.pragmatica.lang.Option.option(projectDir)
+                                               .map(Path::toAbsolutePath)
+                                               .or(() -> Path.of(System.getProperty("user.dir")));
         // Determine artifact ID from directory name if not specified
-        if (artifactId == null) {
-            artifactId = projectDir.getFileName()
-                                   .toString();
-        }
+        artifactId = org.pragmatica.lang.Option.option(artifactId)
+                                               .or(() -> projectDir.getFileName().toString());
         var projectCreated = false;
         var aiToolsInstalled = false;
         // Create project structure unless --ai-only
@@ -98,7 +100,7 @@ public class InitCommand implements Callable<Integer> {
             if (!Files.exists(projectDir)) {
                 try{
                     Files.createDirectories(projectDir);
-                } catch (Exception e) {
+                } catch (java.io.IOException e) {
                     System.err.println("Error: Failed to create directory: " + e.getMessage());
                     return 1;
                 }
@@ -123,8 +125,8 @@ public class InitCommand implements Callable<Integer> {
                 aiToolsInstalled = installer.install()
                                             .onFailure(cause -> System.err.println("Warning: Failed to install AI tools: " + cause.message()))
                                             .onSuccess(this::printAiToolsResult)
-                                            .fold(_ -> false,
-                                                  files -> !files.isEmpty());
+                                            .map(files -> !files.isEmpty())
+                                            .or(false);
             }
         }
         // Print summary
@@ -158,7 +160,8 @@ public class InitCommand implements Callable<Integer> {
         return initializer.initialize()
                           .onFailure(cause -> System.err.println("Error: " + cause.message()))
                           .onSuccess(this::printCreatedFiles)
-                          .fold(_ -> false, _ -> true);
+                          .map(_ -> true)
+                          .or(false);
     }
 
     private void printCreatedFiles(java.util.List<Path> createdFiles) {
@@ -171,25 +174,24 @@ public class InitCommand implements Callable<Integer> {
     }
 
     private boolean hasVersionOverrides() {
-        return pragmaticaVersion != null || aetherVersion != null || jbctVersion != null;
+        return org.pragmatica.lang.Option.option(pragmaticaVersion).isPresent()
+               || org.pragmatica.lang.Option.option(aetherVersion).isPresent()
+               || org.pragmatica.lang.Option.option(jbctVersion).isPresent();
     }
 
     private String effectivePragmaticaVersion() {
-        return pragmaticaVersion != null
-               ? pragmaticaVersion
-               : GitHubVersionResolver.defaultPragmaticaVersion();
+        return org.pragmatica.lang.Option.option(pragmaticaVersion)
+                                         .or(GitHubVersionResolver::defaultPragmaticaVersion);
     }
 
     private String effectiveAetherVersion() {
-        return aetherVersion != null
-               ? aetherVersion
-               : GitHubVersionResolver.defaultAetherVersion();
+        return org.pragmatica.lang.Option.option(aetherVersion)
+                                         .or(GitHubVersionResolver::defaultAetherVersion);
     }
 
     private String effectiveJbctVersion() {
-        return jbctVersion != null
-               ? jbctVersion
-               : GitHubVersionResolver.defaultJbctVersion();
+        return org.pragmatica.lang.Option.option(jbctVersion)
+                                         .or(GitHubVersionResolver::defaultJbctVersion);
     }
 
     private boolean initSliceProject() {
@@ -198,7 +200,8 @@ public class InitCommand implements Callable<Integer> {
                                                                          .onSuccess(createdFiles -> printSliceCreatedFiles(createdFiles,
                                                                                                                            initializer.sliceName())))
                                       .onFailure(cause -> System.err.println("Error: " + cause.message()))
-                                      .fold(_ -> false, _ -> true);
+                                      .map(_ -> true)
+                                      .or(false);
     }
 
     private void printSliceCreatedFiles(java.util.List<Path> createdFiles, String sliceName) {
@@ -218,5 +221,55 @@ public class InitCommand implements Callable<Integer> {
         } else {
             System.out.println("No AI tools files to install.");
         }
+    }
+
+    private static boolean isValidPackageName(String packageName) {
+        return org.pragmatica.lang.Option.option(packageName)
+                                         .filter(s -> !s.isBlank())
+                                         .filter(s -> !s.startsWith(".") && !s.endsWith("."))
+                                         .filter(s -> !s.contains(".."))
+                                         .map(s -> s.split("\\."))
+                                         .filter(InitCommand::allValidIdentifiers)
+                                         .isPresent();
+    }
+
+    private static boolean allValidIdentifiers(String[] segments) {
+        for (var segment : segments) {
+            if (!isValidJavaIdentifier(segment)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isValidJavaIdentifier(String identifier) {
+        return org.pragmatica.lang.Option.option(identifier)
+                                         .filter(s -> !s.isEmpty())
+                                         .filter(s -> Character.isJavaIdentifierStart(s.charAt(0)))
+                                         .filter(InitCommand::allCharsValidIdentifierParts)
+                                         .filter(s -> !isJavaKeyword(s))
+                                         .isPresent();
+    }
+
+    private static boolean allCharsValidIdentifierParts(String identifier) {
+        for (int i = 1; i < identifier.length(); i++) {
+            if (!Character.isJavaIdentifierPart(identifier.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isJavaKeyword(String word) {
+        return switch (word) {
+            case "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
+            "class", "const", "continue", "default", "do", "double", "else", "enum",
+            "extends", "final", "finally", "float", "for", "goto", "if", "implements",
+            "import", "instanceof", "int", "interface", "long", "native", "new", "package",
+            "private", "protected", "public", "return", "short", "static", "strictfp",
+            "super", "switch", "synchronized", "this", "throw", "throws", "transient",
+            "try", "void", "volatile", "while", "true", "false", "null" -> true;
+            default -> false;
+        };
     }
 }

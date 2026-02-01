@@ -77,30 +77,37 @@ public record SliceManifest(String sliceName,
     }
 
     private static Result<SliceManifest> fromProperties(Properties props) {
-        var sliceName = props.getProperty("slice.name");
-        if (sliceName == null || sliceName.isEmpty()) {
-            return Causes.cause("Missing required property: slice.name")
-                         .result();
-        }
-        var artifactSuffix = props.getProperty("slice.artifactSuffix", "");
-        var slicePackage = props.getProperty("slice.package", "");
-        var implClasses = parseList(props.getProperty("impl.classes", ""));
-        var requestClasses = parseList(props.getProperty("request.classes", ""));
-        var responseClasses = parseList(props.getProperty("response.classes", ""));
-        var baseArtifact = props.getProperty("base.artifact", "");
-        var implArtifactId = props.getProperty("impl.artifactId", "");
+        return org.pragmatica.lang.Option.option(props.getProperty("slice.name"))
+                                         .filter(s -> !s.isEmpty())
+                                         .toResult(Causes.cause("Missing required property: slice.name"))
+                                         .map(sliceName -> buildManifest(sliceName, props));
+    }
+
+    private static SliceManifest buildManifest(String sliceName, Properties props) {
+        var artifactSuffix = getPropertyOrEmpty(props, "slice.artifactSuffix");
+        var slicePackage = getPropertyOrEmpty(props, "slice.package");
+        var implClasses = parseList(getPropertyOrEmpty(props, "impl.classes"));
+        var requestClasses = parseList(getPropertyOrEmpty(props, "request.classes"));
+        var responseClasses = parseList(getPropertyOrEmpty(props, "response.classes"));
+        var baseArtifact = getPropertyOrEmpty(props, "base.artifact");
+        var implArtifactId = getPropertyOrEmpty(props, "slice.artifactId");
         var dependencies = parseDependencies(props);
-        var configFile = props.getProperty("config.file", "");
-        return Result.success(new SliceManifest(sliceName,
-                                                artifactSuffix,
-                                                slicePackage,
-                                                implClasses,
-                                                requestClasses,
-                                                responseClasses,
-                                                baseArtifact,
-                                                implArtifactId,
-                                                dependencies,
-                                                configFile));
+        var configFile = getPropertyOrEmpty(props, "config.file");
+        return new SliceManifest(sliceName,
+                                 artifactSuffix,
+                                 slicePackage,
+                                 implClasses,
+                                 requestClasses,
+                                 responseClasses,
+                                 baseArtifact,
+                                 implArtifactId,
+                                 dependencies,
+                                 configFile);
+    }
+
+    private static String getPropertyOrEmpty(Properties props, String key) {
+        return org.pragmatica.lang.Option.option(props.getProperty(key))
+                                         .or("");
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(SliceManifest.class);
@@ -129,13 +136,13 @@ public record SliceManifest(String sliceName,
     }
 
     private static List<String> parseList(String value) {
-        if (value == null || value.isEmpty()) {
-            return List.of();
-        }
-        return Arrays.stream(value.split(","))
-                     .map(String::trim)
-                     .filter(s -> !s.isEmpty())
-                     .toList();
+        return org.pragmatica.lang.Option.option(value)
+                                         .filter(s -> !s.isEmpty())
+                                         .map(s -> Arrays.stream(s.split(","))
+                                                         .map(String::trim)
+                                                         .filter(part -> !part.isEmpty())
+                                                         .toList())
+                                         .or(List.of());
     }
 
     /**

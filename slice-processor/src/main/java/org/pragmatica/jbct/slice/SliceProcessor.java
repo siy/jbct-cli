@@ -44,6 +44,8 @@ public class SliceProcessor extends AbstractProcessor {
     private DependencyVersionResolver versionResolver;
     private RouteSourceGenerator routeGenerator;
     private ErrorTypeDiscovery errorDiscovery;
+    private final java.util.Map<String, TypeElement> packageToSlice = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Set<String> routeServiceEntries = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<>());
 
     @Override
     public synchronized void init(javax.annotation.processing.ProcessingEnvironment processingEnv) {
@@ -56,7 +58,7 @@ public class SliceProcessor extends AbstractProcessor {
         this.factoryGenerator = new FactoryClassGenerator(filer, elements, types, versionResolver);
         this.manifestGenerator = new ManifestGenerator(filer, versionResolver, options);
         this.errorDiscovery = new ErrorTypeDiscovery(processingEnv);
-        this.routeGenerator = new RouteSourceGenerator(filer, processingEnv.getMessager());
+        this.routeGenerator = new RouteSourceGenerator(filer, processingEnv.getMessager(), elements);
     }
 
     @Override
@@ -74,9 +76,47 @@ public class SliceProcessor extends AbstractProcessor {
                     continue;
                 }
                 var interfaceElement = (TypeElement) element;
+                // Enforce one-slice-per-package convention
+                if (!validateOneSlicePerPackage(interfaceElement)) {
+                    return false;
+                }
                 processSliceInterface(interfaceElement);
             }
         }
+        // Write service file once at the end if we have route entries
+        if (roundEnv.processingOver() && !routeServiceEntries.isEmpty()) {
+            writeRouteServiceFile();
+        }
+        return true;
+    }
+
+    private boolean validateOneSlicePerPackage(TypeElement interfaceElement) {
+        var packageName = processingEnv.getElementUtils()
+                                       .getPackageOf(interfaceElement)
+                                       .getQualifiedName()
+                                       .toString();
+        var sliceName = interfaceElement.getSimpleName()
+                                        .toString();
+        if (packageToSlice.containsKey(packageName)) {
+            var existingSlice = packageToSlice.get(packageName);
+            var existingName = existingSlice.getSimpleName()
+                                            .toString();
+            var message = String.format("Multiple @Slice interfaces found in package '%s': %s and %s. "
+                                        + "Convention: One slice per package. " + "Move to separate packages:\n"
+                                        + "  - %s.%s (for %s)\n" + "  - %s.%s (for %s)",
+                                        packageName,
+                                        existingName,
+                                        sliceName,
+                                        packageName,
+                                        toKebabCase(existingName),
+                                        existingName,
+                                        packageName,
+                                        toKebabCase(sliceName),
+                                        sliceName);
+            error(interfaceElement, message);
+            return false;
+        }
+        packageToSlice.put(packageName, interfaceElement);
         return true;
     }
 
@@ -88,13 +128,10 @@ public class SliceProcessor extends AbstractProcessor {
     }
 
     private void generateArtifacts(TypeElement interfaceElement, SliceModel sliceModel) {
-        Result.all(generateFactory(interfaceElement, sliceModel),
-                   generateManifest(interfaceElement, sliceModel),
-                   generateSliceManifest(interfaceElement, sliceModel),
-                   generateRoutes(interfaceElement, sliceModel))
-              .map((_, _, _, _) -> Unit.unit())
-              .onFailure(cause -> error(interfaceElement,
-                                        cause.message()));
+        generateFactory(interfaceElement, sliceModel).flatMap(_ -> generateRoutes(interfaceElement, sliceModel))
+                       .flatMap(routesClassOpt -> generateSliceManifest(interfaceElement, sliceModel, routesClassOpt))
+                       .onFailure(cause -> error(interfaceElement,
+                                                 cause.message()));
     }
 
     private Result<Unit> generateFactory(TypeElement interfaceElement, SliceModel sliceModel) {
@@ -103,23 +140,19 @@ public class SliceProcessor extends AbstractProcessor {
                                                     "Generated factory: " + sliceModel.simpleName() + "Factory"));
     }
 
-    private Result<Unit> generateManifest(TypeElement interfaceElement, SliceModel sliceModel) {
-        return manifestGenerator.generate(sliceModel)
-                                .onSuccess(_ -> note(interfaceElement,
-                                                     "Generated manifest: META-INF/slice-api.properties"));
-    }
-
-    private Result<Unit> generateSliceManifest(TypeElement interfaceElement, SliceModel sliceModel) {
-        return manifestGenerator.generateSliceManifest(sliceModel)
+    private Result<Unit> generateSliceManifest(TypeElement interfaceElement,
+                                               SliceModel sliceModel,
+                                               Option<String> routesClass) {
+        return manifestGenerator.generateSliceManifest(sliceModel, routesClass)
                                 .onSuccess(_ -> note(interfaceElement,
                                                      "Generated slice manifest: META-INF/slice/" + sliceModel.simpleName()
                                                      + ".manifest"));
     }
 
-    private Result<Unit> generateRoutes(TypeElement interfaceElement, SliceModel sliceModel) {
+    private Result<Option<String>> generateRoutes(TypeElement interfaceElement, SliceModel sliceModel) {
         var packageName = sliceModel.packageName();
         return loadRouteConfig(packageName)
-        .flatMap(configOpt -> configOpt.fold(() -> Result.success(Unit.unit()),
+        .flatMap(configOpt -> configOpt.fold(() -> Result.success(Option.<String>none()),
                                              config -> generateRoutesFromConfig(interfaceElement, sliceModel, config)));
     }
 
@@ -143,15 +176,18 @@ public class SliceProcessor extends AbstractProcessor {
         }
     }
 
-    private Result<Unit> generateRoutesFromConfig(TypeElement interfaceElement,
-                                                  SliceModel sliceModel,
-                                                  RouteConfig config) {
+    private Result<Option<String>> generateRoutesFromConfig(TypeElement interfaceElement,
+                                                            SliceModel sliceModel,
+                                                            RouteConfig config) {
         var packageName = sliceModel.packageName();
         return errorDiscovery.discover(packageName,
                                        config.errors())
                              .flatMap(errorMappings -> routeGenerator.generate(sliceModel, config, errorMappings))
-                             .onSuccess(_ -> note(interfaceElement,
-                                                  "Generated routes: " + sliceModel.simpleName() + "Routes"));
+                             .onSuccess(qualifiedNameOpt -> {
+                                            qualifiedNameOpt.onPresent(routeServiceEntries::add);
+                                            note(interfaceElement,
+                                                 "Generated routes: " + sliceModel.simpleName() + "Routes");
+                                        });
     }
 
     private void error(Element element, String message) {
@@ -162,5 +198,45 @@ public class SliceProcessor extends AbstractProcessor {
     private void note(Element element, String message) {
         processingEnv.getMessager()
                      .printMessage(Diagnostic.Kind.NOTE, message, element);
+    }
+
+    private void writeRouteServiceFile() {
+        try{
+            var serviceFile = processingEnv.getFiler()
+                                           .createResource(StandardLocation.CLASS_OUTPUT,
+                                                           "",
+                                                           "META-INF/services/org.pragmatica.aether.http.adapter.SliceRouterFactory");
+            try (var writer = new java.io.PrintWriter(serviceFile.openWriter())) {
+                for (var entry : routeServiceEntries) {
+                    writer.println(entry);
+                }
+            }
+        } catch (IOException e) {
+            processingEnv.getMessager()
+                         .printMessage(Diagnostic.Kind.ERROR,
+                                       "Failed to write SliceRouterFactory service file: " + e.getMessage());
+        }
+    }
+
+    private static String toKebabCase(String camelCase) {
+        return Option.option(camelCase)
+                     .filter(s -> !s.isEmpty())
+                     .map(SliceProcessor::doToKebabCase)
+                     .or("");
+    }
+
+    private static String doToKebabCase(String camelCase) {
+        var result = new StringBuilder();
+        result.append(Character.toLowerCase(camelCase.charAt(0)));
+        for (int i = 1; i < camelCase.length(); i++) {
+            char c = camelCase.charAt(i);
+            if (Character.isUpperCase(c)) {
+                result.append('-');
+                result.append(Character.toLowerCase(c));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 }

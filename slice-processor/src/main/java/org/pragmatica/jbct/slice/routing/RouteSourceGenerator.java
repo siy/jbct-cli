@@ -9,18 +9,14 @@ import org.pragmatica.lang.utils.Causes;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
-import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardLocation;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -67,8 +63,6 @@ import java.util.stream.Collectors;
  * }</pre>
  */
 public class RouteSourceGenerator {
-    private static final String SERVICE_FILE = "META-INF/services/org.pragmatica.aether.http.adapter.SliceRouterFactory";
-
     private static final Map<String, String> TYPE_TO_PATH_PARAMETER = Map.ofEntries(Map.entry("String", "aString"),
                                                                                     Map.entry("java.lang.String",
                                                                                               "aString"),
@@ -141,17 +135,24 @@ public class RouteSourceGenerator {
 
     private final Filer filer;
     private final Messager messager;
+    private final Elements elements;
 
-    public RouteSourceGenerator(Filer filer, Messager messager) {
+    public RouteSourceGenerator(Filer filer, Messager messager, Elements elements) {
         this.filer = filer;
         this.messager = messager;
+        this.elements = elements;
     }
 
-    public Result<Unit> generate(SliceModel model,
-                                 RouteConfig routeConfig,
-                                 List<ErrorTypeMapping> errorMappings) {
+    /**
+     * Generates Routes class for a slice.
+     * Returns the qualified name of the generated class if routes exist, empty otherwise.
+     * The caller is responsible for writing the service file with all accumulated entries.
+     */
+    public Result<Option<String>> generate(SliceModel model,
+                                           RouteConfig routeConfig,
+                                           List<ErrorTypeMapping> errorMappings) {
         if (!routeConfig.hasRoutes()) {
-            return Result.success(Unit.unit());
+            return Result.success(Option.none());
         }
         try{
             var routesName = model.simpleName() + "Routes";
@@ -161,39 +162,11 @@ public class RouteSourceGenerator {
             try (var writer = new PrintWriter(file.openWriter())) {
                 generateRoutesClass(writer, model, routeConfig, errorMappings, routesName);
             }
-            // Generate/update service loader file
-            generateServiceFile(qualifiedName);
-            return Result.success(Unit.unit());
+            return Result.success(Option.some(qualifiedName));
         } catch (Exception e) {
             return Causes.cause("Failed to generate routes class: " + e.getClass()
                                                                        .getSimpleName() + ": " + e.getMessage())
                          .result();
-        }
-    }
-
-    private void generateServiceFile(String qualifiedName) throws IOException {
-        // Read existing entries if file exists
-        Set<String> entries = new LinkedHashSet<>();
-        try{
-            FileObject existing = filer.getResource(StandardLocation.CLASS_OUTPUT, "", SERVICE_FILE);
-            try (var reader = new BufferedReader(existing.openReader(true))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    var trimmed = line.trim();
-                    if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
-                        entries.add(trimmed);
-                    }
-                }
-            }
-        } catch (IOException _) {} catch (IllegalArgumentException _) {}
-        // Add the new entry
-        entries.add(qualifiedName);
-        // Write all entries
-        FileObject serviceFile = filer.createResource(StandardLocation.CLASS_OUTPUT, "", SERVICE_FILE);
-        try (var writer = new PrintWriter(serviceFile.openWriter())) {
-            for (var entry : entries) {
-                writer.println(entry);
-            }
         }
     }
 
@@ -287,6 +260,7 @@ public class RouteSourceGenerator {
         var routeEntries = routeConfig.routes()
                                       .entrySet()
                                       .stream()
+                                      .sorted(Map.Entry.comparingByKey())
                                       .toList();
         // Filter valid routes and report errors for invalid ones
         var validRoutes = new ArrayList<Map.Entry<String, RouteDsl>>();
@@ -317,8 +291,10 @@ public class RouteSourceGenerator {
             var entry = validRoutes.get(i);
             var handlerName = entry.getKey();
             var routeDsl = entry.getValue();
-            var method = methodMap.get(handlerName);
-            generateRoute(out, routeConfig.prefix(), routeDsl, method, i < validRoutes.size() - 1);
+            var hasMore = i < validRoutes.size() - 1;
+            // methodOpt guaranteed present - we validated above
+            Option.option(methodMap.get(handlerName))
+                  .onPresent(method -> generateRoute(out, routeConfig.prefix(), routeDsl, method, hasMore));
         }
         out.println("        );");
         out.println("    }");
@@ -609,9 +585,12 @@ public class RouteSourceGenerator {
      * Handles quotes, backslashes, and common control characters.
      */
     private String escapeJavaString(String input) {
-        if (input == null) {
-            return "";
-        }
+        return Option.option(input)
+                     .map(this::doEscapeJavaString)
+                     .or("");
+    }
+
+    private String doEscapeJavaString(String input) {
         var sb = new StringBuilder(input.length());
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);

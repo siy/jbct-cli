@@ -41,8 +41,8 @@ public class UpgradeCommand implements Callable<Integer> {
         System.out.println("Checking for updates...");
         return checker.checkLatestRelease()
                       .onFailure(cause -> System.err.println("Error: " + cause.message()))
-                      .fold(_ -> 1,
-                            release -> handleRelease(release, currentVersion));
+                      .map(release -> handleRelease(release, currentVersion))
+                      .or(1);
     }
 
     private int handleRelease(GitHubReleaseChecker.ReleaseInfo release, String currentVersion) {
@@ -67,9 +67,8 @@ public class UpgradeCommand implements Callable<Integer> {
                                      System.err.println("Error: " + cause.message());
                                      System.err.println("Please download manually from GitHub.");
                                  })
-                      .fold(_ -> 1,
-                            url -> performUpgrade(url,
-                                                  release.version()));
+                      .map(url -> performUpgrade(url, release.version()))
+                      .or(1);
     }
 
     private int performUpgrade(String downloadUrl, String version) {
@@ -108,13 +107,15 @@ public class UpgradeCommand implements Callable<Integer> {
     private Result<String> downloadRelease(GitHubReleaseChecker.ReleaseInfo release) {
         return release.downloadUrl()
                       .toResult(Causes.cause("No downloadable JAR found in release"))
-                      .flatMap(url -> {
-                                   System.out.println("Downloading version " + release.version() + "...");
-                                   var installer = JarInstaller.jarInstaller();
-                                   var targetPath = JarInstaller.defaultInstallPath();
-                                   return installer.install(url, targetPath)
-                                                   .map(_ -> release.version());
-                               });
+                      .flatMap(url -> downloadAndInstall(url, release.version()));
+    }
+
+    private Result<String> downloadAndInstall(String url, String version) {
+        System.out.println("Downloading version " + version + "...");
+        var installer = JarInstaller.jarInstaller();
+        var targetPath = JarInstaller.defaultInstallPath();
+        return installer.install(url, targetPath)
+                        .map(_ -> version);
     }
 
     private void printInstallSuccess(String version) {

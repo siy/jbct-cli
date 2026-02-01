@@ -30,7 +30,7 @@ class SliceProjectInitializerTest {
                                        .exists();
                              assertThat(projectDir.resolve("src/main/java/org/example/myslice/MySlice.java"))
                                        .exists();
-                             assertThat(projectDir.resolve("src/main/java/org/example/myslice/MySliceImpl.java"))
+                             assertThat(projectDir.resolve("src/test/java/org/example/myslice/MySliceTest.java"))
                                        .exists();
                              // Slice config file
                              assertThat(projectDir.resolve("src/main/resources/slices/MySlice.toml"))
@@ -77,6 +77,14 @@ class SliceProjectInitializerTest {
                   .contains("public interface InventoryService");
         assertThat(content)
                   .contains("static InventoryService inventoryService()");
+        assertThat(content)
+                  .contains("record Request");
+        assertThat(content)
+                  .contains("record Response");
+        assertThat(content)
+                  .contains("sealed interface ValidationError extends Cause");
+        assertThat(content)
+                  .contains("record inventoryService");
     }
 
     @Test

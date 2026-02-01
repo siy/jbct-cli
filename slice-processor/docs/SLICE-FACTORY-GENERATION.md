@@ -99,9 +99,9 @@ public static Promise<OrderService> create(Aspect<OrderService> aspect,
 **Rationale**: Aether runtime needs a generic `Slice` interface to invoke methods by name with type tokens.
 
 ```java
-public static Promise<Slice> createSlice(Aspect<OrderService> aspect,
-                                          SliceInvokerFacade invoker) {
-    record orderServiceSlice(OrderService delegate) implements Slice {
+public static Promise<Slice> orderServiceSlice(Aspect<OrderService> aspect,
+                                               SliceInvokerFacade invoker) {
+    record orderServiceSlice(OrderService delegate) implements Slice, OrderService {
         @Override
         public List<SliceMethod<?, ?>> methods() {
             return List.of(
@@ -113,11 +113,18 @@ public static Promise<Slice> createSlice(Aspect<OrderService> aspect,
                 )
             );
         }
+
+        @Override
+        public Promise<OrderResult> placeOrder(PlaceOrderRequest request) {
+            return delegate.placeOrder(request);
+        }
     }
 
-    return create(aspect, invoker).map(orderServiceSlice::new);
+    return orderService(aspect, invoker).map(orderServiceSlice::new);
 }
 ```
+
+The slice wrapper record implements both `Slice` (for Aether runtime) and the slice interface (e.g., `OrderService`) to enable type-safe routing integration.
 
 ### D6: Proxy Method Parameter Handling
 
@@ -238,9 +245,9 @@ public final class OrderProcessorFactory {
         return Promise.success(aspect.apply(instance));
     }
 
-    public static Promise<Slice> createSlice(Aspect<OrderProcessor> aspect,
-                                              SliceInvokerFacade invoker) {
-        record orderProcessorSlice(OrderProcessor delegate) implements Slice {
+    public static Promise<Slice> orderProcessorSlice(Aspect<OrderProcessor> aspect,
+                                                      SliceInvokerFacade invoker) {
+        record orderProcessorSlice(OrderProcessor delegate) implements Slice, OrderProcessor {
             @Override
             public List<SliceMethod<?, ?>> methods() {
                 return List.of(
@@ -252,9 +259,14 @@ public final class OrderProcessorFactory {
                     )
                 );
             }
+
+            @Override
+            public Promise<OrderResult> processOrder(ProcessOrderRequest request) {
+                return delegate.processOrder(request);
+            }
         }
 
-        return create(aspect, invoker)
+        return orderProcessor(aspect, invoker)
                    .map(orderProcessorSlice::new);
     }
 }

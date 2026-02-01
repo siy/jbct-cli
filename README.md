@@ -46,7 +46,7 @@ Add to your `pom.xml`:
         <plugin>
             <groupId>org.pragmatica-lite</groupId>
             <artifactId>jbct-maven-plugin</artifactId>
-            <version>0.5.0</version>
+            <version>0.6.0</version>
         </plugin>
     </plugins>
 </build>
@@ -106,6 +106,39 @@ Exit codes:
 - `1` - Format or lint issues found
 - `2` - Internal error (parse failure, etc.)
 
+### Score
+
+Calculate JBCT compliance score (0-100):
+
+```bash
+jbct score src/main/java
+```
+
+Options:
+- `--format` / `-f` `<terminal|json|badge>` - Output format (default: terminal)
+- `--baseline` / `-b` `<score>` - Fail if score below threshold
+- `--verbose` / `-v` - Show detailed output
+- `--config <path>` - Path to configuration file
+
+Output formats:
+- `terminal` - Progress bars with category breakdown
+- `json` - Machine-readable JSON with full breakdown
+- `badge` - SVG badge for README
+
+Example with baseline:
+
+```bash
+jbct score --baseline 75 src/main/java  # Fail if score < 75
+```
+
+The score is calculated using density + severity weighting across 6 categories:
+- **Return Types** (25%) - Four return kinds compliance
+- **Null Safety** (20%) - No null returns or parameters
+- **Exception Hygiene** (20%) - No business exceptions
+- **Pattern Purity** (15%) - Clean functional composition
+- **Factory Methods** (10%) - Parse-don't-validate pattern
+- **Lambda Compliance** (10%) - Minimal lambda complexity
+
 ### Upgrade
 
 Self-update to the latest version:
@@ -140,9 +173,10 @@ Creates Maven project with:
 
 For slice projects (`--slice`), also creates:
 - `@Slice` annotated interface with factory method
-- Implementation class
-- Sample request/response records
+- Nested implementation record
+- Request/Response/ValidationError records (nested in interface)
 - Unit test
+- Maven annotation processor configuration
 
 ### Update
 
@@ -205,6 +239,7 @@ Priority chain:
 | `jbct:format-check` | Check formatting (fail if issues) | verify |
 | `jbct:lint` | Run lint rules | verify |
 | `jbct:check` | Combined format-check + lint | verify |
+| `jbct:score` | Calculate JBCT compliance score | verify |
 | `jbct:collect-slice-deps` | Collect slice API dependencies | generate-sources |
 | `jbct:verify-slice` | Validate slice configuration | verify |
 
@@ -234,6 +269,13 @@ Full check (format + lint):
 mvn jbct:check
 ```
 
+Calculate compliance score:
+
+```bash
+mvn jbct:score
+mvn jbct:score -Djbct.score.baseline=75
+```
+
 ### Binding to Build Lifecycle
 
 Add executions to run automatically:
@@ -242,7 +284,7 @@ Add executions to run automatically:
 <plugin>
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-maven-plugin</artifactId>
-    <version>0.5.0</version>
+    <version>0.6.0</version>
     <executions>
         <execution>
             <id>check</id>
@@ -263,7 +305,7 @@ All formatting and linting settings are shared between CLI and Maven plugin.
 <plugin>
     <groupId>org.pragmatica-lite</groupId>
     <artifactId>jbct-maven-plugin</artifactId>
-    <version>0.5.0</version>
+    <version>0.6.0</version>
     <configuration>
         <!-- Skip JBCT processing -->
         <skip>false</skip>

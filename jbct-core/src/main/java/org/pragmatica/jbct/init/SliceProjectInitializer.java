@@ -118,10 +118,12 @@ public final class SliceProjectInitializer {
         try{
             var srcMainJava = projectDir.resolve("src/main/java");
             var srcTestJava = projectDir.resolve("src/test/java");
+            var srcTestResources = projectDir.resolve("src/test/resources");
             var metaInfDeps = projectDir.resolve("src/main/resources/META-INF/dependencies");
             var slicesDir = projectDir.resolve("src/main/resources/slices");
             Files.createDirectories(srcMainJava);
             Files.createDirectories(srcTestJava);
+            Files.createDirectories(srcTestResources);
             Files.createDirectories(metaInfDeps);
             Files.createDirectories(slicesDir);
             var packagePath = basePackage.replace(".", "/");
@@ -138,16 +140,23 @@ public final class SliceProjectInitializer {
         // Fork-Join: Create all independent file groups in parallel
         return Result.allOf(createProjectFiles(),
                             createSourceFiles(),
+                            createTestResources(),
                             createDeployScripts(),
                             createSliceConfigFiles())
-                     .flatMap(fileLists -> createDependencyManifest()
-        .map(manifest -> {
-                 var allFiles = fileLists.stream()
-                                         .flatMap(List::stream)
-                                         .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
-                 allFiles.add(manifest);
-                 return allFiles;
-             }));
+                     .flatMap(this::combineWithDependencyManifest);
+    }
+
+    private Result<List<Path>> combineWithDependencyManifest(List<List<Path>> fileLists) {
+        return createDependencyManifest()
+                   .map(manifest -> combineFileLists(fileLists, manifest));
+    }
+
+    private List<Path> combineFileLists(List<List<Path>> fileLists, Path manifest) {
+        var allFiles = fileLists.stream()
+                                .flatMap(List::stream)
+                                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        allFiles.add(manifest);
+        return allFiles;
     }
 
     private Result<List<Path>> createSliceConfigFiles() {
@@ -180,18 +189,14 @@ public final class SliceProjectInitializer {
         return Result.allOf(createFile("Slice.java.template",
                                        srcMainJava.resolve(packagePath)
                                                   .resolve(sliceName + ".java")),
-                            createFile("SliceImpl.java.template",
-                                       srcMainJava.resolve(packagePath)
-                                                  .resolve(sliceName + "Impl.java")),
-                            createFile("SampleRequest.java.template",
-                                       srcMainJava.resolve(packagePath)
-                                                  .resolve("SampleRequest.java")),
-                            createFile("SampleResponse.java.template",
-                                       srcMainJava.resolve(packagePath)
-                                                  .resolve("SampleResponse.java")),
                             createFile("SliceTest.java.template",
                                        srcTestJava.resolve(packagePath)
                                                   .resolve(sliceName + "Test.java")));
+    }
+
+    private Result<List<Path>> createTestResources() {
+        var srcTestResources = projectDir.resolve("src/test/resources");
+        return createFile("tinylog.properties.template", srcTestResources.resolve("tinylog.properties")).map(path -> List.of(path));
     }
 
     private Result<List<Path>> createDeployScripts() {
@@ -261,10 +266,8 @@ public final class SliceProjectInitializer {
             case "gitignore.template" -> GITIGNORE_TEMPLATE;
             case "CLAUDE.md" -> CLAUDE_MD_TEMPLATE;
             case "Slice.java.template" -> SLICE_INTERFACE_TEMPLATE;
-            case "SliceImpl.java.template" -> SLICE_IMPL_TEMPLATE;
-            case "SampleRequest.java.template" -> SAMPLE_REQUEST_TEMPLATE;
-            case "SampleResponse.java.template" -> SAMPLE_RESPONSE_TEMPLATE;
             case "SliceTest.java.template" -> SLICE_TEST_TEMPLATE;
+            case "tinylog.properties.template" -> TINYLOG_PROPERTIES_TEMPLATE;
             case "deploy-forge.sh.template" -> DEPLOY_FORGE_TEMPLATE;
             case "deploy-test.sh.template" -> DEPLOY_TEST_TEMPLATE;
             case "deploy-prod.sh.template" -> DEPLOY_PROD_TEMPLATE;
@@ -331,7 +334,7 @@ public final class SliceProjectInitializer {
 
             <properties>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-                <maven.compiler.release>21</maven.compiler.release>
+                <maven.compiler.release>25</maven.compiler.release>
                 <pragmatica-lite.version>{{pragmaticaVersion}}</pragmatica-lite.version>
                 <aether.version>{{aetherVersion}}</aether.version>
                 <jbct.version>{{jbctVersion}}</jbct.version>
@@ -368,6 +371,14 @@ public final class SliceProjectInitializer {
                     <scope>provided</scope>
                 </dependency>
 
+                <!-- HTTP Routing Adapter (required for routes.toml) -->
+                <dependency>
+                    <groupId>org.pragmatica-lite.aether</groupId>
+                    <artifactId>http-routing-adapter</artifactId>
+                    <version>${aether.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+
                 <!-- Add other slice API dependencies here (use 'provided' scope for Aether runtime libs) -->
 
                 <!-- Testing -->
@@ -383,6 +394,18 @@ public final class SliceProjectInitializer {
                     <version>3.26.3</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.tinylog</groupId>
+                    <artifactId>tinylog-api</artifactId>
+                    <version>2.7.0</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.tinylog</groupId>
+                    <artifactId>tinylog-impl</artifactId>
+                    <version>2.7.0</version>
+                    <scope>test</scope>
+                </dependency>
             </dependencies>
 
             <build>
@@ -391,6 +414,19 @@ public final class SliceProjectInitializer {
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-compiler-plugin</artifactId>
                         <version>3.14.0</version>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.pragmatica-lite</groupId>
+                                    <artifactId>slice-processor</artifactId>
+                                    <version>${jbct.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                            <compilerArgs>
+                                <arg>-Aslice.groupId={{groupId}}</arg>
+                                <arg>-Aslice.artifactId={{artifactId}}</arg>
+                            </compilerArgs>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -523,7 +559,9 @@ public final class SliceProjectInitializer {
         package {{basePackage}};
 
         import org.pragmatica.aether.slice.annotation.Slice;
+        import org.pragmatica.lang.Cause;
         import org.pragmatica.lang.Promise;
+        import org.pragmatica.lang.Result;
 
         /**
          * {{sliceName}} slice interface.
@@ -531,56 +569,50 @@ public final class SliceProjectInitializer {
         @Slice
         public interface {{sliceName}} {
 
-            Promise<SampleResponse> process(SampleRequest request);
+            /**
+             * Request record.
+             */
+            record Request(String value) {
+                public static Result<Request> request(String value) {
+                    if (value == null || value.isBlank()) {
+                        return Result.failure(ValidationError.emptyValue());
+                    }
+                    return Result.success(new Request(value));
+                }
+            }
+
+            /**
+             * Response record.
+             */
+            record Response(String result) {}
+
+            /**
+             * Validation error.
+             */
+            sealed interface ValidationError extends Cause {
+                record EmptyValue() implements ValidationError {
+                    @Override
+                    public String message() {
+                        return "Value cannot be empty";
+                    }
+                }
+
+                static ValidationError emptyValue() {
+                    return new EmptyValue();
+                }
+            }
+
+            Promise<Response> process(Request request);
 
             static {{sliceName}} {{factoryMethodName}}() {
-                return new {{sliceName}}Impl();
-            }
-        }
-        """;
-
-    private static final String SLICE_IMPL_TEMPLATE = """
-        package {{basePackage}};
-
-        import org.pragmatica.lang.Promise;
-
-        /**
-         * Implementation of {{sliceName}} slice.
-         */
-        final class {{sliceName}}Impl implements {{sliceName}} {
-
-            @Override
-            public Promise<SampleResponse> process(SampleRequest request) {
-                var response = new SampleResponse("Processed: " + request.value());
-                return Promise.successful(response);
-            }
-        }
-        """;
-
-    private static final String SAMPLE_REQUEST_TEMPLATE = """
-        package {{basePackage}};
-
-        /**
-         * Sample request for {{sliceName}} slice.
-         */
-        public record SampleRequest(String value) {
-
-            public static SampleRequest sampleRequest(String value) {
-                return new SampleRequest(value);
-            }
-        }
-        """;
-
-    private static final String SAMPLE_RESPONSE_TEMPLATE = """
-        package {{basePackage}};
-
-        /**
-         * Sample response from {{sliceName}} slice.
-         */
-        public record SampleResponse(String result) {
-
-            public static SampleResponse sampleResponse(String result) {
-                return new SampleResponse(result);
+                record {{factoryMethodName}}() implements {{sliceName}} {
+                    @Override
+                    public Promise<Response> process(Request request) {
+                        var response = new Response("Processed: " + request.value());
+                        return Promise.success(response);
+                    }
+                }
+                return new {{factoryMethodName}}();
             }
         }
         """;
@@ -588,6 +620,7 @@ public final class SliceProjectInitializer {
     private static final String SLICE_TEST_TEMPLATE = """
         package {{basePackage}};
 
+        import org.junit.jupiter.api.Assertions;
         import org.junit.jupiter.api.Test;
 
         import static org.assertj.core.api.Assertions.assertThat;
@@ -598,12 +631,12 @@ public final class SliceProjectInitializer {
 
             @Test
             void should_process_request() {
-                var request = SampleRequest.sampleRequest("test");
-
-                var response = slice.process(request).await();
-
-                assertThat(response.isSuccess()).isTrue();
-                response.onSuccess(r -> assertThat(r.result()).contains("test"));
+                {{sliceName}}.Request.request("test")
+                    .onFailure(Assertions::fail)
+                    .onSuccess(request -> slice.process(request)
+                        .await()
+                        .onFailure(Assertions::fail)
+                        .onSuccess(r -> assertThat(r.result()).isEqualTo("Processed: test")));
             }
         }
         """;
@@ -685,28 +718,8 @@ public final class SliceProjectInitializer {
         # This file is read by the annotation processor and blueprint generator
 
         [blueprint]
-        # Number of instances to deploy
-        instances = 1
-
-        # Request timeout in milliseconds
-        # timeout_ms = 30000
-
-        # Memory allocation in MB
-        # memory_mb = 512
-
-        # Load balancing strategy: round_robin, least_connections, consistent_hash, random
-        # load_balancing = "round_robin"
-
-        # For consistent_hash load balancing, specify the request field to hash on
-        # affinity_key = "customerId"
-
-        # [transport]
-        # Transport configuration (future)
-        # type = "http"
-
-        # [transport.http]
-        # HTTP-specific settings (future)
-        # port = 8080
+        # Number of instances to deploy (default: 3)
+        instances = 3
         """;
 
     private static final String GENERATE_BLUEPRINT_TEMPLATE = """
@@ -728,6 +741,30 @@ public final class SliceProjectInitializer {
             echo "ERROR: Blueprint generation failed"
             exit 1
         fi
+        """;
+
+    private static final String TINYLOG_PROPERTIES_TEMPLATE = """
+        # Tinylog configuration for test logging
+        # Documentation: https://tinylog.org/v2/configuration/
+
+        # Global logging level (trace, debug, info, warn, error)
+        level = info
+
+        # Writer configuration - output to console with colored output
+        writer        = console
+        writer.format = {date: HH:mm:ss.SSS} [{thread}] {class}.{method}() {level}: {message}
+        writer.stream = out
+
+        # Package-specific logging levels
+        # Uncomment and adjust as needed:
+        # level@{{basePackage}} = debug
+
+        # Show SQL queries (if using JDBC):
+        # level@org.pragmatica.jdbc = debug
+
+        # Reduce noise from libraries:
+        # level@org.apache.http = warn
+        # level@io.netty = warn
         """;
 
     public Path projectDir() {

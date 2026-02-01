@@ -67,9 +67,9 @@ mvn verify
 
 ## Requirements
 
-- Java 21+
+- Java 25+
 - Maven 3.8+
-- JBCT CLI 0.5.0+
+- JBCT CLI 0.6.0+
 
 ## Project Structure
 
@@ -84,10 +84,7 @@ my-slice/
 └── src/
     ├── main/java/
     │   └── org/example/myslice/
-    │       ├── MySlice.java         # @Slice interface
-    │       ├── MySliceImpl.java     # Implementation
-    │       ├── MyRequest.java       # Request record
-    │       └── MyResponse.java      # Response record
+    │       └── MySlice.java         # @Slice interface with nested records
     └── test/java/
         └── org/example/myslice/
             └── MySliceTest.java
@@ -106,4 +103,4 @@ From Maven packaging:
 
 | JAR | Contents |
 |-----|----------|
-| `{name}.jar` | Interface, implementation, factory, request/response types, bundled dependencies (fat JAR) |
+| `{name}.jar` | Interface (with nested records/implementation), factory, bundled dependencies (fat JAR) |

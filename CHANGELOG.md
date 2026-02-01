@@ -1,9 +1,57 @@
 # Changelog
 
+## [0.6.0] - 2026-01-29
+
+### Added
+- Init: groupId validation for `jbct init -g` parameter (validates Java package name format)
+
+### Changed
+- Slice init: added tinylog dependencies (2.7.0) in test scope
+- Slice init: added tinylog.properties configuration file in test resources
+- Build: Bump Aether to 0.8.1
+- CI: Re-enabled slice-processor-tests module
+- Slice init: Java version 21 to 25
+- Slice init: updated default versions (Pragmatica Lite 0.11.1, Aether 0.8.1, JBCT 0.6.0)
+- Slice init: implementation pattern changed to record-based (nested record in interface)
+- Slice init: removed Config dependency from template (factory now parameterless)
+- Slice init: added annotation processor configuration to maven-compiler-plugin
+- Slice init: added compilerArgs with `-Aslice.groupId` and `-Aslice.artifactId`
+- Slice init: removed separate *Impl.java, SampleRequest.java, SampleResponse.java files
+- Slice init: Request/Response/Error records now nested in @Slice interface
+- Slice init: removed "Sample" prefix from Request/Response records
+- Slice init: inner implementation record uses lowercased slice name, not "Impl"
+- Init: version resolution uses running binary version as minimum (overrides GitHub API if newer)
+- Init: version comparison uses Result-based `Number.parseInt()` from pragmatica-lite
+
+### Fixed
+- RFC-0004 compliance: removed non-standard slice-api.properties generation
+- RFC-0004 compliance: slice manifests now include `slice.interface` property
+- RFC-0004 compliance: renamed `impl.artifactId` to `slice.artifactId` in manifests
+- RFC-0007 compliance: infrastructure dependencies now accessed via InfraStore instead of being proxied
+- CollectSliceDepsMojo: now scans META-INF/slice/*.manifest instead of slice-api.properties
+- VerifySliceMojo: validates manifest files instead of slice-api.properties
+- PackageSlicesMojo: reads slice metadata from .manifest files
+- SliceProjectValidator: checks for .manifest files instead of slice-api.properties
+- SliceManifest: reads `slice.artifactId` property (was incorrectly reading `impl.artifactId`)
+- PackageSlicesMojo: fixed JAR naming bug (empty artifact prefix in JAR names)
+- PackageSlicesMojo: fixed JAR overwriting bug (multiple slices now create separate JARs)
+- FactoryClassGenerator: infrastructure deps (CacheService, etc.) now use InfraStore.instance().get()
+- FactoryClassGenerator: only slice dependencies are proxied via SliceInvokerFacade
+- FactoryClassGenerator: reduced flatMap chain depth (e.g., 13 to 3 for UrlShortener with mixed deps)
+- PackageSlicesMojo: bytecode transformation replaces UNRESOLVED versions with actual versions (strips semver prefix ^/~)
+- Slice init: `ValidationError` now extends `Cause` (required for `Result.failure`)
+- Slice init: added missing `Cause` import to template
+- Slice init: `Promise.success()` instead of `Promise.successful()`
+- Slice init: implemented `message()` method in `ValidationError.EmptyValue`
+- Slice init: test template now uses monadic composition instead of `.unwrap()`
+- FactoryClassGenerator: infra flatMaps now use proper nesting for variable scoping
+- GenerateBlueprintMojo: UNRESOLVED dependency edges now properly resolved in graph traversal
+- CollectSliceDepsMojo: improved base.artifact validation (rejects spaces, slashes)
+
 ## [0.5.0] - 2026-01-20
 
 ### Added
-- Security: `SecurityError` sealed interface with `PathTraversal`, `InvalidUrl`, `UntrustedDomain` error types
+- Security: `SecurityError` sealed interface with `PathTraversalDetected`, `UrlRejected`, `DomainRejected` error types
 - Slice verify: dependency scope validation for Aether runtime libraries
   - `jbct:verify-slice` now fails if `org.pragmatica-lite` or `org.pragmatica-lite.aether` dependencies are not `provided` scope
   - Prevents accidental bundling of runtime libraries in slice JARs
@@ -110,8 +158,6 @@
 
 ## [0.4.7] - 2026-01-10
 
-### Added
-
 ### Changed
 - Build: bump Pragmatica Lite to 0.9.10
 - Docs: update README with missing CLI options (--config, --version, --artifact-id, etc.)
@@ -127,8 +173,6 @@
 - Formatter: prevent leading newline accumulation in files without package declaration
 
 ## [0.4.6] - 2026-01-05
-
-### Added
 
 ### Changed
 - Build: bump Pragmatica Lite to 0.9.7
@@ -148,22 +192,14 @@
 
 ## [0.4.5] - 2026-01-02
 
-### Added
-
 ### Changed
 - Build: bump Pragmatica Lite to 0.9.4
 
-### Fixed
-
 ## [0.4.4] - 2026-01-01
-
-### Added
 
 ### Changed
 - AI tools: update to JBCT v2.0.10 with Pragmatica Lite Core 0.9.3
 - Build: bump Pragmatica Lite to 0.9.3
-
-### Fixed
 
 ## [0.4.3] - 2025-12-31
 
@@ -187,10 +223,6 @@
 - Linter: JBCT-PAT-02 no longer flags method references as fork-join (e.g., `Result::allOf`)
 
 ## [0.4.2] - 2025-12-30
-
-### Added
-
-### Changed
 
 ### Fixed
 - Parser: `record` as contextual keyword - works as method name, type name, field type, variable type
