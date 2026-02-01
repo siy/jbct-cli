@@ -21,6 +21,32 @@ To invoke: Use the `/jbct` skill or spawn the `jbct-coder` agent via the Task to
 
 Until release 1.0, backward compatibility is not guaranteed. Breaking changes are acceptable for JBCT compliance improvements.
 
+## JBCT Pattern Exceptions
+
+The following deviations from strict JBCT patterns are accepted in this codebase:
+
+### Resource Loading Null Checks
+
+Classpath resource loading uses direct null checks instead of Option pattern due to try-with-resources complexity:
+
+```java
+try (var in = Class.class.getResourceAsStream(path)) {
+    if (in == null) {
+        return Causes.cause("Resource not found").result();
+    }
+    // use stream
+}
+```
+
+**Affected files:**
+- `JarInstaller.java:226` - Copying wrapper scripts
+- `ProjectInitializer.java:189` - Loading templates
+- `SliceProjectInitializer.java:226` - Loading templates
+- `GitHubVersionResolver.java:55` - Loading version properties
+- `Version.java:18` - Loading version properties
+
+**Rationale:** Wrapping InputStream in Option requires splitting into two methods to handle try-with-resources correctly. The added complexity outweighs the benefit for adapter-layer code.
+
 ## Project Overview
 CLI tool and Maven plugin for JBCT (Java Backend Coding Technology) code formatting and linting.
 
